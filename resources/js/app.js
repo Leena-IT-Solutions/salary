@@ -17,7 +17,9 @@ import '@fortawesome/fontawesome-free/js/all.js';
 const app = createApp({});
 
 import ExampleComponent from './components/ExampleComponent.vue';
+import AppNavigation from './components/AppNavigation.vue';
 app.component('example-component', ExampleComponent);
+app.component('app-navigation', AppNavigation);
 
 /**
  * The following block of code may be used to automatically register your
