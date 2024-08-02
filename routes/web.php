@@ -179,15 +179,40 @@ Route::post('/organisation_settings/leaves_setup/update_lg', [App\Http\Controlle
 Route::post('/organisation_settings/leaves_setup/delete_lg', [App\Http\Controllers\LeavesSetupController::class, 'delete_lg']);
 
 
-/* Earning Components */
-Route::get('/salary_settings/earning_components', [App\Http\Controllers\EarningComponentsController::class, 'earning_components']);
-Route::get('/salary_settings/earning_components/fetch', [App\Http\Controllers\EarningComponentsController::class, 'fetch']);
-Route::post('/salary_settings/earning_components/add', [App\Http\Controllers\EarningComponentsController::class, 'add']);
-Route::post('/salary_settings/earning_components/update', [App\Http\Controllers\EarningComponentsController::class, 'update']);
-Route::post('/salary_settings/earning_components/delete', [App\Http\Controllers\EarningComponentsController::class, 'delete']);
+/* Earnings */
+Route::get('/salary_settings/earnings', [App\Http\Controllers\EarningsController::class, 'earnings']);
+Route::get('/salary_settings/earnings/fetch', [App\Http\Controllers\EarningsController::class, 'fetch']);
+Route::post('/salary_settings/earnings/add', [App\Http\Controllers\EarningsController::class, 'add']);
+Route::post('/salary_settings/earnings/update', [App\Http\Controllers\EarningsController::class, 'update']);
+Route::post('/salary_settings/earnings/delete', [App\Http\Controllers\EarningsController::class, 'delete']);
 
-/* Deduction Components */
-Route::get('/salary_settings/deduction_components', [App\Http\Controllers\DeductionComponentsController::class, 'deduction_components']);
+/* Services */
+Route::get('/salary_settings/services', [App\Http\Controllers\ServicesController::class, 'services']);
 
-/* Reimbursement Components */
-Route::get('/salary_settings/reimbursement_components', [App\Http\Controllers\ReimbursementComponentsController::class, 'reimbursement_components']);
+/* Exemption and Deduction */
+Route::get('/salary_settings/exemption_and_deduction', [App\Http\Controllers\ExemptionAndDeductionController::class, 'exemption_and_deduction']);
+
+/* Statutory Compliance */
+Route::get('/salary_settings/statutory_compliance', [App\Http\Controllers\StatutoryComplianceController::class, 'statutory_compliance']);
+
+/* Reimbursement */
+Route::get('/salary_settings/reimbursement', [App\Http\Controllers\ReimbursementController::class, 'reimbursement']);
+
+
+/* Leave Approval */
+Route::get('/approvals/leave', [App\Http\Controllers\LeaveApprovalController::class, 'leave']);
+
+/* Overtime Approval */
+Route::get('/approvals/overtime', [App\Http\Controllers\OvertimeApprovalController::class, 'overtime']);
+
+/* Loan and Advance Approval */
+Route::get('/approvals/loan_and_advance', [App\Http\Controllers\LoansAndAdvanceApprovalController::class, 'loan_and_advance']);
+
+/* Time Update */
+Route::get('/approvals/time_update', [App\Http\Controllers\TimeUpdateController::class, 'time_update']);
+
+/* Reimbursement Approval */
+Route::get('/approvals/reimbursement', [App\Http\Controllers\ReimbursementApprovalController::class, 'reimbursement']);
+
+/* Exemption and Deduction Approval */
+Route::get('/approvals/exemption_and_deduction', [App\Http\Controllers\ExemptionAndDeductionApprovalController::class, 'exemption_and_deduction']);

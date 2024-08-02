@@ -6,9 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\EarningType;
 use App\Models\Earning;
 
-class EarningComponentsController extends Controller
+class EarningsController extends Controller
 {
-    public function earning_components(){
+    public function earnings(){
         $earning_types = EarningType::orderBy('name', 'asc')->get(['id as val', 'name as key']);
         return view('salary_settings.earning_components', compact('earning_types'));
     }

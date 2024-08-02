@@ -46,6 +46,65 @@
             </div>
         </div>
 
+        <!-- Approvals -->
+        <div class="mb-5">
+            <div>
+                <h6 class="text-uppercase fw-bold m-0 d-inline-block mb-2">Apporvals</h6>
+            </div>
+    
+            <div class="d-grid gap-2">
+                
+                <a href="/approvals/leave" 
+                class="btn btn-lg btn-primary btn-sm text-start"
+                :class="cpath == '/approvals/leave' ? 'active' : ''" 
+                type="button">
+                    <i class="bi bi-person me-2"></i>
+                    Leave
+                </a>
+
+                <a href="/approvals/overtime" 
+                class="btn btn-lg btn-primary btn-sm text-start"
+                :class="cpath == '/approvals/overtime' ? 'active' : ''" 
+                type="button">
+                    <i class="bi bi-person me-2"></i>
+                    Overtime
+                </a>
+
+                <a href="/approvals/loan_and_advance" 
+                class="btn btn-lg btn-primary btn-sm text-start"
+                :class="cpath == '/approvals/loan_and_advance' ? 'active' : ''" 
+                type="button">
+                    <i class="bi bi-person me-2"></i>
+                    Loans and Advance
+                </a>
+
+                <a href="/approvals/time_update" 
+                class="btn btn-lg btn-primary btn-sm text-start"
+                :class="cpath == '/approvals/time_update' ? 'active' : ''" 
+                type="button">
+                    <i class="bi bi-person me-2"></i>
+                    Time Update
+                </a>
+
+                <a href="/approvals/reimbursement" 
+                class="btn btn-lg btn-primary btn-sm text-start"
+                :class="cpath == '/approvals/reimbursement' ? 'active' : ''" 
+                type="button">
+                    <i class="bi bi-person me-2"></i>
+                    Reimbursement
+                </a>
+
+                <a href="/approvals/exemption_and_deduction" 
+                class="btn btn-lg btn-primary btn-sm text-start"
+                :class="cpath == '/approvals/exemption_and_deduction' ? 'active' : ''" 
+                type="button">
+                    <i class="bi bi-person me-2"></i>
+                    Exemption and Deduction
+                </a>
+
+            </div>
+        </div>
+
         <div class="mb-5">
             <div>
                 <h6 class="text-uppercase fw-bold m-0 d-inline-block mb-2">Employee</h6>
@@ -137,30 +196,48 @@
             <div class="d-grid gap-2">
 
                 <a 
-                href="/salary_settings/earning_components" 
+                href="/salary_settings/earnings" 
                 class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/salary_settings/earning_components' ? 'active' : ''" 
+                :class="cpath == '/salary_settings/earnings' ? 'active' : ''" 
                 type="button">
                     <i class="bi bi-currency-rupee me-2"></i>
-                    Earning Components
+                    Earnings
                 </a>
 
                 <a 
-                href="/salary_settings/deduction_components" 
+                href="/salary_settings/services" 
                 class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/salary_settings/deduction_components' ? 'active' : ''" 
+                :class="cpath == '/salary_settings/services' ? 'active' : ''" 
                 type="button">
                     <i class="bi bi-currency-rupee me-2"></i>
-                    Deduction Components
+                    Services
                 </a>
 
                 <a 
-                href="/salary_settings/reimbursement_components" 
+                href="/salary_settings/exemption_and_deduction" 
                 class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/salary_settings/reimbursement_components' ? 'active' : ''" 
+                :class="cpath == '/salary_settings/exemption_and_deduction' ? 'active' : ''" 
                 type="button">
                     <i class="bi bi-currency-rupee me-2"></i>
-                    Reimbursement Components
+                    Exemption And Deduction
+                </a>
+
+                <a 
+                href="/salary_settings/reimbursement" 
+                class="btn btn-lg btn-primary btn-sm text-start" 
+                :class="cpath == '/salary_settings/reimbursement' ? 'active' : ''" 
+                type="button">
+                    <i class="bi bi-currency-rupee me-2"></i>
+                    Reimbursement
+                </a>
+
+                <a 
+                href="/salary_settings/statutory_compliance" 
+                class="btn btn-lg btn-primary btn-sm text-start" 
+                :class="cpath == '/salary_settings/statutory_compliance' ? 'active' : ''"   
+                type="button">
+                    <i class="bi bi-currency-rupee me-2"></i>
+                    Statutory Compliance
                 </a>
 
                 <a 

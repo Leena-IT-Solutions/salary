@@ -173,7 +173,7 @@ export default {
 
         fetch(){
 
-            let url = '/salary_settings/earning_components/fetch';
+            let url = '/salary_settings/earnings/fetch';
             if(this.next_page_url != null){
                 url = this.next_page_url;
             }
@@ -217,7 +217,7 @@ export default {
 
         add(){
             this.loading = true;
-            axios.post('/salary_settings/earning_components/add', this.earning).then(res => {
+            axios.post('/salary_settings/earnings/add', this.earning).then(res => {
                 this.reset();
                 this.search();
             });
@@ -225,7 +225,7 @@ export default {
 
         update(){
             this.loading = true;
-            axios.post('/salary_settings/earning_components/update', this.earning).then(res => {
+            axios.post('/salary_settings/earnings/update', this.earning).then(res => {
                 this.reset();
                 this.search();
             });
@@ -237,7 +237,7 @@ export default {
 
         deleteNow(){
             this.loading = true;
-            axios.post('/salary_settings/earning_components/delete', this.earning).then(res => {
+            axios.post('/salary_settings/earnings/delete', this.earning).then(res => {
                 this.reset();
                 this.search();
             });
