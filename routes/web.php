@@ -125,6 +125,12 @@ Route::post('/employee/employee_document/add', [App\Http\Controllers\EmployeeDoc
 Route::post('/employee/employee_document/update', [App\Http\Controllers\EmployeeDocumentsController::class, 'update']);
 Route::post('/employee/employee_document/delete', [App\Http\Controllers\EmployeeDocumentsController::class, 'delete']);
 
+/* Employee Document */
+Route::get('/employee/employee_leave_group/{id}/fetch', [App\Http\Controllers\EmployeeLeaveGroupController::class, 'fetch']);
+Route::post('/employee/employee_leave_group/add', [App\Http\Controllers\EmployeeLeaveGroupController::class, 'add']);
+Route::post('/employee/employee_leave_group/update', [App\Http\Controllers\EmployeeLeaveGroupController::class, 'update']);
+Route::post('/employee/employee_leave_group/delete', [App\Http\Controllers\EmployeeLeaveGroupController::class, 'delete']);
+
 
 
 

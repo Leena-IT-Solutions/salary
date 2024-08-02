@@ -7,6 +7,7 @@ use App\Models\Employee;
 use App\Models\WorkLocation;
 use App\Models\Designation;
 use App\Models\Department;
+use App\Models\LeaveGroup;
 
 class EmployeeController extends Controller
 {
@@ -19,7 +20,8 @@ class EmployeeController extends Controller
         $work_locations = WorkLocation::get(['id as val', 'location_name as key']);
         $designations = Designation::get(['id as val', 'designation as key']);
         $departments = Department::get(['id as val', 'department as key']);
-        return view('employee.profile', compact('employee', 'work_locations', 'designations', 'departments'));
+        $leave_groups = LeaveGroup::get(['id as val', 'name as key']);
+        return view('employee.profile', compact('employee', 'work_locations', 'designations', 'departments', 'leave_groups'));
     }
 
     public function fetch(Request $request){

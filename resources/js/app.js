@@ -67,6 +67,7 @@ import EmployeeAddress from './components/elements/employee/EmployeeAddress.vue'
 import EmployeeWorkLocation from './components/elements/employee/EmployeeWorkLocation.vue';
 import EmployeeDesignation from './components/elements/employee/EmployeeDesignation.vue';
 import EmployeeDepartment from './components/elements/employee/EmployeeDepartment.vue';
+import EmployeeLeaveGroup from './components/elements/employee/EmployeeLeaveGroup.vue';
 
 
 app.component('app-navigation', AppNavigation);
@@ -117,6 +118,7 @@ app.component('employee-address', EmployeeAddress);
 app.component('employee-work-location', EmployeeWorkLocation);
 app.component('employee-designation', EmployeeDesignation);
 app.component('employee-department', EmployeeDepartment);
+app.component('employee-leave-group', EmployeeLeaveGroup);
 
 /**
  * The following block of code may be used to automatically register your

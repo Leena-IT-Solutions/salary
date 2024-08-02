@@ -9,6 +9,7 @@
             <button :class="[what == 'Work Location' ? 'active' : '']" @click="what = 'Work Location'" class="btn btn-outline-primary me-2">Work Location</button>
             <button :class="[what == 'Department' ? 'active' : '']" @click="what = 'Department'" class="btn btn-outline-primary me-2">Department</button>
             <button :class="[what == 'Designation' ? 'active' : '']" @click="what = 'Designation'" class="btn btn-outline-primary me-2">Designation</button>
+            <button :class="[what == 'Leave Group' ? 'active' : '']" @click="what = 'Leave Group'" class="btn btn-outline-primary me-2">Leave Group</button>
             <button v-if="what != null" @click="what = null" class="btn btn-danger">Close Form</button>
         </div>
 
@@ -18,6 +19,7 @@
         <employee-work-location :locations="locations" :employee_id="employee.id" v-if="what=='Work Location'"></employee-work-location>
         <employee-designation :designations="designations" :employee_id="employee.id" v-if="what=='Designation'"></employee-designation>
         <employee-department :departments="departments" :employee_id="employee.id" v-if="what=='Department'"></employee-department>
+        <employee-leave-group :leave_groups="leave_groups" :employee_id="employee.id" v-if="what=='Leave Group'"></employee-leave-group>
 
 
     </div>
@@ -26,7 +28,7 @@
 <script>
 export default {
 
-    props: ['employee', 'work_locations', 'designations', 'departments'],
+    props: ['employee', 'work_locations', 'designations', 'departments', 'leave_groups'],
 
     data(){
         return {

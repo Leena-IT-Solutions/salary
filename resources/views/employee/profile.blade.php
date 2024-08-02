@@ -19,7 +19,12 @@
 
 <div class="container-fluid px-4 py-5 m-0">
 
-    <employee-update :employee="{{ $employee }}" :work_locations="{{ $work_locations }}" :designations="{{ $designations }}" :departments="{{ $departments }}"></employee-update>
+    <employee-update 
+    :employee="{{ $employee }}" 
+    :work_locations="{{ $work_locations }}" 
+    :designations="{{ $designations }}" 
+    :departments="{{ $departments }}"
+    :leave_groups="{{ $leave_groups }}"></employee-update>
 
 </div>
 
