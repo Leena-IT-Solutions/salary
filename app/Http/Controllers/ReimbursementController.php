@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 class ReimbursementController extends Controller
 {
     public function reimbursement(){
-        return "reimbursement";
-        // return view('salary_settings.deduction_components');
+        return view('salary_settings.reimbursement');
     }
 }

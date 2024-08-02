@@ -7,6 +7,6 @@ use Illuminate\Http\Request;
 class OvertimeApprovalController extends Controller
 {
     public function overtime(){
-        return "Overtime";
+        return view("approvals.overtime");
     }
 }

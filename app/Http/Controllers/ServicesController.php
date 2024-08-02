@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 class ServicesController extends Controller
 {
     public function services(){
-        return "Services";
-        // return view('salary_settings.deduction_components');
+        return view('salary_settings.services');
     }
 }

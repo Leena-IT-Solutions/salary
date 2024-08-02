@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 class ExemptionAndDeductionController extends Controller
 {
     public function exemption_and_deduction(){
-        return "exemption_and_deduction";
-        // return view('salary_settings.deduction_components');
+        return view('salary_settings.exemption_and_deduction');
     }
 }

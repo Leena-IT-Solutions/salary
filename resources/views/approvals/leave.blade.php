@@ -1,12 +1,12 @@
 @extends('layouts.newapp')
 
 @section('head')
-<title>Reimbursement Component</title>
+<title>Leave Approval</title>
 @endsection
 
 @section('content')
 
-<page-header title="Reimbursement Components"></page-header>
+<page-header title="Leave Approval"></page-header>
 
 <div class="container-fluid px-4 py-5 m-0">
 

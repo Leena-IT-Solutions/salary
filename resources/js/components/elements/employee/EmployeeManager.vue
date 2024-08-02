@@ -138,8 +138,8 @@
                         <td>{{ emp.id }}</td>
                         <td>{{ emp.first_name }} {{ emp.middle_name }} {{ emp.last_name }}</td>
                         <td>{{ emp.employee_code }}</td>
-                        <td v-if="emp.employee_department">{{ emp.employee_department.department.department }}</td>
-                        <td v-if="emp.employee_designation">{{ emp.employee_designation.designation.designation }}</td>
+                        <td><span v-if="emp.employee_department">{{ emp.employee_department.department.department }}</span></td>
+                        <td><span v-if="emp.employee_designation">{{ emp.employee_designation.designation.designation }}</span></td>
                         <td>{{ emp.phone }}</td>
                         <td>{{ emp.email }}</td>
                         <td class="text-end">

@@ -7,6 +7,6 @@ use Illuminate\Http\Request;
 class LeaveApprovalController extends Controller
 {
     public function leave(){
-        return "Leave";
+        return view("approvals.leave");
     }
 }

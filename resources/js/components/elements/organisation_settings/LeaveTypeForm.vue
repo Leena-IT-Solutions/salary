@@ -5,9 +5,12 @@
 
         <div  v-if="leave_type" class="row g-4 mb-5">
 
-            <forms-text-field name="leave_type" label="Leave Type" v-model="leave_type.leave_type" error="" classes="col-12 col-lg-6"></forms-text-field>
+            <forms-text-field name="leave_type" label="Leave Type" v-model="leave_type.leave_type" error="" classes="col-12 col-lg-4"></forms-text-field>
 
-            <forms-text-field name="code" label="Code" v-model="leave_type.code" error="" classes="col-12 col-lg-6"></forms-text-field>
+            <forms-text-field name="code" label="Code" v-model="leave_type.code" error="" classes="col-12 col-lg-4"></forms-text-field>
+
+            <forms-select-field name="is_lop" label="Is loss of pay?" v-model="leave_type.is_lop" error="" classes="col-12 col-lg-4" 
+            :options="[{ key: 'Yes', val: 'Yes' }, { key: 'No', val: 'No' }]"></forms-select-field>
 
             <forms-submit-button name="" v-model="loading" label="Save Leave Type" @click="save()" classes="col-6"></forms-submit-button>
 
@@ -40,6 +43,7 @@
                         <th @click="orderBy('id')" class="cursor-pointer" style="width: 60px;">ID</th>
                         <th @click="orderBy('leave_type')" class="cursor-pointer">Leave Type</th>
                         <th @click="orderBy('code')" class="cursor-pointer">Code</th>
+                        <th @click="orderBy('code')" class="cursor-pointer">LOP</th>
                         <th class="text-end" style="width: 120px;">Action</th>
                     </tr>
                 </thead>
@@ -49,6 +53,7 @@
                         <td>{{ dept.id }}</td>
                         <td>{{ dept.leave_type }}</td>
                         <td>{{ dept.code }}</td>
+                        <td>{{ dept.is_lop }}</td>
                         <td class="text-end">
                             <button class="btn btn-outline-info btn-sm me-2" @click="edit(dept)"><i class="bi bi-pencil"></i></button>
                         </td>
@@ -75,6 +80,7 @@ export default {
                 id: null,
                 head: null,
                 code: null,
+                is_lop: null,
             },
             leave_types: [],
             next_page_url: null,
@@ -139,7 +145,7 @@ export default {
             this.leave_type.id = null;
             this.leave_type.leave_type = null;
             this.leave_type.code = null;
-            this.leave_type.description = null;
+            this.leave_type.is_lop = null;
         },
 
         add(){
@@ -174,7 +180,7 @@ export default {
             this.leave_type.id = item.id;
             this.leave_type.leave_type = item.leave_type;
             this.leave_type.code = item.code;
-            this.leave_type.description = item.description;
+            this.leave_type.is_lop = item.is_lop;
         },
 
     },

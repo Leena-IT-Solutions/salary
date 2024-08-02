@@ -11,6 +11,7 @@ class LeaveMaster extends Model
 
     protected $fillable = [
         'leave_type',
-        'code'
+        'code',
+        'is_lop'
     ];
 }

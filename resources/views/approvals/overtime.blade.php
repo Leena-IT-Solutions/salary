@@ -1,12 +1,12 @@
 @extends('layouts.newapp')
 
 @section('head')
-<title>Deduction Component</title>
+<title>Overtime Approval</title>
 @endsection
 
 @section('content')
 
-<page-header title="Deduction Components"></page-header>
+<page-header title="Overtime Approval"></page-header>
 
 <div class="container-fluid px-4 py-5 m-0">
 

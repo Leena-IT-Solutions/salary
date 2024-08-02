@@ -7,6 +7,6 @@ use Illuminate\Http\Request;
 class ReimbursementApprovalController extends Controller
 {
     public function reimbursement(){
-        return "Reimbursement";
+        return view("approvals.reimbursement");
     }
 }
