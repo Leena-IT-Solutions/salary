@@ -1,0 +1,15 @@
+.my_layout {
+    height: calc(100vh - 20px);
+    display: grid;
+    grid-template-columns: auto;
+    grid-template-rows: 45px auto;
+}
+
+// Large devices (desktops, 992px and up)
+@media (min-width: 992px) {
+    .my_layout {
+        height: 100vh;
+        grid-template-columns: 320px auto;
+        grid-template-rows: auto;
+    }
+}

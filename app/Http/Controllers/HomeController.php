@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Employee;
 
 class HomeController extends Controller
 {
@@ -23,6 +24,16 @@ class HomeController extends Controller
      */
     public function index()
     {
-        return view('home');
+        $today = date("Y-m-d");
+        $total_employee = Employee::count();
+        $present = Employee::whereHas('employee_shift', function($q) use($today){
+            $q->where('dt', $today)->has('employee_attendance');
+        })
+        ->count();
+        $absent = Employee::whereHas('employee_shift', function($q) use($today){
+            $q->where('dt', $today)->has('employee_attendance', 0);
+        })
+        ->count();
+        return view('home', compact('total_employee', 'present', 'absent'));
     }
 }

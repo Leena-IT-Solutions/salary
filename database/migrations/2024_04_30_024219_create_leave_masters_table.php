@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('leave_masters', function (Blueprint $table) {
             $table->id();
 
-            $table->string('head');
-            $table->string('description')->nullable();
+            $table->string('leave_type');
+            $table->string('code');
 
             $table->timestamps();
         });

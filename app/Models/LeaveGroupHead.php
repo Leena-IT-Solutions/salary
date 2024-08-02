@@ -14,4 +14,12 @@ class LeaveGroupHead extends Model
         'leave_master_id',
         'no_of_leaves'
     ];
+
+    public function leave_group(){
+        return $this->belongsTo(LeaveGroup::class);
+    }
+
+    public function leave_master(){
+        return $this->belongsTo(LeaveMaster::class);
+    }
 }

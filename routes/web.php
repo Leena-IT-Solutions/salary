@@ -1,7 +1,193 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use App\Models\Employee;
+use App\Models\EmployeeShift;
 
 Auth::routes(['verify' => true]);
 
+/***********************************
+# Overview Routes 
+************************************/
+
+Route::get('/attendance/save', function(Request $request){
+
+    // Request Format
+    // "tagid=" + tagId + "&tagms=" + tagMs + "&dt=" + dt + "&tim=" + tim
+    // https://payroll.sarvodayavidyalay.com/attendance/save?tagid=1234&tagms=SAR24101&dt=2024-06-14&tim=08:00
+
+    $response = [
+        "message" => ""
+    ];
+
+
+    // Get Employee By his code
+    $employee = Employee::where('employee_code', $request->tagms)->first();
+
+    // Check his/her shift available
+    if($employee){
+        $es = EmployeeShift::where('employee_id', $employee->id)->where('dt', $request->dt);
+        // if Shift Available get Shift
+        if($es->exists()){
+            $employee_shift = $es->first();
+            // Create Attendance Record
+
+            /* $emp_att = $employee_shift->employee_attendance();
+            $tms = 0;
+
+            if($emp_att->count() > 0){
+                $tm1 = strtotime($request->tim);
+                $tm2 = strtotime($emp_att->orderBy('tm', 'desc')->first()->tm);
+                $tms = $tm1 - $tm2;
+            } */
+
+            /* if($tms > 60 || $tms == 0){
+                $employee_shift->employee_attendance()->create([
+                    "tm" => $request->tim
+                ]);
+                $response["message"] = "Success";
+            } */
+
+            $employee_shift->employee_attendance()->create([
+                "tm" => $request->tim
+            ]);
+            $response["message"] = "Success";
+            
+        }
+    }
+
+    // Return Response with message
+    return response()->json($response);
+});
+
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('/calender', [App\Http\Controllers\CalenderController::class, 'calender']);
+Route::get('/calender/working_years', [App\Http\Controllers\CalenderController::class, 'working_years']);
+Route::post('/calender/working_years/add', [App\Http\Controllers\CalenderController::class, 'add']);
+Route::get('/calender/special_day/fetch/{year}', [App\Http\Controllers\CalenderController::class, 'fetch']);
+Route::post('/calender/special_day/save', [App\Http\Controllers\CalenderController::class, 'save']);
+Route::post('/calender/special_day/delete', [App\Http\Controllers\CalenderController::class, 'delete']);
+
+Route::get('/employee_shift', [App\Http\Controllers\EmployeeShiftController::class, 'employee_shift']);
+Route::get('/employee_shift/employee/fetch', [App\Http\Controllers\EmployeeShiftController::class, 'fetch']);
+Route::post('/employee_shift/save', [App\Http\Controllers\EmployeeShiftController::class, 'save']);
+
+Route::get('/attendance', [App\Http\Controllers\AttendanceController::class, 'attendance']);
+Route::get('/attendance/fetch', [App\Http\Controllers\AttendanceController::class, 'fetch']);
+
+
+/***********************************
+# Employee Routes 
+************************************/
+
+/* Employee Manager */
+Route::get('/employee/employee_manager', [App\Http\Controllers\EmployeeController::class, 'employee_manager']);
+Route::get('/employee/profile/{id}', [App\Http\Controllers\EmployeeController::class, 'profile']);
+Route::get('/employee/employee_manager/fetch', [App\Http\Controllers\EmployeeController::class, 'fetch']);
+Route::post('/employee/employee_manager/add', [App\Http\Controllers\EmployeeController::class, 'add']);
+Route::post('/employee/employee_manager/update', [App\Http\Controllers\EmployeeController::class, 'update']);
+Route::post('/employee/employee_manager/delete', [App\Http\Controllers\EmployeeController::class, 'delete']);
+
+/* Employee Address */
+Route::get('/employee/employee_address/{id}/fetch', [App\Http\Controllers\EmployeeAddressController::class, 'fetch']);
+Route::post('/employee/employee_address/add', [App\Http\Controllers\EmployeeAddressController::class, 'add']);
+Route::post('/employee/employee_address/update', [App\Http\Controllers\EmployeeAddressController::class, 'update']);
+Route::post('/employee/employee_address/delete', [App\Http\Controllers\EmployeeAddressController::class, 'delete']);
+
+/* Employee Work Location */
+Route::get('/employee/employee_work_location/{id}/fetch', [App\Http\Controllers\EmployeeWorkLocationController::class, 'fetch']);
+Route::post('/employee/employee_work_location/add', [App\Http\Controllers\EmployeeWorkLocationController::class, 'add']);
+Route::post('/employee/employee_work_location/update', [App\Http\Controllers\EmployeeWorkLocationController::class, 'update']);
+Route::post('/employee/employee_work_location/delete', [App\Http\Controllers\EmployeeWorkLocationController::class, 'delete']);
+
+/* Employee Designation */
+Route::get('/employee/employee_designation/{id}/fetch', [App\Http\Controllers\EmployeeDesignationController::class, 'fetch']);
+Route::post('/employee/employee_designation/add', [App\Http\Controllers\EmployeeDesignationController::class, 'add']);
+Route::post('/employee/employee_designation/update', [App\Http\Controllers\EmployeeDesignationController::class, 'update']);
+Route::post('/employee/employee_designation/delete', [App\Http\Controllers\EmployeeDesignationController::class, 'delete']);
+
+/* Employee Department */
+Route::get('/employee/employee_department/{id}/fetch', [App\Http\Controllers\EmployeeDepartmentController::class, 'fetch']);
+Route::post('/employee/employee_department/add', [App\Http\Controllers\EmployeeDepartmentController::class, 'add']);
+Route::post('/employee/employee_department/update', [App\Http\Controllers\EmployeeDepartmentController::class, 'update']);
+Route::post('/employee/employee_department/delete', [App\Http\Controllers\EmployeeDepartmentController::class, 'delete']);
+
+/* Employee Photo */
+Route::get('/employee/employee_photo/{id}/fetch', [App\Http\Controllers\EmployeePhotoController::class, 'fetch']);
+Route::post('/employee/employee_photo/add', [App\Http\Controllers\EmployeePhotoController::class, 'add']);
+Route::post('/employee/employee_photo/update', [App\Http\Controllers\EmployeePhotoController::class, 'update']);
+Route::post('/employee/employee_photo/delete', [App\Http\Controllers\EmployeePhotoController::class, 'delete']);
+
+/* Employee Document */
+Route::get('/employee/employee_document/{id}/fetch', [App\Http\Controllers\EmployeeDocumentsController::class, 'fetch']);
+Route::post('/employee/employee_document/add', [App\Http\Controllers\EmployeeDocumentsController::class, 'add']);
+Route::post('/employee/employee_document/update', [App\Http\Controllers\EmployeeDocumentsController::class, 'update']);
+Route::post('/employee/employee_document/delete', [App\Http\Controllers\EmployeeDocumentsController::class, 'delete']);
+
+
+
+
+/***********************************
+# Organization Settings Routes 
+************************************/
+
+/* Company Profile */
+Route::get('/organisation_settings/company_profile', [App\Http\Controllers\CompanyProfileController::class, 'company_profile']);
+Route::get('/organisation_settings/company_profile/fetch', [App\Http\Controllers\CompanyProfileController::class, 'fetch']);
+Route::post('/organisation_settings/company_profile/logo_upload', [App\Http\Controllers\CompanyProfileController::class, 'logo_upload']);
+Route::post('/organisation_settings/company_profile/update', [App\Http\Controllers\CompanyProfileController::class, 'update']);
+
+/* Work Location */
+Route::get('/organisation_settings/work_location', [App\Http\Controllers\WorkLocationController::class, 'work_location']);
+Route::get('/organisation_settings/work_location/fetch', [App\Http\Controllers\WorkLocationController::class, 'fetch']);
+Route::post('/organisation_settings/work_location/add', [App\Http\Controllers\WorkLocationController::class, 'add']);
+Route::post('/organisation_settings/work_location/update', [App\Http\Controllers\WorkLocationController::class, 'update']);
+Route::post('/organisation_settings/work_location/delete', [App\Http\Controllers\WorkLocationController::class, 'delete']);
+
+/* Departments */
+Route::get('/organisation_settings/departments', [App\Http\Controllers\DepartmentController::class, 'departments']);
+Route::get('/organisation_settings/departments/fetch', [App\Http\Controllers\DepartmentController::class, 'fetch']);
+Route::post('/organisation_settings/departments/add', [App\Http\Controllers\DepartmentController::class, 'add']);
+Route::post('/organisation_settings/departments/update', [App\Http\Controllers\DepartmentController::class, 'update']);
+Route::post('/organisation_settings/departments/delete', [App\Http\Controllers\DepartmentController::class, 'delete']);
+
+/* Designations */
+Route::get('/organisation_settings/designations', [App\Http\Controllers\DesignationController::class, 'designations']);
+Route::get('/organisation_settings/designations/fetch', [App\Http\Controllers\DesignationController::class, 'fetch']);
+Route::post('/organisation_settings/designations/add', [App\Http\Controllers\DesignationController::class, 'add']);
+Route::post('/organisation_settings/designations/update', [App\Http\Controllers\DesignationController::class, 'update']);
+Route::post('/organisation_settings/designations/delete', [App\Http\Controllers\DesignationController::class, 'delete']);
+
+/* Working Shifts */
+Route::get('/organisation_settings/working_shifts', [App\Http\Controllers\WorkingShiftController::class, 'working_shifts']);
+Route::get('/organisation_settings/working_shifts/fetch', [App\Http\Controllers\WorkingShiftController::class, 'fetch']);
+Route::post('/organisation_settings/working_shifts/add', [App\Http\Controllers\WorkingShiftController::class, 'add']);
+Route::post('/organisation_settings/working_shifts/update', [App\Http\Controllers\WorkingShiftController::class, 'update']);
+Route::post('/organisation_settings/working_shifts/delete', [App\Http\Controllers\WorkingShiftController::class, 'delete']);
+
+/* Leaves Setup */
+Route::get('/organisation_settings/leaves_setup', [App\Http\Controllers\LeavesSetupController::class, 'leaves_setup']);
+Route::get('/organisation_settings/leaves_setup/fetch', [App\Http\Controllers\LeavesSetupController::class, 'fetch']);
+Route::post('/organisation_settings/leaves_setup/add', [App\Http\Controllers\LeavesSetupController::class, 'add']);
+Route::post('/organisation_settings/leaves_setup/update', [App\Http\Controllers\LeavesSetupController::class, 'update']);
+Route::post('/organisation_settings/leaves_setup/delete', [App\Http\Controllers\LeavesSetupController::class, 'delete']);
+
+Route::get('/organisation_settings/leaves_setup/fetch_lg', [App\Http\Controllers\LeavesSetupController::class, 'fetch_lg']);
+Route::post('/organisation_settings/leaves_setup/save_lg', [App\Http\Controllers\LeavesSetupController::class, 'save_lg']);
+Route::post('/organisation_settings/leaves_setup/update_lg', [App\Http\Controllers\LeavesSetupController::class, 'update_lg']);
+Route::post('/organisation_settings/leaves_setup/delete_lg', [App\Http\Controllers\LeavesSetupController::class, 'delete_lg']);
+
+
+/* Earning Components */
+Route::get('/salary_settings/earning_components', [App\Http\Controllers\EarningComponentsController::class, 'earning_components']);
+Route::get('/salary_settings/earning_components/fetch', [App\Http\Controllers\EarningComponentsController::class, 'fetch']);
+Route::post('/salary_settings/earning_components/add', [App\Http\Controllers\EarningComponentsController::class, 'add']);
+Route::post('/salary_settings/earning_components/update', [App\Http\Controllers\EarningComponentsController::class, 'update']);
+Route::post('/salary_settings/earning_components/delete', [App\Http\Controllers\EarningComponentsController::class, 'delete']);
+
+/* Deduction Components */
+Route::get('/salary_settings/deduction_components', [App\Http\Controllers\DeductionComponentsController::class, 'deduction_components']);
+
+/* Reimbursement Components */
+Route::get('/salary_settings/reimbursement_components', [App\Http\Controllers\ReimbursementComponentsController::class, 'reimbursement_components']);

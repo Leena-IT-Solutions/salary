@@ -10,7 +10,7 @@ class LeaveMaster extends Model
     use HasFactory;
 
     protected $fillable = [
-        'head',
-        'description'
+        'leave_type',
+        'code'
     ];
 }

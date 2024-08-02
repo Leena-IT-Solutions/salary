@@ -16,10 +16,107 @@ import '@fortawesome/fontawesome-free/js/all.js';
 
 const app = createApp({});
 
-import ExampleComponent from './components/ExampleComponent.vue';
 import AppNavigation from './components/AppNavigation.vue';
-app.component('example-component', ExampleComponent);
+import PageHeader from './components/elements/PageHeader.vue';
+import SectionTitle from './components/elements/SectionTitle.vue';
+
+/* Calender Imports */
+import Calender from './components/elements/calender/Calender.vue';
+import YearForm from './components/elements/calender/YearForm.vue';
+
+/* Employee Shift Manager */
+import EmployeeShiftManager from './components/elements/employee_shift/EmployeeShiftManager.vue';
+
+/* Attendance */
+import EmployeeAttendance from './components/elements/attendance/EmployeeAttendance.vue';
+
+/* Form Imports */
+import TextField from './components/forms/TextField.vue';
+import NumberField from './components/forms/NumberField.vue';
+import TimeField from './components/forms/TimeField.vue';
+import DateField from './components/forms/DateField.vue';
+import TextareaField from './components/forms/TextareaField.vue';
+import SubmitButton from './components/forms/SubmitButton.vue';
+import SelectField from './components/forms/SelectField.vue';
+import RadioField from './components/forms/RadioField.vue';
+import CheckboxField from './components/forms/CheckboxField.vue';
+import CheckboxIs from './components/forms/CheckboxIs.vue';
+import FileField from './components/forms/FileField.vue';
+import MyDemoForm from './components/MyDemoForm.vue';
+
+/* Organisation Settings Imports */
+import LogoUpload from './components/elements/organisation_settings/LogoUpload.vue';
+import CompanyProfile from './components/elements/organisation_settings/CompanyProfile.vue';
+import CompanyRegistration from './components/elements/organisation_settings/CompanyRegistration.vue';
+import WorkLocations from './components/elements/organisation_settings/WorkLocations.vue';
+import DepartmentsForm from './components/elements/organisation_settings/DepartmentsForm.vue';
+import DesignationsForm from './components/elements/organisation_settings/DesignationsForm.vue';
+import WorkingShiftForm from './components/elements/organisation_settings/WorkingShiftForm.vue';
+import LeaveTypeForm from './components/elements/organisation_settings/LeaveTypeForm.vue';
+import LeaveGroupForm from './components/elements/organisation_settings/LeaveGroupForm.vue';
+
+/* Salary Settings Import */
+import EarningsComponent from './components/elements/salary_settings/EarningsComponent.vue';
+
+/* Employee Imports */
+import EmployeeManager from './components/elements/employee/EmployeeManager.vue';
+import EmployeeUpdate from './components/elements/employee/EmployeeUpdate.vue';
+import EmployeePhoto from './components/elements/employee/EmployeePhoto.vue';
+import EmployeeDocuments from './components/elements/employee/EmployeeDocuments.vue';
+import EmployeeAddress from './components/elements/employee/EmployeeAddress.vue';
+import EmployeeWorkLocation from './components/elements/employee/EmployeeWorkLocation.vue';
+import EmployeeDesignation from './components/elements/employee/EmployeeDesignation.vue';
+import EmployeeDepartment from './components/elements/employee/EmployeeDepartment.vue';
+
+
 app.component('app-navigation', AppNavigation);
+app.component('page-header', PageHeader);
+app.component('section-title', SectionTitle);
+
+/* Calender Components */
+app.component('app-calender', Calender);
+app.component('year-form', YearForm);
+app.component('employee-shift-manager', EmployeeShiftManager);
+app.component('employee-attendance', EmployeeAttendance);
+
+
+/* Form Components */
+app.component('forms-text-field', TextField);
+app.component('forms-number-field', NumberField);
+app.component('forms-time-field', TimeField);
+app.component('forms-date-field', DateField);
+app.component('forms-textarea-field', TextareaField);
+app.component('forms-submit-button', SubmitButton);
+app.component('forms-select-field', SelectField);
+app.component('forms-radio-field', RadioField);
+app.component('forms-checkbox-field', CheckboxField);
+app.component('forms-checkbox-is', CheckboxIs);
+app.component('forms-file-field', FileField);
+app.component('my-demo-form', MyDemoForm);
+
+/* Organisation Settings Components */
+app.component('logo-upload', LogoUpload);
+app.component('company-profile', CompanyProfile);
+app.component('company-registration', CompanyRegistration);
+app.component('work-locations', WorkLocations);
+app.component('departments-form', DepartmentsForm);
+app.component('designations-form', DesignationsForm);
+app.component('working-shift-form', WorkingShiftForm);
+app.component('leave-type-form', LeaveTypeForm);
+app.component('leave-group-form', LeaveGroupForm);
+
+/* Salary Settings Components */
+app.component('earnings-component', EarningsComponent);
+
+/* Employee Components */
+app.component('employee-manager', EmployeeManager);
+app.component('employee-update', EmployeeUpdate);
+app.component('employee-photo', EmployeePhoto);
+app.component('employee-documents', EmployeeDocuments);
+app.component('employee-address', EmployeeAddress);
+app.component('employee-work-location', EmployeeWorkLocation);
+app.component('employee-designation', EmployeeDesignation);
+app.component('employee-department', EmployeeDepartment);
 
 /**
  * The following block of code may be used to automatically register your

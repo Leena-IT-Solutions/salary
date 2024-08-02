@@ -13,4 +13,8 @@ class LeaveGroup extends Model
         'name',
         'total_leaves'
     ];
+
+    public function lgh(){
+        return $this->hasMany(LeaveGroupHead::class);
+    }
 }
