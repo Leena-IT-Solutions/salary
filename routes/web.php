@@ -217,6 +217,9 @@ Route::get('/approvals/loan_and_advance', [App\Http\Controllers\LoansAndAdvanceA
 /* Time Update */
 Route::get('/approvals/time_update', [App\Http\Controllers\TimeUpdateController::class, 'time_update']);
 
+/* On Duty */
+Route::get('/approvals/on_duty', [App\Http\Controllers\OnDutyController::class, 'on_duty']);
+
 /* Reimbursement Approval */
 Route::get('/approvals/reimbursement', [App\Http\Controllers\ReimbursementApprovalController::class, 'reimbursement']);
 

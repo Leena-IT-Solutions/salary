@@ -1,0 +1,15 @@
+@extends('layouts.newapp')
+
+@section('head')
+<title>On Duty</title>
+@endsection
+
+@section('content')
+
+<page-header title="On Duty"></page-header>
+
+<div class="container-fluid px-4 py-5 m-0">
+
+</div>
+
+@endsection

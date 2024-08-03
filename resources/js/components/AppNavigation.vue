@@ -86,6 +86,14 @@
                     Time Update
                 </a>
 
+                <a href="/approvals/on_duty" 
+                class="btn btn-lg btn-primary btn-sm text-start"
+                :class="cpath == '/approvals/on_duty' ? 'active' : ''" 
+                type="button">
+                    <i class="bi bi-person me-2"></i>
+                    On Duty
+                </a>
+
                 <a href="/approvals/reimbursement" 
                 class="btn btn-lg btn-primary btn-sm text-start"
                 :class="cpath == '/approvals/reimbursement' ? 'active' : ''" 
