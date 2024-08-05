@@ -15,4 +15,8 @@ class OnDuty extends Model
         'to_date',
         'reason',
     ];
+
+    public function employee(){
+        return $this->belongsTo(Employee::class);
+    }
 }

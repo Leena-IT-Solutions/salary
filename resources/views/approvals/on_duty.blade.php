@@ -10,6 +10,8 @@
 
 <div class="container-fluid px-4 py-5 m-0">
 
+    <on-duty></on-duty>
+
 </div>
 
 @endsection

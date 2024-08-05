@@ -233,6 +233,11 @@ Route::get('/approvals/time_update/employee/{id}', [App\Http\Controllers\TimeUpd
 
 /* On Duty */
 Route::get('/approvals/on_duty', [App\Http\Controllers\OnDutyController::class, 'on_duty']);
+Route::get('/approvals/on_duty/fetch', [App\Http\Controllers\OnDutyController::class, 'fetch']);
+Route::post('/approvals/on_duty/add', [App\Http\Controllers\OnDutyController::class, 'add']);
+Route::post('/approvals/on_duty/update', [App\Http\Controllers\OnDutyController::class, 'update']);
+Route::post('/approvals/on_duty/delete', [App\Http\Controllers\OnDutyController::class, 'delete']);
+Route::get('/approvals/on_duty/employee/{id}', [App\Http\Controllers\OnDutyController::class, 'employee']);
 
 /* Loan and Advance Approval */
 Route::get('/approvals/loan_and_advance', [App\Http\Controllers\LoansAndAdvanceApprovalController::class, 'loan_and_advance']);
