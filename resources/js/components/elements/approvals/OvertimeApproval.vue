@@ -8,7 +8,7 @@
             </div>
         </div>
 
-        <div  v-if="item" class="row g-4 mb-5">
+        <div  v-if="(item && employee) || item.id != null" class="row g-4 mb-5">
 
             <!-- <forms-text-field name="employee_id" label="Employee ID" v-model="item.employee_id" error="" classes="col-12"></forms-text-field> -->
 
