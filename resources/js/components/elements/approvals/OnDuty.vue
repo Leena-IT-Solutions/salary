@@ -18,7 +18,7 @@
             
             <forms-text-field name="reason" label="Reason" v-model="item.reason" error="" classes="col-12"></forms-text-field>
 
-            <forms-submit-button name="" v-model="loading" label="Save department" @click="save()" classes="col-6"></forms-submit-button>
+            <forms-submit-button name="" v-model="loading" label="Save on duty" @click="save()" classes="col-6"></forms-submit-button>
 
             <div class="col-6 text-end">
                 <button v-if="item.id != null && !isDelete" class="btn btn-danger" @click="deleteItem()">Delete Item</button>

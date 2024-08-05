@@ -74,6 +74,7 @@ import LeaveApproval from './components/elements/approvals/LeaveApproval.vue';
 import OvertimeApproval from './components/elements/approvals/OvertimeApproval.vue';
 import TimeUpdate from './components/elements/approvals/TimeUpdate.vue';
 import OnDuty from './components/elements/approvals/OnDuty.vue';
+import LoanAndAdvanceApproval from './components/elements/approvals/LoanAndAdvanceApproval.vue';
 
 /* Application Settings Import */
 import FinancialYear from './components/elements/application_settings/FinancialYear.vue';
@@ -134,6 +135,7 @@ app.component('leave-approval', LeaveApproval);
 app.component('overtime-approval', OvertimeApproval);
 app.component('time-update', TimeUpdate);
 app.component('on-duty', OnDuty);
+app.component('loan-and-advance-approval', LoanAndAdvanceApproval);
 
 /* Application Settings Components */
 app.component('financial-year', FinancialYear);

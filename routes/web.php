@@ -241,6 +241,11 @@ Route::get('/approvals/on_duty/employee/{id}', [App\Http\Controllers\OnDutyContr
 
 /* Loan and Advance Approval */
 Route::get('/approvals/loan_and_advance', [App\Http\Controllers\LoansAndAdvanceApprovalController::class, 'loan_and_advance']);
+Route::get('/approvals/loan_and_advance/fetch', [App\Http\Controllers\LoansAndAdvanceApprovalController::class, 'fetch']);
+Route::post('/approvals/loan_and_advance/add', [App\Http\Controllers\LoansAndAdvanceApprovalController::class, 'add']);
+Route::post('/approvals/loan_and_advance/update', [App\Http\Controllers\LoansAndAdvanceApprovalController::class, 'update']);
+Route::post('/approvals/loan_and_advance/delete', [App\Http\Controllers\LoansAndAdvanceApprovalController::class, 'delete']);
+Route::get('/approvals/loan_and_advance/employee/{id}', [App\Http\Controllers\LoansAndAdvanceApprovalController::class, 'employee']);
 
 /* Reimbursement Approval */
 Route::get('/approvals/reimbursement', [App\Http\Controllers\ReimbursementApprovalController::class, 'reimbursement']);

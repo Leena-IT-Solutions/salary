@@ -22,4 +22,8 @@ class LoanAndAdvanceApproval extends Model
         'reason',
         'is_pause',
     ];
+
+    public function employee(){
+        return $this->belongsTo(Employee::class);
+    }
 }

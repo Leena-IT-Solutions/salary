@@ -16,8 +16,8 @@ return new class extends Migration
 
             $table->bigInteger('employee_id')->index();
             $table->date('application_date');
-            $table->date('disbursed_date');
-            $table->date('close_date');
+            $table->date('disbursed_date')->nullable();
+            $table->date('close_date')->nullable();
             $table->integer('loan_amount');
             $table->integer('emi_amount');
             $table->double('rate_of_interest');
