@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Models\Employee;
 use App\Models\EmployeeShift;
+use App\Models\FinancialYear;
 
 Auth::routes(['verify' => true]);
 
@@ -207,6 +208,12 @@ Route::get('/salary_settings/reimbursement', [App\Http\Controllers\Reimbursement
 
 /* Leave Approval */
 Route::get('/approvals/leave', [App\Http\Controllers\LeaveApprovalController::class, 'leave']);
+Route::get('/approvals/leave/fetch', [App\Http\Controllers\LeaveApprovalController::class, 'fetch']);
+Route::post('/approvals/leave/add', [App\Http\Controllers\LeaveApprovalController::class, 'add']);
+Route::post('/approvals/leave/update', [App\Http\Controllers\LeaveApprovalController::class, 'update']);
+Route::post('/approvals/leave/delete', [App\Http\Controllers\LeaveApprovalController::class, 'delete']);
+Route::get('/approvals/leave/employee/{id}/fy/{fyid}', [App\Http\Controllers\LeaveApprovalController::class, 'employee']);
+
 
 /* Overtime Approval */
 Route::get('/approvals/overtime', [App\Http\Controllers\OvertimeApprovalController::class, 'overtime']);
@@ -225,3 +232,17 @@ Route::get('/approvals/reimbursement', [App\Http\Controllers\ReimbursementApprov
 
 /* Exemption and Deduction Approval */
 Route::get('/approvals/exemption_and_deduction', [App\Http\Controllers\ExemptionAndDeductionApprovalController::class, 'exemption_and_deduction']);
+
+
+/* Financial Year */
+Route::get('/application_settings/financial_year', [App\Http\Controllers\FinancialYearController::class, 'financial_year']);
+Route::get('/application_settings/financial_year/fetch', [App\Http\Controllers\FinancialYearController::class, 'fetch']);
+Route::post('/application_settings/financial_year/add', [App\Http\Controllers\FinancialYearController::class, 'add']);
+Route::post('/application_settings/financial_year/update', [App\Http\Controllers\FinancialYearController::class, 'update']);
+Route::post('/application_settings/financial_year/delete', [App\Http\Controllers\FinancialYearController::class, 'delete']);
+
+
+View::composer(['*'], function($view){
+    $fy = FinancialYear::where('is_current_year', 'Yes')->first();
+    $view->with('fy', $fy);
+});

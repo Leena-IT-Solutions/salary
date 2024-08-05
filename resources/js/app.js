@@ -69,6 +69,12 @@ import EmployeeDesignation from './components/elements/employee/EmployeeDesignat
 import EmployeeDepartment from './components/elements/employee/EmployeeDepartment.vue';
 import EmployeeLeaveGroup from './components/elements/employee/EmployeeLeaveGroup.vue';
 
+/* Approvals Import */
+import LeaveApproval from './components/elements/approvals/LeaveApproval.vue';
+
+/* Application Settings Import */
+import FinancialYear from './components/elements/application_settings/FinancialYear.vue';
+
 
 app.component('app-navigation', AppNavigation);
 app.component('page-header', PageHeader);
@@ -119,6 +125,15 @@ app.component('employee-work-location', EmployeeWorkLocation);
 app.component('employee-designation', EmployeeDesignation);
 app.component('employee-department', EmployeeDepartment);
 app.component('employee-leave-group', EmployeeLeaveGroup);
+
+/* Approvals Components */
+app.component('leave-approval', LeaveApproval);
+
+
+/* Application Settings Components */
+app.component('financial-year', FinancialYear);
+
+
 
 /**
  * The following block of code may be used to automatically register your

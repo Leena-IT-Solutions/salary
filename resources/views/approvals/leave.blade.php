@@ -10,6 +10,8 @@
 
 <div class="container-fluid px-4 py-5 m-0">
 
+    <leave-approval :leaves="{{ $leaves }}" :fy="{{ $fy }}" :fys="{{ $fys }}"></leave-approval>
+
 </div>
 
 @endsection

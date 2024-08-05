@@ -5,18 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class EmployeeLeaveGroup extends Model
+class FinancialYear extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'employee_id',
-        'leave_group_id',
+        'fy_name',
         'from',
-        'to'
+        'to',
+        'is_current_year'
     ];
-
-    public function leave_group(){
-        return $this->belongsTo(LeaveGroup::class);
-    }
 }

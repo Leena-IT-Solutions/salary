@@ -54,4 +54,18 @@ class Employee extends Model
     public function employee_shifts(){
         return $this->hasMany(EmployeeShift::class);
     }
+
+    public function employee_leave_groups(){
+        return $this->hasMany(EmployeeLeaveGroup::class);
+    }
+
+    public function employee_leave_group(){
+        $today = date("Y-m-d");
+        return $this->hasOne(EmployeeLeaveGroup::class)
+        ->where(function($q) use($today) {
+            $q->where('to', null)->orWhere('to', '>=', $today);
+        })
+        ->where('from', "<=", $today)
+        ->latest();
+    }
 }

@@ -22,4 +22,5 @@ class LeaveGroupHead extends Model
     public function leave_master(){
         return $this->belongsTo(LeaveMaster::class);
     }
+
 }

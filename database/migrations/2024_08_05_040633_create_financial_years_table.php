@@ -11,18 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('leave_approvals', function (Blueprint $table) {
+        Schema::create('financial_years', function (Blueprint $table) {
             $table->id();
 
-            $table->bigInteger('employee_id')->index();
-            $table->bigInteger('leave_master_id')->index();
+            $table->string('fy_name');
             $table->date('from');
             $table->date('to');
-            $table->string('reason')->nullable();
-            $table->set('status', ['Approved', 'Rejected']);
-            $table->set('is_halfday', ['Yes', 'No']);
-            $table->set('is_lop', ['Yes', 'No']);
-            $table->double('no_of_days');
+            $table->set('is_current_year', ['Yes', 'No']);
 
             $table->timestamps();
         });
@@ -33,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('leave_approvals');
+        Schema::dropIfExists('financial_years');
     }
 };

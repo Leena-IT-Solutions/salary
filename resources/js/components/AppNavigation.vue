@@ -290,7 +290,26 @@
                 :class="cpath == '/' ? 'active' : ''" 
                 type="button">
                     <i class="bi bi-currency-rupee me-2"></i>
-                    User & Roles
+                    Email Template
+                </a>
+
+            </div>
+        </div>
+
+        <div class="mb-5">
+            <div>
+                <h6 class="text-uppercase fw-bold m-0 d-inline-block mb-2">Application Settings</h6>
+            </div>
+    
+            <div class="d-grid gap-2">
+
+                <a 
+                href="/application_settings/financial_year" 
+                class="btn btn-lg btn-primary btn-sm text-start" 
+                :class="cpath == '/application_settings/financial_year' ? 'active' : ''" 
+                type="button">
+                    <i class="bi bi-currency-rupee me-2"></i>
+                    Financial Year
                 </a>
 
                 <a 
@@ -299,7 +318,7 @@
                 :class="cpath == '/' ? 'active' : ''" 
                 type="button">
                     <i class="bi bi-currency-rupee me-2"></i>
-                    Email Template
+                    User & Roles
                 </a>
 
                 <a 
@@ -316,6 +335,7 @@
                     <i class="bi bi-box-arrow-right me-2"></i>
                     Logout
                 </a>
+
             </div>
         </div>
         

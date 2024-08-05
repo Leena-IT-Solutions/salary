@@ -18,6 +18,15 @@ class LeaveApproval extends Model
         'status',
         'is_halfday',
         'is_lop',
+        'no_of_days',
     ];
+
+    public function employee(){
+        return $this->belongsTo(Employee::class);
+    }
+
+    public function leave_master(){
+        return $this->belongsTo(LeaveMaster::class);
+    }
 
 }
