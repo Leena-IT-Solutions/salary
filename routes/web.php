@@ -223,14 +223,19 @@ Route::post('/approvals/overtime/update', [App\Http\Controllers\OvertimeApproval
 Route::post('/approvals/overtime/delete', [App\Http\Controllers\OvertimeApprovalController::class, 'delete']);
 Route::get('/approvals/overtime/employee/{id}', [App\Http\Controllers\OvertimeApprovalController::class, 'employee']);
 
-/* Loan and Advance Approval */
-Route::get('/approvals/loan_and_advance', [App\Http\Controllers\LoansAndAdvanceApprovalController::class, 'loan_and_advance']);
-
 /* Time Update */
 Route::get('/approvals/time_update', [App\Http\Controllers\TimeUpdateController::class, 'time_update']);
+Route::get('/approvals/time_update/fetch', [App\Http\Controllers\TimeUpdateController::class, 'fetch']);
+Route::post('/approvals/time_update/add', [App\Http\Controllers\TimeUpdateController::class, 'add']);
+Route::post('/approvals/time_update/update', [App\Http\Controllers\TimeUpdateController::class, 'update']);
+Route::post('/approvals/time_update/delete', [App\Http\Controllers\TimeUpdateController::class, 'delete']);
+Route::get('/approvals/time_update/employee/{id}', [App\Http\Controllers\TimeUpdateController::class, 'employee']);
 
 /* On Duty */
 Route::get('/approvals/on_duty', [App\Http\Controllers\OnDutyController::class, 'on_duty']);
+
+/* Loan and Advance Approval */
+Route::get('/approvals/loan_and_advance', [App\Http\Controllers\LoansAndAdvanceApprovalController::class, 'loan_and_advance']);
 
 /* Reimbursement Approval */
 Route::get('/approvals/reimbursement', [App\Http\Controllers\ReimbursementApprovalController::class, 'reimbursement']);

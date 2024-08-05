@@ -16,4 +16,8 @@ class TimeUpdate extends Model
         'out_time',
         'reason',
     ];
+
+    public function employee(){
+        return $this->belongsTo(Employee::class);
+    }
 }

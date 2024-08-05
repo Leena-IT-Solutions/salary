@@ -16,8 +16,8 @@ return new class extends Migration
 
             $table->bigInteger('employee_id')->index();
             $table->date('on_date');
-            $table->time('in_time')->format('H:i');
-            $table->time('out_time')->format('H:i');
+            $table->time('in_time')->format('H:i')->nullable();
+            $table->time('out_time')->format('H:i')->nullable();
             $table->string('reason')->nullable();
 
             $table->timestamps();

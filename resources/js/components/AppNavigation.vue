@@ -70,13 +70,6 @@
                     Overtime
                 </a>
 
-                <a href="/approvals/loan_and_advance" 
-                class="btn btn-lg btn-primary btn-sm text-start"
-                :class="cpath == '/approvals/loan_and_advance' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-person me-2"></i>
-                    Loans and Advance
-                </a>
 
                 <a href="/approvals/time_update" 
                 class="btn btn-lg btn-primary btn-sm text-start"
@@ -92,6 +85,14 @@
                 type="button">
                     <i class="bi bi-person me-2"></i>
                     On Duty
+                </a>
+
+                <a href="/approvals/loan_and_advance" 
+                class="btn btn-lg btn-primary btn-sm text-start"
+                :class="cpath == '/approvals/loan_and_advance' ? 'active' : ''" 
+                type="button">
+                    <i class="bi bi-person me-2"></i>
+                    Loans and Advance
                 </a>
 
                 <a href="/approvals/reimbursement" 
