@@ -77,12 +77,10 @@ class LeaveApprovalController extends Controller
             "leaves_availed" => []
         ];
         
-        
         $response["employee"] = Employee::where('employee_code', $id)
         ->with('employee_leave_group.leave_group.lgh.leave_master')
         ->first();
 
-        
         $lghs = $response['employee']->employee_leave_group->leave_group->lgh()->get();
         foreach($lghs as $lgh){
             
@@ -104,8 +102,6 @@ class LeaveApprovalController extends Controller
 
             $response["leaves_availed"][] = $data;
         }
-
-
 
         return $response;
     }

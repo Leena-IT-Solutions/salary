@@ -71,6 +71,7 @@ import EmployeeLeaveGroup from './components/elements/employee/EmployeeLeaveGrou
 
 /* Approvals Import */
 import LeaveApproval from './components/elements/approvals/LeaveApproval.vue';
+import OvertimeApproval from './components/elements/approvals/OvertimeApproval.vue';
 
 /* Application Settings Import */
 import FinancialYear from './components/elements/application_settings/FinancialYear.vue';
@@ -128,6 +129,8 @@ app.component('employee-leave-group', EmployeeLeaveGroup);
 
 /* Approvals Components */
 app.component('leave-approval', LeaveApproval);
+app.component('overtime-approval', OvertimeApproval);
+
 
 
 /* Application Settings Components */

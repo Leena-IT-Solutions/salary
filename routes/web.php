@@ -217,6 +217,11 @@ Route::get('/approvals/leave/employee/{id}/fy/{fyid}', [App\Http\Controllers\Lea
 
 /* Overtime Approval */
 Route::get('/approvals/overtime', [App\Http\Controllers\OvertimeApprovalController::class, 'overtime']);
+Route::get('/approvals/overtime/fetch', [App\Http\Controllers\OvertimeApprovalController::class, 'fetch']);
+Route::post('/approvals/overtime/add', [App\Http\Controllers\OvertimeApprovalController::class, 'add']);
+Route::post('/approvals/overtime/update', [App\Http\Controllers\OvertimeApprovalController::class, 'update']);
+Route::post('/approvals/overtime/delete', [App\Http\Controllers\OvertimeApprovalController::class, 'delete']);
+Route::get('/approvals/overtime/employee/{id}', [App\Http\Controllers\OvertimeApprovalController::class, 'employee']);
 
 /* Loan and Advance Approval */
 Route::get('/approvals/loan_and_advance', [App\Http\Controllers\LoansAndAdvanceApprovalController::class, 'loan_and_advance']);

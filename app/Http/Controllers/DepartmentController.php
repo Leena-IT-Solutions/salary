@@ -23,11 +23,11 @@ class DepartmentController extends Controller
         $key = isset($request->key) ? $request->key : $key;
         $value = isset($request->value) ? $request->value : $value;
 
-        $departments = Department::orderBy($by, $order);
+        $items = Department::orderBy($by, $order);
         if($key != null && $value != null){
-            $departments = $departments->where($key, 'LIKE', '%'.$value.'%');
+            $items = $items->where($key, 'LIKE', '%'.$value.'%');
         }
-        return $departments->simplePaginate(25);
+        return $items->simplePaginate(25);
     }
 
     public function add(Request $request){
