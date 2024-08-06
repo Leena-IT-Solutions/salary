@@ -11,9 +11,18 @@ class ReimbursementApproval extends Model
 
     protected $fillable = [
         'employee_id',
+        'reimbursement_component_id',
         'app_date',
         'amount',
         'status',
         'note',
     ];
+
+    public function employee(){
+        return $this->belongsTo(Employee::class);
+    }
+
+    public function reimbursement_component(){
+        return $this->belongsTo(ReimbursementComponent::class);
+    }
 }

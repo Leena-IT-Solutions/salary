@@ -1,5 +1,5 @@
 <template>
-    <div class="col-12">
+    <div :class="item_classes">
 
         <div class="mb-2">
             <label class="">{{ item_label }}</label>
@@ -8,11 +8,11 @@
         <div class="form-check" v-for="opt, ind in options" :key="ind">
             <input class="form-check-input" type="radio" 
             :name="name" 
-            :id="opt.val + ind" 
+            :id="opt.val + '_' + ind" 
             :value="opt.val"
             :checked="opt.val == modelValue"
             @input="$emit('update:modelValue', $event.target.value)">
-            <label class="form-check-label" :for="opt.val + ind">{{ opt.key }}</label>
+            <label class="form-check-label" :for="opt.val + '_' + ind">{{ opt.key }}</label>
         </div>
 
         <div v-if="error" class="text-danger small px-3 mt-1">

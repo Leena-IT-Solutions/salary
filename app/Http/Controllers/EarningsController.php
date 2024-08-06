@@ -9,8 +9,8 @@ use App\Models\Earning;
 class EarningsController extends Controller
 {
     public function earnings(){
-        $earning_types = EarningType::orderBy('name', 'asc')->get(['id as val', 'name as key']);
-        return view('salary_settings.earning_components', compact('earning_types'));
+        $types = EarningType::orderBy('name', 'asc')->get(['id as val', 'name as key']);
+        return view('salary_settings.earning_components', compact('types'));
     }
 
     public function fetch(Request $request){
@@ -24,25 +24,25 @@ class EarningsController extends Controller
         $key = isset($request->key) ? $request->key : $key;
         $value = isset($request->value) ? $request->value : $value;
 
-        $departments = Earning::orderBy($by, $order);
+        $items = Earning::orderBy($by, $order);
         if($key != null && $value != null){
-            $departments = $departments->where($key, 'LIKE', '%'.$value.'%');
+            $items = $items->where($key, 'LIKE', '%'.$value.'%');
         }
-        return $departments->simplePaginate(25);
+        return $items->simplePaginate(25);
     }
 
     public function add(Request $request){
 
         $input = $request->all();
 
-        if(isset($request->custom_earning_type)){
+        if(isset($request->custom_type)){
             $et = EarningType::create([
-                'name' => $request->custom_earning_type
+                'name' => $request->custom_type
             ]);
             $input['earning_type_id'] = $et->id;
         }
 
-        unset($input['custom_earning_type']);
+        unset($input['custom_type']);
 
         return Earning::create($input);
     }
@@ -51,14 +51,14 @@ class EarningsController extends Controller
 
         $input = $request->all();
 
-        if(isset($request->custom_earning_type)){
+        if(isset($request->custom_type)){
             $et = EarningType::create([
-                'name' => $request->custom_earning_type
+                'name' => $request->custom_type
             ]);
             $input['earning_type_id'] = $et->id;
         }
 
-        unset($input['custom_earning_type']);
+        unset($input['custom_type']);
 
         return Earning::find($request->id)->update($input);
     }

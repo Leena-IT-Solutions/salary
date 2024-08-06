@@ -6,6 +6,6 @@
 
 @section('content')
 
-    <earnings-component :earning_types="{{ $earning_types }}"></earnings-component>
+    <earnings-component :types="{{ $types }}"></earnings-component>
 
 @endsection

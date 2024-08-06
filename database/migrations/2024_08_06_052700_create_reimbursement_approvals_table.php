@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
 
             $table->bigInteger('employee_id')->index();
-            //$table->bigInteger('reimbursement_id')->index();
+            $table->bigInteger('reimbursement_component_id')->index();
             $table->date('app_date');
             $table->integer('amount');
             $table->set('status', ['Approved', 'Rejected']);

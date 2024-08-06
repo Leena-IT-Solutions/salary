@@ -5,4 +5,7 @@
 @endsection
 
 @section('content')
+
+    <services-component :types="{{ $types }}"></services-component>
+
 @endsection

@@ -3,13 +3,13 @@
 
         <!-- Header -->
         <div class="py-3 px-4 border">
-            <span class="m-0 h4 fw-bold">Earning Components</span>
+            <span class="m-0 h4 fw-bold">Services Components</span>
             <span class="float-end">
                 <button 
                 @click="isForm = !isForm"
                 :class="[isForm ? 'btn-danger' : 'btn-outline-primary']"
                 class="btn btn-sm">
-                    {{ isForm ? 'Close Form' : 'Add Earning Component' }}
+                    {{ isForm ? 'Close Form' : 'Add Services Component' }}
                 </button>
             </span>
         </div>
@@ -22,12 +22,12 @@
                 <div class="col-12 col-xl-6">
                     <div class="row g-4">
 
-                        <forms-select-field v-model="item.earning_type_id" name="earning_type_id" label="Earning Type" error="" classes="" 
+                        <forms-select-field v-model="item.services_type_id" name="services_type_id" label="Services Type" error="" classes="" 
                         :options="types"></forms-select-field>
 
-                        <forms-text-field v-if="item.earning_type_id == 0" v-model="item.custom_type" name="custom_type" label="Custom Earning Name" error="" classes=""></forms-text-field>
+                        <forms-text-field v-if="item.services_type_id == 0" v-model="item.custom_type" name="custom_type" label="Custom Services Name" error="" classes=""></forms-text-field>
 
-                        <forms-text-field v-model="item.name" name="name" label="Earning Name" error="" classes=""></forms-text-field>
+                        <forms-text-field v-model="item.name" name="name" label="Services Name" error="" classes=""></forms-text-field>
 
                         <forms-text-field v-model="item.name_in_payslip" name="name_in_payslip" label="Name in Payslip" error="" classes=""></forms-text-field>
 
@@ -60,33 +60,16 @@
 
                         <forms-checkbox-is v-model="item.is_active" name="is_active" label="Mark this as Active" error="" classes=""></forms-checkbox-is>
 
-                        <forms-checkbox-is v-model="item.is_part_of_salary" name="is_part_of_salary" label="Make this earning a part of the employee's salary structure" error="" classes=""></forms-checkbox-is>
-
-                        <forms-checkbox-is v-model="item.is_taxable" name="is_taxable" label="This is a taxable earning" error="" classes=""></forms-checkbox-is>
-
-                        <forms-checkbox-is @change="changedFBP()" v-model="item.is_fbp" name="is_fbp" label="Include this as a FBP component" error="" classes=""></forms-checkbox-is>
-
-                        <forms-checkbox-is v-if="item.is_fbp" v-model="item.is_fbp_restricted" name="is_fbp_restricted" label="Restrict Employee from Overriding the FBP Amount" error="" classes="ps-5"></forms-checkbox-is>
-
                         <forms-checkbox-is v-model="item.is_pro_rata" name="is_pro_rata" label="Calculate on pro-rata basis" error="" classes=""></forms-checkbox-is>
 
-                        <forms-checkbox-is v-model="item.is_epf" name="is_epf" label="Consider for EPF contribution" error="" classes=""></forms-checkbox-is>
-
-                        <template v-if="item.is_epf">
-                            <forms-radio-field v-model="item.is_fullepf" name="is_fullepf" label="PF Wage Condition" error="" classes="ps-5" :options="[
-                                {key: 'Always', val: 1},
-                                {key: 'Consider only if PF wage is below 15000', val: 0},
-                            ]"></forms-radio-field>
-                        </template>
-
-                        <forms-checkbox-is v-model="item.is_esi" name="is_esi" label="Consider for ESIC contribution" error="" classes=""></forms-checkbox-is>
-
                         <forms-checkbox-is v-model="item.is_in_payslip" name="is_in_payslip" label="Show this component in payslip" error="" classes=""></forms-checkbox-is>
+
+                        <forms-checkbox-is v-model="item.is_compulsory" name="is_compulsory" label="This is compulsory component" error="" classes=""></forms-checkbox-is>
 
                     </div>
                 </div>
 
-                <forms-submit-button name="" v-model="loading" label="Save Earning" @click="save()" classes="col-6"></forms-submit-button>
+                <forms-submit-button name="" v-model="loading" label="Save Service" @click="save()" classes="col-6"></forms-submit-button>
 
                 <div class="col-6 text-end">
                     <button v-if="item.id != null && !isDelete" class="btn btn-danger" @click="deleteItem()">Delete Item</button>
@@ -119,7 +102,7 @@
                 <thead>
                     <tr>
                         <th @click="orderBy('id')" class="cursor-pointer" style="width: 60px;">ID</th>
-                        <th @click="orderBy('name')" class="cursor-pointer">Earning Name</th>
+                        <th @click="orderBy('name')" class="cursor-pointer">Service Name</th>
                         <th @click="orderBy('pay_time')" class="cursor-pointer">Pay Time</th>
                         <th @click="orderBy('calculation')" class="cursor-pointer">Calculation</th>
                         <th @click="orderBy('value')" class="cursor-pointer">Value</th>
@@ -161,23 +144,17 @@ export default {
             loading: false,
             item: {
                 id: null,
-                earning_type_id: null,
+                services_type_id: null,
                 custom_type: null,
                 name: null,
                 name_in_payslip: null,
                 calculation: null,
                 pay_time: null,
                 value: null,
-                is_fbp: false,
-                is_fbp_restricted: false,
                 is_active: false,
-                is_part_of_salary: false,
-                is_taxable: false,
                 is_pro_rata: false,
-                is_epf: false,
-                is_fullepf: false,
-                is_esi: false,
                 is_in_payslip: false,
+                is_compulsory: false,
             },
             items: [],
             next_page_url: null,
@@ -196,56 +173,38 @@ export default {
 
         reset(){
             this.item.id = null;
-            this.item.earning_type_id = null;
+            this.item.services_type_id = null;
             this.item.custom_type = null;
             this.item.name = null;
             this.item.name_in_payslip = null;
             this.item.calculation = null;
             this.item.pay_time = null;
             this.item.value = null;
-            this.item.is_fbp = false;
-            this.item.is_fbp_restricted = null;
             this.item.is_active = false;
-            this.item.is_part_of_salary = false;
-            this.item.is_taxable = false;
-            this.item.is_pro_rata = false;
-            this.item.is_epf = false;
-            this.item.is_fullepf = false;
-            this.item.is_esi = false;
+            this.item.is_pro_rata = null;
             this.item.is_in_payslip = false;
+            this.item.is_compulsory = false;
         },
 
         edit(item){
             this.item.id = item.id;
-            this.item.earning_type_id = item.earning_type_id;
+            this.item.services_type_id = item.services_type_id;
             this.item.custom_type = item.custom_type;
             this.item.name = item.name;
             this.item.name_in_payslip = item.name_in_payslip;
             this.item.calculation = item.calculation;
             this.item.pay_time = item.pay_time;
             this.item.value = item.value;
-            this.item.is_fbp = item.is_fbp;
-            this.item.is_fbp_restricted = item.is_fbp_restricted;
             this.item.is_active = item.is_active;
-            this.item.is_part_of_salary = item.is_part_of_salary;
-            this.item.is_taxable = item.is_taxable;
             this.item.is_pro_rata = item.is_pro_rata;
-            this.item.is_epf = item.is_epf;
-            this.item.is_fullepf = item.is_fullepf;
-            this.item.is_esi = item.is_esi;
             this.item.is_in_payslip = item.is_in_payslip;
+            this.item.is_compulsory = item.is_compulsory;
             this.isForm = true;
-        },
-
-        changedFBP(){
-            if(this.item.is_fbp == false){
-                this.item.is_fbp_restricted = false;
-            }
         },
 
         fetch(){
 
-            let url = '/salary_settings/earnings/fetch';
+            let url = '/salary_settings/services/fetch';
             if(this.next_page_url != null){
                 url = this.next_page_url;
             }
@@ -289,7 +248,7 @@ export default {
 
         add(){
             this.loading = true;
-            axios.post('/salary_settings/earnings/add', this.item).then(res => {
+            axios.post('/salary_settings/services/add', this.item).then(res => {
                 this.reset();
                 this.search();
             });
@@ -297,7 +256,7 @@ export default {
 
         update(){
             this.loading = true;
-            axios.post('/salary_settings/earnings/update', this.item).then(res => {
+            axios.post('/salary_settings/services/update', this.item).then(res => {
                 this.reset();
                 this.search();
             });
@@ -309,7 +268,7 @@ export default {
 
         deleteNow(){
             this.loading = true;
-            axios.post('/salary_settings/earnings/delete', this.item).then(res => {
+            axios.post('/salary_settings/services/delete', this.item).then(res => {
                 this.reset();
                 this.search();
             });

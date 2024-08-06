@@ -5,4 +5,7 @@
 @endsection
 
 @section('content')
+
+    <exemption-and-deduction-component :types="{{ $types }}"></exemption-and-deduction-component>
+    
 @endsection

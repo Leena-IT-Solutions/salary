@@ -195,15 +195,27 @@ Route::post('/salary_settings/earnings/delete', [App\Http\Controllers\EarningsCo
 
 /* Services */
 Route::get('/salary_settings/services', [App\Http\Controllers\ServicesController::class, 'services']);
-
-/* Exemption and Deduction */
-Route::get('/salary_settings/exemption_and_deduction', [App\Http\Controllers\ExemptionAndDeductionController::class, 'exemption_and_deduction']);
-
-/* Statutory Compliance */
-Route::get('/salary_settings/statutory_compliance', [App\Http\Controllers\StatutoryComplianceController::class, 'statutory_compliance']);
+Route::get('/salary_settings/services/fetch', [App\Http\Controllers\ServicesController::class, 'fetch']);
+Route::post('/salary_settings/services/add', [App\Http\Controllers\ServicesController::class, 'add']);
+Route::post('/salary_settings/services/update', [App\Http\Controllers\ServicesController::class, 'update']);
+Route::post('/salary_settings/services/delete', [App\Http\Controllers\ServicesController::class, 'delete']);
 
 /* Reimbursement */
 Route::get('/salary_settings/reimbursement', [App\Http\Controllers\ReimbursementController::class, 'reimbursement']);
+Route::get('/salary_settings/reimbursement/fetch', [App\Http\Controllers\ReimbursementController::class, 'fetch']);
+Route::post('/salary_settings/reimbursement/add', [App\Http\Controllers\ReimbursementController::class, 'add']);
+Route::post('/salary_settings/reimbursement/update', [App\Http\Controllers\ReimbursementController::class, 'update']);
+Route::post('/salary_settings/reimbursement/delete', [App\Http\Controllers\ReimbursementController::class, 'delete']);
+
+/* Exemption and Deduction */
+Route::get('/salary_settings/exemption_and_deduction', [App\Http\Controllers\ExemptionAndDeductionController::class, 'exemption_and_deduction']);
+Route::get('/salary_settings/exemption_and_deduction/fetch', [App\Http\Controllers\ExemptionAndDeductionController::class, 'fetch']);
+Route::post('/salary_settings/exemption_and_deduction/add', [App\Http\Controllers\ExemptionAndDeductionController::class, 'add']);
+Route::post('/salary_settings/exemption_and_deduction/update', [App\Http\Controllers\ExemptionAndDeductionController::class, 'update']);
+Route::post('/salary_settings/exemption_and_deduction/delete', [App\Http\Controllers\ExemptionAndDeductionController::class, 'delete']);
+
+/* Statutory Compliance */
+Route::get('/salary_settings/statutory_compliance', [App\Http\Controllers\StatutoryComplianceController::class, 'statutory_compliance']);
 
 
 /* Leave Approval */
@@ -249,9 +261,19 @@ Route::get('/approvals/loan_and_advance/employee/{id}', [App\Http\Controllers\Lo
 
 /* Reimbursement Approval */
 Route::get('/approvals/reimbursement', [App\Http\Controllers\ReimbursementApprovalController::class, 'reimbursement']);
+Route::get('/approvals/reimbursement/fetch', [App\Http\Controllers\ReimbursementApprovalController::class, 'fetch']);
+Route::post('/approvals/reimbursement/add', [App\Http\Controllers\ReimbursementApprovalController::class, 'add']);
+Route::post('/approvals/reimbursement/update', [App\Http\Controllers\ReimbursementApprovalController::class, 'update']);
+Route::post('/approvals/reimbursement/delete', [App\Http\Controllers\ReimbursementApprovalController::class, 'delete']);
+Route::get('/approvals/reimbursement/employee/{id}', [App\Http\Controllers\ReimbursementApprovalController::class, 'employee']);
 
 /* Exemption and Deduction Approval */
 Route::get('/approvals/exemption_and_deduction', [App\Http\Controllers\ExemptionAndDeductionApprovalController::class, 'exemption_and_deduction']);
+Route::get('/approvals/exemption_and_deduction/fetch', [App\Http\Controllers\ExemptionAndDeductionApprovalController::class, 'fetch']);
+Route::post('/approvals/exemption_and_deduction/add', [App\Http\Controllers\ExemptionAndDeductionApprovalController::class, 'add']);
+Route::post('/approvals/exemption_and_deduction/update', [App\Http\Controllers\ExemptionAndDeductionApprovalController::class, 'update']);
+Route::post('/approvals/exemption_and_deduction/delete', [App\Http\Controllers\ExemptionAndDeductionApprovalController::class, 'delete']);
+Route::get('/approvals/exemption_and_deduction/employee/{id}', [App\Http\Controllers\ExemptionAndDeductionApprovalController::class, 'employee']);
 
 
 /* Financial Year */

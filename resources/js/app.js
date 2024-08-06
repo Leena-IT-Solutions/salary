@@ -57,6 +57,9 @@ import LeaveGroupForm from './components/elements/organisation_settings/LeaveGro
 
 /* Salary Settings Import */
 import EarningsComponent from './components/elements/salary_settings/EarningsComponent.vue';
+import ServicesComponent from './components/elements/salary_settings/ServicesComponent.vue';
+import ReimbursementComponent from './components/elements/salary_settings/ReimbursementComponent.vue';
+import ExemptionAndDeductionComponent from './components/elements/salary_settings/ExemptionAndDeductionComponent.vue';
 
 /* Employee Imports */
 import EmployeeManager from './components/elements/employee/EmployeeManager.vue';
@@ -75,6 +78,8 @@ import OvertimeApproval from './components/elements/approvals/OvertimeApproval.v
 import TimeUpdate from './components/elements/approvals/TimeUpdate.vue';
 import OnDuty from './components/elements/approvals/OnDuty.vue';
 import LoanAndAdvanceApproval from './components/elements/approvals/LoanAndAdvanceApproval.vue';
+import ReimbursementApproval from './components/elements/approvals/ReimbursementApproval.vue';
+import ExemptionAndDeductionApproval from './components/elements/approvals/ExemptionAndDeductionApproval.vue';
 
 /* Application Settings Import */
 import FinancialYear from './components/elements/application_settings/FinancialYear.vue';
@@ -118,6 +123,9 @@ app.component('leave-group-form', LeaveGroupForm);
 
 /* Salary Settings Components */
 app.component('earnings-component', EarningsComponent);
+app.component('services-component', ServicesComponent);
+app.component('reimbursement-component', ReimbursementComponent);
+app.component('exemption-and-deduction-component', ExemptionAndDeductionComponent);
 
 /* Employee Components */
 app.component('employee-manager', EmployeeManager);
@@ -136,6 +144,8 @@ app.component('overtime-approval', OvertimeApproval);
 app.component('time-update', TimeUpdate);
 app.component('on-duty', OnDuty);
 app.component('loan-and-advance-approval', LoanAndAdvanceApproval);
+app.component('reimbursement-approval', ReimbursementApproval);
+app.component('exemption-and-deduction-approval', ExemptionAndDeductionApproval);
 
 /* Application Settings Components */
 app.component('financial-year', FinancialYear);

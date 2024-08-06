@@ -10,6 +10,8 @@
 
 <div class="container-fluid px-4 py-5 m-0">
 
+    <exemption-and-deduction-approval :types="{{ $types }}"></exemption-and-deduction-approval>
+
 </div>
 
 @endsection

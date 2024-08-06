@@ -223,21 +223,21 @@
                 </a>
 
                 <a 
-                href="/salary_settings/exemption_and_deduction" 
-                class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/salary_settings/exemption_and_deduction' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-currency-rupee me-2"></i>
-                    Exemption And Deduction
-                </a>
-
-                <a 
                 href="/salary_settings/reimbursement" 
                 class="btn btn-lg btn-primary btn-sm text-start" 
                 :class="cpath == '/salary_settings/reimbursement' ? 'active' : ''" 
                 type="button">
                     <i class="bi bi-currency-rupee me-2"></i>
                     Reimbursement
+                </a>
+
+                <a 
+                href="/salary_settings/exemption_and_deduction" 
+                class="btn btn-lg btn-primary btn-sm text-start" 
+                :class="cpath == '/salary_settings/exemption_and_deduction' ? 'active' : ''" 
+                type="button">
+                    <i class="bi bi-currency-rupee me-2"></i>
+                    Exemption And Deduction
                 </a>
 
                 <a 

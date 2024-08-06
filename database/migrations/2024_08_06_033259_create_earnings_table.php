@@ -27,6 +27,7 @@ return new class extends Migration
             $table->boolean('is_taxable')->default(false);
             $table->boolean('is_pro_rata')->default(false);
             $table->boolean('is_epf')->default(false);
+            $table->boolean('is_fullepf')->default(false);
             $table->boolean('is_esi')->default(false);
             $table->boolean('is_in_payslip')->default(false);
 

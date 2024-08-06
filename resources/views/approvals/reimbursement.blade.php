@@ -10,6 +10,8 @@
 
 <div class="container-fluid px-4 py-5 m-0">
 
+    <reimbursement-approval :types="{{ $types }}"></reimbursement-approval>
+
 </div>
 
 @endsection
