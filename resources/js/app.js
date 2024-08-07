@@ -60,6 +60,10 @@ import EarningsComponent from './components/elements/salary_settings/EarningsCom
 import ServicesComponent from './components/elements/salary_settings/ServicesComponent.vue';
 import ReimbursementComponent from './components/elements/salary_settings/ReimbursementComponent.vue';
 import ExemptionAndDeductionComponent from './components/elements/salary_settings/ExemptionAndDeductionComponent.vue';
+import StatutoryCompliance from './components/elements/salary_settings/StatutoryCompliance.vue';
+import StatutoryComplianceCondition from './components/elements/salary_settings/StatutoryComplianceCondition.vue';
+import SalaryGroup from './components/elements/salary_settings/SalaryGroup.vue';
+import SalaryGroupData from './components/elements/salary_settings/SalaryGroupData.vue';
 
 /* Employee Imports */
 import EmployeeManager from './components/elements/employee/EmployeeManager.vue';
@@ -71,6 +75,7 @@ import EmployeeWorkLocation from './components/elements/employee/EmployeeWorkLoc
 import EmployeeDesignation from './components/elements/employee/EmployeeDesignation.vue';
 import EmployeeDepartment from './components/elements/employee/EmployeeDepartment.vue';
 import EmployeeLeaveGroup from './components/elements/employee/EmployeeLeaveGroup.vue';
+import EmployeeSalary from './components/elements/employee/EmployeeSalary.vue';
 
 /* Approvals Import */
 import LeaveApproval from './components/elements/approvals/LeaveApproval.vue';
@@ -126,6 +131,10 @@ app.component('earnings-component', EarningsComponent);
 app.component('services-component', ServicesComponent);
 app.component('reimbursement-component', ReimbursementComponent);
 app.component('exemption-and-deduction-component', ExemptionAndDeductionComponent);
+app.component('statutory-compliance', StatutoryCompliance);
+app.component('statutory-compliance-condition', StatutoryComplianceCondition);
+app.component('salary-group', SalaryGroup);
+app.component('salary-group-data', SalaryGroupData);
 
 /* Employee Components */
 app.component('employee-manager', EmployeeManager);
@@ -137,6 +146,7 @@ app.component('employee-work-location', EmployeeWorkLocation);
 app.component('employee-designation', EmployeeDesignation);
 app.component('employee-department', EmployeeDepartment);
 app.component('employee-leave-group', EmployeeLeaveGroup);
+app.component('employee-salary', EmployeeSalary);
 
 /* Approvals Components */
 app.component('leave-approval', LeaveApproval);

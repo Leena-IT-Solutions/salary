@@ -250,9 +250,9 @@
                 </a>
 
                 <a 
-                href="/" 
+                href="/salary_settings/salary_group" 
                 class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/' ? 'active' : ''" 
+                :class="cpath == '/salary_settings/salary_group' ? 'active' : ''" 
                 type="button">
                     <i class="bi bi-currency-rupee me-2"></i>
                     Salary Groups
@@ -267,23 +267,23 @@
                     Payslip Formats
                 </a>
 
-                <a 
+                <!-- <a 
                 href="/" 
                 class="btn btn-lg btn-primary btn-sm text-start" 
                 :class="cpath == '/' ? 'active' : ''" 
                 type="button">
                     <i class="bi bi-currency-rupee me-2"></i>
                     Taxes
-                </a>
+                </a> -->
 
-                <a 
+                <!-- <a 
                 href="/" 
                 class="btn btn-lg btn-primary btn-sm text-start" 
                 :class="cpath == '/' ? 'active' : ''" 
                 type="button">
                     <i class="bi bi-currency-rupee me-2"></i>
                     Pay Schedule
-                </a>
+                </a> -->
 
                 <a 
                 href="/" 

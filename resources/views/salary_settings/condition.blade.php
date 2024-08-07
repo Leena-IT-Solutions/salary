@@ -6,6 +6,6 @@
 
 @section('content')
 
-    <statutory-compliance></statutory-compliance>
+    <statutory-compliance-condition :statutory_compliance="{{ $statutory_compliance }}"></statutory-compliance-condition>
 
 @endsection

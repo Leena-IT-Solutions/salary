@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-use App\Models\StatutoryCompliance;
+use App\Models\SalaryGroup;
 
-class StatutoryComplianceController extends Controller
+class SalaryGroupController extends Controller
 {
-    public function statutory_compliance(){
-        return view('salary_settings.statutory_compliance');
+    public function salary_group(){
+        return view('salary_settings.salary_group');
     }
 
     public function fetch(Request $request){
@@ -23,7 +23,7 @@ class StatutoryComplianceController extends Controller
         $key = isset($request->key) ? $request->key : $key;
         $value = isset($request->value) ? $request->value : $value;
 
-        $items = StatutoryCompliance::orderBy($by, $order);
+        $items = SalaryGroup::orderBy($by, $order);
         if($key != null && $value != null){
             $items = $items->where($key, 'LIKE', '%'.$value.'%');
         }
@@ -32,15 +32,15 @@ class StatutoryComplianceController extends Controller
 
     public function add(Request $request){
         $input = $request->all();
-        return StatutoryCompliance::create($input);
+        return SalaryGroup::create($input);
     }
 
     public function update(Request $request){
         $input = $request->all();
-        return StatutoryCompliance::find($request->id)->update($input);
+        return SalaryGroup::find($request->id)->update($input);
     }
 
     public function delete(Request $request){
-        return StatutoryCompliance::find($request->id)->delete();
+        return SalaryGroup::find($request->id)->delete();
     }
 }

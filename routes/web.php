@@ -216,6 +216,27 @@ Route::post('/salary_settings/exemption_and_deduction/delete', [App\Http\Control
 
 /* Statutory Compliance */
 Route::get('/salary_settings/statutory_compliance', [App\Http\Controllers\StatutoryComplianceController::class, 'statutory_compliance']);
+Route::get('/salary_settings/statutory_compliance/fetch', [App\Http\Controllers\StatutoryComplianceController::class, 'fetch']);
+Route::post('/salary_settings/statutory_compliance/add', [App\Http\Controllers\StatutoryComplianceController::class, 'add']);
+Route::post('/salary_settings/statutory_compliance/update', [App\Http\Controllers\StatutoryComplianceController::class, 'update']);
+Route::post('/salary_settings/statutory_compliance/delete', [App\Http\Controllers\StatutoryComplianceController::class, 'delete']);
+
+Route::get('/salary_settings/statutory_compliance/{id}/condition', [App\Http\Controllers\StatutoryComplianceConditionController::class, 'condition']);
+Route::get('/salary_settings/statutory_compliance/{id}/condition/fetch', [App\Http\Controllers\StatutoryComplianceConditionController::class, 'fetch']);
+Route::post('/salary_settings/statutory_compliance/{id}/condition/add', [App\Http\Controllers\StatutoryComplianceConditionController::class, 'add']);
+Route::post('/salary_settings/statutory_compliance/{id}/condition/update', [App\Http\Controllers\StatutoryComplianceConditionController::class, 'update']);
+Route::post('/salary_settings/statutory_compliance/{id}/condition/delete', [App\Http\Controllers\StatutoryComplianceConditionController::class, 'delete']);
+
+/* Salary Group */
+Route::get('/salary_settings/salary_group', [App\Http\Controllers\SalaryGroupController::class, 'salary_group']);
+Route::get('/salary_settings/salary_group/fetch', [App\Http\Controllers\SalaryGroupController::class, 'fetch']);
+Route::post('/salary_settings/salary_group/add', [App\Http\Controllers\SalaryGroupController::class, 'add']);
+Route::post('/salary_settings/salary_group/update', [App\Http\Controllers\SalaryGroupController::class, 'update']);
+Route::post('/salary_settings/salary_group/delete', [App\Http\Controllers\SalaryGroupController::class, 'delete']);
+
+Route::get('/salary_settings/salary_group/{id}/data', [App\Http\Controllers\SalaryGroupDataController::class, 'data']);
+Route::get('/salary_settings/salary_group/{id}/data/fetch', [App\Http\Controllers\SalaryGroupDataController::class, 'fetch']);
+Route::post('/salary_settings/salary_group/data/update', [App\Http\Controllers\SalaryGroupDataController::class, 'update']);
 
 
 /* Leave Approval */

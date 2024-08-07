@@ -1,11 +1,11 @@
 @extends('layouts.newapp')
 
 @section('head')
-<title>Statutory Compliance</title>
+<title>Salary Group</title>
 @endsection
 
 @section('content')
 
-    <statutory-compliance></statutory-compliance>
+    <salary-group></salary-group>
 
 @endsection

@@ -5,17 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ReimbursementComponent extends Model
+class StatutoryCompliance extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'reimbursement_type_id',
-        'name',
-        'name_in_payslip',
-        'value',
+        'scheme_name',
+        'abbreviation',
+        'registration_number',
         'is_active',
-        'is_annual',
+        'is_part_of_salary',
+        'is_pro_rata',
     ];
-
 }
