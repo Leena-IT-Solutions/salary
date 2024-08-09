@@ -132,6 +132,10 @@ Route::post('/employee/employee_leave_group/add', [App\Http\Controllers\Employee
 Route::post('/employee/employee_leave_group/update', [App\Http\Controllers\EmployeeLeaveGroupController::class, 'update']);
 Route::post('/employee/employee_leave_group/delete', [App\Http\Controllers\EmployeeLeaveGroupController::class, 'delete']);
 
+/* Employee Salary */
+Route::get('/employee/salary_group_data/{id}/fetch', [App\Http\Controllers\EmployeeSalaryController::class, 'salary_group_data']);
+Route::post('/employee/salary_group_data/employee_salary/save', [App\Http\Controllers\EmployeeSalaryController::class, 'save']);
+
 
 
 

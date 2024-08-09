@@ -7,7 +7,7 @@
             :class="[error ? 'is-invalid' : '']"
             :value="modelValue"
             @input="$emit('update:modelValue', $event.target.value)">
-                <option :value="null" selected>Select {{ item_label }}</option>
+                <option :value="''" selected>Select {{ item_label }}</option>
                 <option v-for="opt,ind in options" :key="ind" :value="opt.val">{{ opt.key }}</option>
             </select>
             <label for="floatingSelect">{{ item_label }}</label>
@@ -42,9 +42,7 @@ export default {
     },
 
     created(){
-
         this.init();
-
     },
 
 }

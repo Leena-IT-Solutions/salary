@@ -68,4 +68,13 @@ class Employee extends Model
         ->where('from', "<=", $today)
         ->latest();
     }
+
+    public function employee_salaries(){
+        return $this->hasMany(EmployeeSalary::class);
+    }
+
+    public function employee_salary(){
+        $today = date("Y-m-d");
+        return $this->hasOne(EmployeeSalary::class)->where('effective_from', '<=', $today)->orderBy('id', 'desc')->latest();
+    }
 }

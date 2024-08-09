@@ -17,4 +17,8 @@ class StatutoryCompliance extends Model
         'is_part_of_salary',
         'is_pro_rata',
     ];
+
+    public function statutory_compliance_conditions(){
+        return $this->hasMany(StatutoryComplianceCondition::class);
+    }
 }

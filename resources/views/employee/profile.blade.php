@@ -24,7 +24,8 @@
     :work_locations="{{ $work_locations }}" 
     :designations="{{ $designations }}" 
     :departments="{{ $departments }}"
-    :leave_groups="{{ $leave_groups }}"></employee-update>
+    :leave_groups="{{ $leave_groups }}"
+    :salary_groups="{{ $salary_groups }}"></employee-update>
 
 </div>
 

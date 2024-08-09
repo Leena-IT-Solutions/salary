@@ -42,13 +42,13 @@
 
                     <forms-number-field v-model="item.restrict_salary_for_calculation" name="restrict_salary_for_calculation" label="Restricted Amount Salary for Calculation" error="" classes="col-12 col-lg-4"></forms-number-field>
 
-                    <forms-number-field v-model="item.employee_contribution" name="employee_contribution" label="Employee Contribution" error="" classes="col-12 col-lg-6"></forms-number-field>
+                    <forms-text-field v-model="item.employee_contribution" name="employee_contribution" label="Employee Contribution" error="" classes="col-12 col-lg-6"></forms-text-field>
 
-                    <forms-number-field v-model="item.max_employee_contribution" name="max_employee_contribution" label="Maximum Employee Contribution Amount" error="" classes="col-12 col-lg-6"></forms-number-field>
+                    <forms-text-field v-model="item.max_employee_contribution" name="max_employee_contribution" label="Maximum Employee Contribution Amount" error="" classes="col-12 col-lg-6"></forms-text-field>
 
-                    <forms-number-field v-model="item.employer_contribution" name="employer_contribution" label="Employer Contribution" error="" classes="col-12 col-lg-6"></forms-number-field>
+                    <forms-text-field v-model="item.employer_contribution" name="employer_contribution" label="Employer Contribution" error="" classes="col-12 col-lg-6"></forms-text-field>
 
-                    <forms-number-field v-model="item.max_employer_contribution" name="max_employer_contribution" label="Maximum Employer Contribution Amount" error="" classes="col-12 col-lg-6"></forms-number-field>
+                    <forms-text-field v-model="item.max_employer_contribution" name="max_employer_contribution" label="Maximum Employer Contribution Amount" error="" classes="col-12 col-lg-6"></forms-text-field>
 
                     <forms-submit-button name="" v-model="loading" label="Save Statutory Scheme" @click="save()" classes="col-6"></forms-submit-button>
 

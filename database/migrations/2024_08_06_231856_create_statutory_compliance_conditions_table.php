@@ -21,10 +21,10 @@ return new class extends Migration
             $table->double('min_salary')->nullable();
             $table->double('max_salary')->nullable();
             $table->double('restrict_salary_for_calculation')->nullable();
-            $table->double('employee_contribution')->nullable();
-            $table->double('max_employee_contribution')->nullable();
-            $table->double('employer_contribution')->nullable();
-            $table->double('max_employer_contribution')->nullable();
+            $table->text('employee_contribution')->nullable();
+            $table->text('max_employee_contribution')->nullable();
+            $table->text('employer_contribution')->nullable();
+            $table->text('max_employer_contribution')->nullable();
             $table->boolean('is_active')->default(false);
             $table->set('state',[
                 'All',

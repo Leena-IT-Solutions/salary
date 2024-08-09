@@ -8,6 +8,7 @@ use App\Models\WorkLocation;
 use App\Models\Designation;
 use App\Models\Department;
 use App\Models\LeaveGroup;
+use App\Models\SalaryGroup;
 
 class EmployeeController extends Controller
 {
@@ -16,12 +17,13 @@ class EmployeeController extends Controller
     }
 
     public function profile($id){
-        $employee = Employee::find($id);
+        $employee = Employee::with('employee_work_location.work_location')->with('employee_salary')->find($id);
         $work_locations = WorkLocation::get(['id as val', 'location_name as key']);
         $designations = Designation::get(['id as val', 'designation as key']);
         $departments = Department::get(['id as val', 'department as key']);
         $leave_groups = LeaveGroup::get(['id as val', 'name as key']);
-        return view('employee.profile', compact('employee', 'work_locations', 'designations', 'departments', 'leave_groups'));
+        $salary_groups = SalaryGroup::where('is_active', true)->get(['id as val', 'salary_group_name as key']);
+        return view('employee.profile', compact('employee', 'work_locations', 'designations', 'departments', 'leave_groups', 'salary_groups'));
     }
 
     public function fetch(Request $request){

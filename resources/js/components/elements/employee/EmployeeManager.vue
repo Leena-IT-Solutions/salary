@@ -144,7 +144,7 @@
                         <td>{{ emp.email }}</td>
                         <td class="text-end">
                             <button class="btn btn-outline-info btn-sm me-2" @click="edit(emp)"><i class="bi bi-pencil"></i></button>
-                            <a class="btn btn-primary btn-sm me-2" :href="'/employee/profile/'+emp.id" target="_blank"><i class="bi bi-person"></i></a>
+                            <a class="btn btn-primary btn-sm me-2" :href="'/employee/profile/'+emp.id"><i class="bi bi-person"></i></a>
                         </td>
                     </tr>
                 </tbody>

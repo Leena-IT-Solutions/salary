@@ -21,7 +21,7 @@
         <employee-designation :designations="designations" :employee_id="employee.id" v-if="what=='Designation'"></employee-designation>
         <employee-department :departments="departments" :employee_id="employee.id" v-if="what=='Department'"></employee-department>
         <employee-leave-group :leave_groups="leave_groups" :employee_id="employee.id" v-if="what=='Leave Group'"></employee-leave-group>
-        <employee-salary :employee_id="employee.id" v-if="what=='Salary'"></employee-salary>
+        <employee-salary :salary_groups="salary_groups" :employee="employee" v-if="what=='Salary'"></employee-salary>
 
 
     </div>
@@ -30,7 +30,7 @@
 <script>
 export default {
 
-    props: ['employee', 'work_locations', 'designations', 'departments', 'leave_groups'],
+    props: ['employee', 'work_locations', 'designations', 'departments', 'leave_groups', 'salary_groups'],
 
     data(){
         return {
