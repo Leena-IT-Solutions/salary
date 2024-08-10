@@ -251,6 +251,8 @@ Route::post('/approvals/leave/update', [App\Http\Controllers\LeaveApprovalContro
 Route::post('/approvals/leave/delete', [App\Http\Controllers\LeaveApprovalController::class, 'delete']);
 Route::get('/approvals/leave/employee/{id}/fy/{fyid}', [App\Http\Controllers\LeaveApprovalController::class, 'employee']);
 
+/* Shortleave Approval */
+Route::get('/approvals/shortleave', [App\Http\Controllers\ShortleaveApprovalController::class, 'shortleave']);
 
 /* Overtime Approval */
 Route::get('/approvals/overtime', [App\Http\Controllers\OvertimeApprovalController::class, 'overtime']);
@@ -307,6 +309,18 @@ Route::get('/application_settings/financial_year/fetch', [App\Http\Controllers\F
 Route::post('/application_settings/financial_year/add', [App\Http\Controllers\FinancialYearController::class, 'add']);
 Route::post('/application_settings/financial_year/update', [App\Http\Controllers\FinancialYearController::class, 'update']);
 Route::post('/application_settings/financial_year/delete', [App\Http\Controllers\FinancialYearController::class, 'delete']);
+
+/* User & Roles */
+Route::get('/application_settings/user_and_roles', [App\Http\Controllers\UserAndRolesController::class, 'user_and_roles']);
+Route::get('/application_settings/user_and_roles/fetch', [App\Http\Controllers\UserAndRolesController::class, 'fetch']);
+Route::post('/application_settings/user_and_roles/add', [App\Http\Controllers\UserAndRolesController::class, 'add']);
+Route::post('/application_settings/user_and_roles/update', [App\Http\Controllers\UserAndRolesController::class, 'update']);
+Route::post('/application_settings/user_and_roles/delete', [App\Http\Controllers\UserAndRolesController::class, 'delete']);
+
+/* Preferance */
+Route::get('/application_settings/preference', [App\Http\Controllers\PreferenceController::class, 'preference']);
+Route::get('/application_settings/preference/fetch', [App\Http\Controllers\PreferenceController::class, 'fetch']);
+Route::post('/application_settings/preference/save', [App\Http\Controllers\PreferenceController::class, 'save']);
 
 
 View::composer(['*'], function($view){

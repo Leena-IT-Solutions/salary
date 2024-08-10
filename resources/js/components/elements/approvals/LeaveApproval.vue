@@ -162,7 +162,7 @@ export default {
             },
             employee_code: null,
             employee: null,
-            selected_fy: null,
+            selected_fy: this.fy,
             used: null,
         };
     },
@@ -297,7 +297,9 @@ export default {
 
     created(){
         this.fetch();
-        this.selected_fy = this.fy.id;
+        /* if(this.fy){
+            this.selected_fy = this.fy.id;
+        } */
     },
 
 }

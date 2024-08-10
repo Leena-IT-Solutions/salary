@@ -13,6 +13,10 @@ class EmployeeShift extends Model
         'employee_id',
         'working_shift_id',
         'dt',
+        'late',
+        'early',
+        'lop',
+        'status',
     ];
 
     public function working_shift(){

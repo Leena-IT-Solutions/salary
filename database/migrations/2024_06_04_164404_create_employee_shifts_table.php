@@ -17,6 +17,22 @@ return new class extends Migration
             $table->bigInteger('employee_id')->index();
             $table->bigInteger('working_shift_id')->index();
             $table->date('dt');
+            $table->integer('late')->default(0);
+            $table->integer('early')->default(0);
+            $table->double('lop')->default(1);
+            $table->set('status', [
+                'Present',
+                'Working',
+                'Halfday Working',
+                'Halfday Leave',
+                'Short Leave',
+                'Leave',
+                'Time Update',
+                'On Duty',
+                'Weekoff',
+                'Holiday',
+                'Absent',
+            ])->nullable();
 
             $table->timestamps();
         });

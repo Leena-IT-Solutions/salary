@@ -1,14 +1,14 @@
 <template>
     <div class="container text-light py-4">
 
-        <div class="mb-5">
+        <div class="mb-4">
             <div>
                 <h6 class="text-uppercase fw-bold m-0 d-inline-block mb-2">Dashboard
                     <!-- <hr class="w-50 border-3 my-2"> -->
                 </h6>
             </div>
     
-            <div class="d-grid gap-2">
+            <div class="d-grid gap-1">
                 
                 <a 
                 href="/" 
@@ -47,12 +47,12 @@
         </div>
 
         <!-- Approvals -->
-        <div class="mb-5">
+        <div class="mb-4">
             <div>
                 <h6 class="text-uppercase fw-bold m-0 d-inline-block mb-2">Apporvals</h6>
             </div>
     
-            <div class="d-grid gap-2">
+            <div class="d-grid gap-1">
                 
                 <a href="/approvals/leave" 
                 class="btn btn-lg btn-primary btn-sm text-start"
@@ -61,15 +61,6 @@
                     <i class="bi bi-person me-2"></i>
                     Leave
                 </a>
-
-                <a href="/approvals/overtime" 
-                class="btn btn-lg btn-primary btn-sm text-start"
-                :class="cpath == '/approvals/overtime' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-person me-2"></i>
-                    Overtime
-                </a>
-
 
                 <a href="/approvals/time_update" 
                 class="btn btn-lg btn-primary btn-sm text-start"
@@ -85,6 +76,22 @@
                 type="button">
                     <i class="bi bi-person me-2"></i>
                     On Duty
+                </a>
+
+                <a href="/approvals/shortleave" 
+                class="btn btn-lg btn-primary btn-sm text-start"
+                :class="cpath == '/approvals/shortleave' ? 'active' : ''" 
+                type="button">
+                    <i class="bi bi-person me-2"></i>
+                    Short Leave
+                </a>
+
+                <a href="/approvals/overtime" 
+                class="btn btn-lg btn-primary btn-sm text-start"
+                :class="cpath == '/approvals/overtime' ? 'active' : ''" 
+                type="button">
+                    <i class="bi bi-person me-2"></i>
+                    Overtime
                 </a>
 
                 <a href="/approvals/loan_and_advance" 
@@ -114,12 +121,12 @@
             </div>
         </div>
 
-        <div class="mb-5">
+        <div class="mb-4">
             <div>
                 <h6 class="text-uppercase fw-bold m-0 d-inline-block mb-2">Employee</h6>
             </div>
     
-            <div class="d-grid gap-2">
+            <div class="d-grid gap-1">
                 
                 <a href="/employee/employee_manager" 
                 class="btn btn-lg btn-primary btn-sm text-start"
@@ -132,12 +139,12 @@
             </div>
         </div>
 
-        <div class="mb-5">
+        <div class="mb-4">
             <div>
                 <h6 class="text-uppercase fw-bold m-0 d-inline-block mb-2">Organisation Settings</h6>
             </div>
 
-            <div class="d-grid gap-2">
+            <div class="d-grid gap-1">
 
                 <a 
                 href="/organisation_settings/company_profile" 
@@ -197,12 +204,12 @@
     
         </div>
 
-        <div class="mb-5">
+        <div class="mb-4">
             <div>
                 <h6 class="text-uppercase fw-bold m-0 d-inline-block mb-2">Salary Settings</h6>
             </div>
     
-            <div class="d-grid gap-2">
+            <div class="d-grid gap-1">
 
                 <a 
                 href="/salary_settings/earnings" 
@@ -297,12 +304,12 @@
             </div>
         </div>
 
-        <div class="mb-5">
+        <div class="mb-4">
             <div>
                 <h6 class="text-uppercase fw-bold m-0 d-inline-block mb-2">Application Settings</h6>
             </div>
     
-            <div class="d-grid gap-2">
+            <div class="d-grid gap-1">
 
                 <a 
                 href="/application_settings/financial_year" 
@@ -314,18 +321,18 @@
                 </a>
 
                 <a 
-                href="/" 
+                href="/application_settings/user_and_roles" 
                 class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/' ? 'active' : ''" 
+                :class="cpath == '/application_settings/user_and_roles' ? 'active' : ''" 
                 type="button">
                     <i class="bi bi-currency-rupee me-2"></i>
                     User & Roles
                 </a>
 
                 <a 
-                href="/" 
+                href="/application_settings/preference" 
                 class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/' ? 'active' : ''" 
+                :class="cpath == '/application_settings/preference' ? 'active' : ''" 
                 type="button">
                     <i class="bi bi-currency-rupee me-2"></i>
                     Preference

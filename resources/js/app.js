@@ -88,6 +88,8 @@ import ExemptionAndDeductionApproval from './components/elements/approvals/Exemp
 
 /* Application Settings Import */
 import FinancialYear from './components/elements/application_settings/FinancialYear.vue';
+import UserAndRoles from './components/elements/application_settings/UserAndRoles.vue';
+import Preferences from './components/elements/application_settings/Preferences.vue';
 
 
 app.component('app-navigation', AppNavigation);
@@ -159,6 +161,10 @@ app.component('exemption-and-deduction-approval', ExemptionAndDeductionApproval)
 
 /* Application Settings Components */
 app.component('financial-year', FinancialYear);
+app.component('user-and-roles', UserAndRoles);
+app.component('preferences', Preferences);
+
+
 
 
 

@@ -16,6 +16,7 @@ return new class extends Migration
 
             $table->bigInteger('employee_id')->index();
             $table->bigInteger('leave_master_id')->index();
+            $table->bigInteger('employee_shift_id')->index();
             $table->date('from');
             $table->date('to');
             $table->string('reason')->nullable();

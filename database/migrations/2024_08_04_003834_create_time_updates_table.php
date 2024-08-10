@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
 
             $table->bigInteger('employee_id')->index();
+            $table->bigInteger('employee_shift_id')->index();
             $table->date('on_date');
             $table->time('in_time')->format('H:i')->nullable();
             $table->time('out_time')->format('H:i')->nullable();
