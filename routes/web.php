@@ -2,8 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
-use App\Models\Employee;
-use App\Models\EmployeeShift;
 use App\Models\FinancialYear;
 
 Auth::routes(['verify' => true]);
@@ -12,55 +10,7 @@ Auth::routes(['verify' => true]);
 # Overview Routes 
 ************************************/
 
-Route::get('/attendance/save', function(Request $request){
-
-    // Request Format
-    // "tagid=" + tagId + "&tagms=" + tagMs + "&dt=" + dt + "&tim=" + tim
-    // https://payroll.sarvodayavidyalay.com/attendance/save?tagid=1234&tagms=SAR24101&dt=2024-06-14&tim=08:00
-
-    $response = [
-        "message" => ""
-    ];
-
-
-    // Get Employee By his code
-    $employee = Employee::where('employee_code', $request->tagms)->first();
-
-    // Check his/her shift available
-    if($employee){
-        $es = EmployeeShift::where('employee_id', $employee->id)->where('dt', $request->dt);
-        // if Shift Available get Shift
-        if($es->exists()){
-            $employee_shift = $es->first();
-            // Create Attendance Record
-
-            /* $emp_att = $employee_shift->employee_attendance();
-            $tms = 0;
-
-            if($emp_att->count() > 0){
-                $tm1 = strtotime($request->tim);
-                $tm2 = strtotime($emp_att->orderBy('tm', 'desc')->first()->tm);
-                $tms = $tm1 - $tm2;
-            } */
-
-            /* if($tms > 60 || $tms == 0){
-                $employee_shift->employee_attendance()->create([
-                    "tm" => $request->tim
-                ]);
-                $response["message"] = "Success";
-            } */
-
-            $employee_shift->employee_attendance()->create([
-                "tm" => $request->tim
-            ]);
-            $response["message"] = "Success";
-            
-        }
-    }
-
-    // Return Response with message
-    return response()->json($response);
-});
+Route::get('/attendance/save', [App\Http\Controllers\AttendanceMachineController::class, 'save']);
 
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/calender', [App\Http\Controllers\CalenderController::class, 'calender']);

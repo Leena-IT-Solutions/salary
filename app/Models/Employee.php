@@ -14,6 +14,7 @@ class Employee extends Model
         'middle_name',
         'last_name',
         'employee_code',
+        'tagid',
         'email',
         'phone',
         'doj',

@@ -12,11 +12,13 @@
 
             <forms-text-field name="last_name" label="Last Name" v-model="employee.last_name" error="" classes="col-12 col-xl-4"></forms-text-field>
 
-            <forms-text-field name="employee_code" label="Employee Code" v-model="employee.employee_code" error="" classes="col-12 col-xl-4"></forms-text-field>
+            <forms-text-field name="employee_code" label="Employee Code" v-model="employee.employee_code" error="" classes="col-12 col-xl-6"></forms-text-field>
 
-            <forms-text-field name="email" label="Email" v-model="employee.email" error="" classes="col-12 col-xl-4"></forms-text-field>
+            <forms-text-field name="tagid" label="RFID Tag ID" v-model="employee.tagid" error="" classes="col-12 col-xl-6"></forms-text-field>
 
-            <forms-text-field name="phone" label="Phone Number" v-model="employee.phone" error="" classes="col-12 col-xl-4"></forms-text-field>
+            <forms-text-field name="email" label="Email" v-model="employee.email" error="" classes="col-12 col-xl-6"></forms-text-field>
+
+            <forms-text-field name="phone" label="Phone Number" v-model="employee.phone" error="" classes="col-12 col-xl-6"></forms-text-field>
 
             <forms-date-field name="doj" label="Date of Joining" v-model="employee.doj" error="" classes="col-12 col-xl-4"></forms-date-field>
 
@@ -172,6 +174,7 @@ export default {
                 middle_name: null,
                 last_name: null,
                 employee_code: null,
+                tagid: null,
                 email: null,
                 phone: null,
                 doj: null,
@@ -257,6 +260,7 @@ export default {
             this.employee.middle_name = null;
             this.employee.last_name = null;
             this.employee.employee_code = null;
+            this.employee.tagid = null;
             this.employee.email = null;
             this.employee.phone = null;
             this.employee.doj = null;
@@ -313,6 +317,7 @@ export default {
             this.employee.middle_name = item.middle_name;
             this.employee.last_name = item.last_name;
             this.employee.employee_code = item.employee_code;
+            this.employee.tagid = item.tagid;
             this.employee.email = item.email;
             this.employee.phone = item.phone;
             this.employee.doj = item.doj;

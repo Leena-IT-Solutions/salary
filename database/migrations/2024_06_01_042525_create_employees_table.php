@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('middle_name', 65)->nullable();
             $table->string('last_name', 65);
             $table->string('employee_code', 65)->unique()->index();
+            $table->string('tagid', 65)->nullable();
             $table->string('email', 100);
             $table->string('phone', 12);
             $table->date('doj')->nullable();

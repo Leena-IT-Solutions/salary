@@ -100,7 +100,7 @@ export default {
                 key: this.settings[ind].key,
                 value: this.settings[ind].val
             }).then(res => {
-                console.log(res);
+                //console.log(res);
             });
         },
 
