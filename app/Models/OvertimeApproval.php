@@ -11,7 +11,8 @@ class OvertimeApproval extends Model
 
     protected $fillable = [
         'employee_id',
-        'ot_date',
+        'employee_shift_id',
+        'on_date',
         'hrs',
         'note',
         'status',

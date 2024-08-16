@@ -12,7 +12,7 @@
 
             <!-- <forms-text-field name="employee_id" label="Employee ID" v-model="item.employee_id" error="" classes="col-12"></forms-text-field> -->
 
-            <forms-date-field name="ot_date" label="Overtime Date" v-model="item.ot_date" error="" classes="col-12 col-lg-4"></forms-date-field>
+            <forms-date-field name="on_date" label="Overtime Date" v-model="item.on_date" error="" classes="col-12 col-lg-4"></forms-date-field>
 
             <forms-number-field name="hrs" label="Hours" v-model="item.hrs" error="" classes="col-12 col-lg-4"></forms-number-field>
 
@@ -50,7 +50,7 @@
                     <tr>
                         <th @click="orderBy('id')" class="cursor-pointer" style="width: 60px;">ID</th>
                         <th class="cursor-pointer">Employee</th>
-                        <th @click="orderBy('ot_date')" class="cursor-pointer">Date</th>
+                        <th @click="orderBy('on_date')" class="cursor-pointer">Date</th>
                         <th @click="orderBy('hrs')" class="cursor-pointer">Hours</th>
                         <th @click="orderBy('note')" class="cursor-pointer">Note</th>
                         <th @click="orderBy('status')" class="cursor-pointer">Status</th>
@@ -62,7 +62,7 @@
                     <tr v-for="row in items" :key="row.id">
                         <td>{{ row.id }}</td>
                         <td>{{ row.employee.first_name }} {{ row.employee.middle_name }} {{ row.employee.last_name }}</td>
-                        <td>{{ row.ot_date }}</td>
+                        <td>{{ row.on_date }}</td>
                         <td>{{ row.hrs }} {{ (row.hrs > 1) ? 'Hrs' : 'Hr' }}</td>
                         <td>{{ row.note }}</td>
                         <td>{{ row.status }}</td>
@@ -91,7 +91,7 @@ export default {
             item: {
                 id: null,
                 employee_id: null,
-                ot_date: null,
+                on_date: null,
                 hrs: null,
                 note: null,
                 status: null,
@@ -116,7 +116,7 @@ export default {
         reset(){
             this.item.id = null;
             this.item.employee_id = null;
-            this.item.ot_date = null;
+            this.item.on_date = null;
             this.item.hrs = null;
             this.item.note = null;
             this.item.status = null;
@@ -125,7 +125,7 @@ export default {
         edit(item){
             this.item.id = item.id;
             this.item.employee_id = item.employee_id;
-            this.item.ot_date = item.ot_date;
+            this.item.on_date = item.on_date;
             this.item.hrs = item.hrs;
             this.item.note = item.note;
             this.item.status = item.status;

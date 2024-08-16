@@ -11,15 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('overtime_approvals', function (Blueprint $table) {
+        Schema::create('short_leaves', function (Blueprint $table) {
             $table->id();
 
             $table->bigInteger('employee_id')->index();
             $table->bigInteger('employee_shift_id')->index();
-            $table->date('ot_date');
-            $table->smallInteger('hrs');
-            $table->string('note')->nullable();
+            $table->date('on_date');
+            $table->time('in_time')->format('H:i')->nullable();
+            $table->time('out_time')->format('H:i')->nullable();
             $table->set('status', ['Approved', 'Rejected']);
+            $table->set('is_lop', ['Yes', 'No']);
+            $table->string('reason')->nullable();
 
             $table->timestamps();
         });
@@ -30,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('overtime_approvals');
+        Schema::dropIfExists('short_leaves');
     }
 };

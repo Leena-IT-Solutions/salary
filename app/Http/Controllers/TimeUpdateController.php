@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\TimeUpdate;
 use App\Models\Employee;
+use App\Models\EmployeeShift;
 
 class TimeUpdateController extends Controller
 {
@@ -31,11 +32,15 @@ class TimeUpdateController extends Controller
     }
 
     public function add(Request $request){
-        return TimeUpdate::create($request->all());
+        $input = $request->all();
+        $input["employee_shift_id"] = EmployeeShift::where('dt', $request->on_date)->where('employee_id', $request->employee_id)->first()->id;
+        return TimeUpdate::create($input);
     }
 
     public function update(Request $request){
-        return TimeUpdate::find($request->id)->update($request->all());
+        $input = $request->all();
+        $input["employee_shift_id"] = EmployeeShift::where('dt', $request->on_date)->where('employee_id', $request->employee_id)->first()->id;
+        return TimeUpdate::find($request->id)->update($input);
     }
 
     public function delete(Request $request){

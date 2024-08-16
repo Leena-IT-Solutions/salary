@@ -7,6 +7,7 @@ use App\Models\LeaveApproval;
 use App\Models\LeaveMaster;
 use App\Models\Employee;
 use App\Models\FinancialYear;
+use App\Models\EmployeeShift;
 
 class LeaveApprovalController extends Controller
 {
@@ -36,31 +37,33 @@ class LeaveApprovalController extends Controller
 
     public function add(Request $request){
 
-        $input = $request->all();
-        $to = strtotime($request->to);
         $from = strtotime($request->from);
-        $datediff = $to - $from;
-        $input["no_of_days"] =  round($datediff / (60 * 60 * 24)) + 1;
-
-        if($input["no_of_days"] == 1 && $request->is_halfday == "Yes"){
-            $input["no_of_days"] = 0.5;
+        $to = strtotime($request->to);
+        $diff = ($to - $from) / 86400;
+        $dates = [];
+        for($i=0;$i<=$diff;$i++){
+            $dates[] = date('Y-m-d', strtotime("+".$i." days", $from));
         }
 
-        return LeaveApproval::create($input);
+        foreach($dates as $on_date){
+            $data = [
+                "employee_id" => $request->employee_id,
+                "leave_master_id" => $request->leave_master_id,
+                "employee_shift_id" => EmployeeShift::where('dt', $on_date)->where('employee_id', $request->employee_id)->first()->id,
+                "on_date" => $on_date,
+                "reason" => $request->reason,
+                "status" => $request->status,
+                "is_halfday" => $request->is_halfday,
+                "is_lop" => $request->is_lop,
+            ];
+            LeaveApproval::create($data);
+        }
+        return ["message" => "Successful"];
     }
 
     public function update(Request $request){
-        
         $input = $request->all();
-        $to = strtotime($request->to);
-        $from = strtotime($request->from);
-        $datediff = $to - $from;
-        $input["no_of_days"] =  round($datediff / (60 * 60 * 24)) + 1;
-
-        if($input["no_of_days"] == 1 && $request->is_halfday == "Yes"){
-            $input["no_of_days"] = 0.5;
-        }
-        
+        $input["employee_shift_id"] = EmployeeShift::where('dt', $request->on_date)->where('employee_id', $request->employee_id)->first()->id;
         return LeaveApproval::find($request->id)->update($input);
     }
 
@@ -88,16 +91,28 @@ class LeaveApprovalController extends Controller
             $used = LeaveApproval::
             where('employee_id', $response["employee"]->id)
             ->where('leave_master_id', $leave_master_id)
-            ->where('from', '>=', $fy->from)
-            ->where('from', '<=', $fy->to)
-            ->where('to', '>=', $fy->from)
-            ->where('to', '<=', $fy->to)
+            ->where('on_date', '>=', $fy->from)
+            ->where('on_date', '<=', $fy->to)
+            ->where('is_halfday', 'No')
+            ->where('is_lop', 'No')
             ->where('status', 'Approved')
-            ->sum('no_of_days');
+            ->count();
+
+            $usedHalfdays = LeaveApproval::
+            where('employee_id', $response["employee"]->id)
+            ->where('leave_master_id', $leave_master_id)
+            ->where('on_date', '>=', $fy->from)
+            ->where('on_date', '<=', $fy->to)
+            ->where('is_halfday', 'Yes')
+            ->where('is_lop', 'No')
+            ->where('status', 'Approved')
+            ->count();
+
+            $usedHalfdays = $usedHalfdays * 0.5;
 
             $data = [
                 "id" => $leave_master_id,
-                "used" => $used
+                "used" => $used + $usedHalfdays
             ];
 
             $response["leaves_availed"][] = $data;

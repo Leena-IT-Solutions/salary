@@ -11,8 +11,8 @@ class OnDuty extends Model
 
     protected $fillable = [
         'employee_id',
-        'from_date',
-        'to_date',
+        'employee_shift_id',
+        'on_date',
         'reason',
     ];
 

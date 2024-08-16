@@ -11,6 +11,7 @@ class TimeUpdate extends Model
 
     protected $fillable = [
         'employee_id',
+        'employee_shift_id',
         'on_date',
         'in_time',
         'out_time',

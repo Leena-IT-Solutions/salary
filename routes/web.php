@@ -203,6 +203,11 @@ Route::get('/approvals/leave/employee/{id}/fy/{fyid}', [App\Http\Controllers\Lea
 
 /* Shortleave Approval */
 Route::get('/approvals/shortleave', [App\Http\Controllers\ShortleaveApprovalController::class, 'shortleave']);
+Route::get('/approvals/shortleave/fetch', [App\Http\Controllers\ShortleaveApprovalController::class, 'fetch']);
+Route::post('/approvals/shortleave/add', [App\Http\Controllers\ShortleaveApprovalController::class, 'add']);
+Route::post('/approvals/shortleave/update', [App\Http\Controllers\ShortleaveApprovalController::class, 'update']);
+Route::post('/approvals/shortleave/delete', [App\Http\Controllers\ShortleaveApprovalController::class, 'delete']);
+Route::get('/approvals/shortleave/employee/{id}', [App\Http\Controllers\ShortleaveApprovalController::class, 'employee']);
 
 /* Overtime Approval */
 Route::get('/approvals/overtime', [App\Http\Controllers\OvertimeApprovalController::class, 'overtime']);

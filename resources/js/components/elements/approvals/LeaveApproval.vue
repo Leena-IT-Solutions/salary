@@ -52,9 +52,11 @@
             <forms-select-field name="leave_master_id" label="Leave Type" v-model="item.leave_master_id" error="" classes="col-12 col-lg-4" 
             :options="leaves"></forms-select-field>
 
-            <forms-date-field name="from" label="From Date" v-model="item.from" error="" classes="col-12 col-lg-4"></forms-date-field>
+            <forms-date-field v-if="item.id == null" name="from" label="From Date" v-model="item.from" error="" classes="col-12 col-lg-4"></forms-date-field>
     
-            <forms-date-field name="to" label="To Date" v-model="item.to" error="" classes="col-12 col-lg-4"></forms-date-field>
+            <forms-date-field v-if="item.id == null" name="to" label="To Date" v-model="item.to" error="" classes="col-12 col-lg-4"></forms-date-field>
+
+            <forms-date-field v-if="item.id != null" name="on_date" label="On Date" v-model="item.on_date" error="" classes="col-12 col-lg-8"></forms-date-field>
 
             <forms-select-field name="status" label="Status" v-model="item.status" error="" classes="col-12 col-lg-4" 
             :options="[{ key: 'Approved', val: 'Approved' }, { key: 'Rejected', val: 'Rejected' }]"></forms-select-field>
@@ -98,9 +100,7 @@
                         <th @click="orderBy('id')" class="cursor-pointer" style="width: 60px;">ID</th>
                         <th class="cursor-pointer">Employee</th>
                         <th class="cursor-pointer">Leave Type</th>
-                        <th @click="orderBy('from')" class="cursor-pointer">From</th>
-                        <th @click="orderBy('to')" class="cursor-pointer">To</th>
-                        <th @click="orderBy('no_of_days')" class="cursor-pointer">Days</th>
+                        <th @click="orderBy('on_date')" class="cursor-pointer">Date</th>
                         <th @click="orderBy('status')" class="cursor-pointer">Status</th>
                         <th class="text-end" style="width: 120px;">Action</th>
                     </tr>
@@ -111,9 +111,7 @@
                         <td>{{ row.id }}</td>
                         <td>{{ row.employee.first_name }} {{ row.employee.middle_name }} {{ row.employee.last_name }}</td>
                         <td>{{ row.leave_master.leave_type }}</td>
-                        <td>{{ row.from }}</td>
-                        <td>{{ row.to }}</td>
-                        <td>{{ row.no_of_days }}</td>
+                        <td>{{ row.on_date }}</td>
                         <td>{{ row.status }}</td>
                         <td class="text-end">
                             <button class="btn btn-outline-info btn-sm me-2" @click="edit(row)"><i class="bi bi-pencil"></i></button>
@@ -143,6 +141,8 @@ export default {
                 id: null,
                 employee_id: null,
                 leave_master_id: null,
+                employee_shift_id: null,
+                on_date: null,
                 from: null,
                 to: null,
                 reason: null,
@@ -175,6 +175,7 @@ export default {
             this.item.leave_master_id = null;
             this.item.from = null;
             this.item.to = null;
+            this.item.on_date = null;
             this.item.reason = null;
             this.item.status = null;
             this.item.is_halfday = null;
@@ -187,8 +188,7 @@ export default {
             this.item.id = entry.id;
             this.item.employee_id = entry.employee_id;
             this.item.leave_master_id = entry.leave_master_id;
-            this.item.from = entry.from;
-            this.item.to = entry.to;
+            this.item.on_date = entry.on_date;
             this.item.reason = entry.reason;
             this.item.status = entry.status;
             this.item.is_halfday = entry.is_halfday;

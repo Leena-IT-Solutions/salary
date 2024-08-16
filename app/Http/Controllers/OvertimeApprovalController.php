@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\OvertimeApproval;
 use App\Models\Employee;
+use App\Models\EmployeeShift;
 
 class OvertimeApprovalController extends Controller
 {
@@ -31,10 +32,14 @@ class OvertimeApprovalController extends Controller
     }
 
     public function add(Request $request){
-        return OvertimeApproval::create($request->all());
+        $input = $request->all();
+        $input["employee_shift_id"] = EmployeeShift::where('dt', $request->on_date)->where('employee_id', $request->employee_id)->first()->id;
+        return OvertimeApproval::create($input);
     }
 
     public function update(Request $request){
+        $input = $request->all();
+        $input["employee_shift_id"] = EmployeeShift::where('dt', $request->on_date)->where('employee_id', $request->employee_id)->first()->id;
         return OvertimeApproval::find($request->id)->update($request->all());
     }
 
@@ -43,13 +48,10 @@ class OvertimeApprovalController extends Controller
     }
 
     public function employee($id){
-
         $response = [
             "employee" => null,
         ];
-        
         $response["employee"] = Employee::where('employee_code', $id)->first();
-
         return $response;
     }
 }

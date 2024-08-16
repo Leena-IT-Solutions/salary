@@ -1,16 +1,16 @@
 @extends('layouts.newapp')
 
 @section('head')
-<title>Preferance</title>
+<title>Short Leave Approval</title>
 @endsection
 
 @section('content')
 
-<page-header title="Preferance"></page-header>
+<page-header title="Short Leave Approval"></page-header>
 
 <div class="container-fluid px-4 py-5 m-0">
 
-    <!-- <user-and-roles></user-and-roles> -->
+    <short-leave></short-leave>
 
 </div>
 

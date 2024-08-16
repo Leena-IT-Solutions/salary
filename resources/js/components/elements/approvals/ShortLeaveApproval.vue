@@ -10,17 +10,23 @@
 
         <div  v-if="(item && employee) || item.id != null" class="row g-4 mb-5">
 
-            <!-- <forms-text-field name="employee_id" label="Employee ID" v-model="item.employee_id" error="" classes="col-12"></forms-text-field> -->
-            
-            <forms-date-field v-if="item.id == null" name="from_date" label="From Date" v-model="item.from_date" error="" classes="col-12 col-md-6"></forms-date-field>
-            
-            <forms-date-field v-if="item.id == null" name="to_date" label="To Date" v-model="item.to_date" error="" classes="col-12 col-md-6"></forms-date-field>
+            <!-- <forms-text-field name="employee_id " label="Employee ID" v-model="item.employee_id " error="" classes="col-12"></forms-text-field> -->
 
-            <forms-date-field v-if="item.id != null" name="on_date" label="On Date" v-model="item.on_date" error="" classes="col-12 col-lg-12"></forms-date-field>
-            
+            <forms-date-field name="on_date" label="Date" v-model="item.on_date" error="" classes="col-12 col-lg-4"></forms-date-field>
+
+            <forms-time-field name="in_time" label="In Time" v-model="item.in_time" error="" classes="col-12 col-lg-4"></forms-time-field>
+
+            <forms-time-field name="out_time" label="Out Time" v-model="item.out_time" error="" classes="col-12 col-lg-4"></forms-time-field>
+
+            <forms-select-field name="status" label="Status" v-model="item.status" error="" classes="col-12 col-lg-6" 
+            :options="[{ key: 'Approved', val: 'Approved' }, { key: 'Rejected', val: 'Rejected' }]"></forms-select-field>
+
+            <forms-select-field name="is_lop" label="Is loss of pay?" v-model="item.is_lop" error="" classes="col-12 col-lg-6" 
+            :options="[{ key: 'Yes', val: 'Yes' }, { key: 'No', val: 'No' }]"></forms-select-field>
+
             <forms-text-field name="reason" label="Reason" v-model="item.reason" error="" classes="col-12"></forms-text-field>
 
-            <forms-submit-button name="" v-model="loading" label="Save on duty" @click="save()" classes="col-6"></forms-submit-button>
+            <forms-submit-button name="" v-model="loading" label="Save time" @click="save()" classes="col-6"></forms-submit-button>
 
             <div class="col-6 text-end">
                 <button v-if="item.id != null && !isDelete" class="btn btn-danger" @click="deleteItem()">Delete Item</button>
@@ -51,7 +57,8 @@
                         <th @click="orderBy('id')" class="cursor-pointer" style="width: 60px;">ID</th>
                         <th class="cursor-pointer">Employee</th>
                         <th @click="orderBy('on_date')" class="cursor-pointer">Date</th>
-                        <th @click="orderBy('reason')" class="cursor-pointer">Reason</th>
+                        <th @click="orderBy('in_time')" class="cursor-pointer">In Time</th>
+                        <th @click="orderBy('out_time')" class="cursor-pointer">Out Time</th>
                         <th class="text-end" style="width: 120px;">Action</th>
                     </tr>
                 </thead>
@@ -61,7 +68,8 @@
                         <td>{{ row.id }}</td>
                         <td>{{ row.employee.first_name }} {{ row.employee.middle_name }} {{ row.employee.last_name }}</td>
                         <td>{{ row.on_date }}</td>
-                        <td>{{ row.reason }}</td>
+                        <td>{{ row.in_time }}</td>
+                        <td>{{ row.out_time }}</td>
                         <td class="text-end">
                             <button class="btn btn-outline-info btn-sm me-2" @click="edit(row)"><i class="bi bi-pencil"></i></button>
                         </td>
@@ -87,9 +95,9 @@ export default {
             item: {
                 id: null,
                 employee_id: null,
-                from_date: null,
-                to_date: null,
                 on_date: null,
+                in_time: null,
+                out_time: null,
                 reason: null,
             },
             items: [],
@@ -112,24 +120,24 @@ export default {
         reset(){
             this.item.id = null;
             this.item.employee_id = null;
-            this.item.from_date = null;
-            this.item.to_date = null;
             this.item.on_date = null;
+            this.item.in_time = null;
+            this.item.out_time = null;
             this.item.reason = null;
         },
 
         edit(item){
             this.item.id = item.id;
             this.item.employee_id = item.employee_id;
-            this.item.from_date = item.from_date;
-            this.item.to_date = item.to_date;
             this.item.on_date = item.on_date;
+            this.item.in_time = item.in_time;
+            this.item.out_time = item.out_time;
             this.item.reason = item.reason;
         },
 
         fetch(){
 
-            let url = '/approvals/on_duty/fetch';
+            let url = '/approvals/shortleave/fetch';
             if(this.next_page_url != null){
                 url = this.next_page_url;
             }
@@ -173,7 +181,7 @@ export default {
 
         add(){
             this.loading = true;
-            axios.post('/approvals/on_duty/add', this.item).then(res => {
+            axios.post('/approvals/shortleave/add', this.item).then(res => {
                 this.reset();
                 this.search();
             });
@@ -181,7 +189,7 @@ export default {
 
         update(){
             this.loading = true;
-            axios.post('/approvals/on_duty/update', this.item).then(res => {
+            axios.post('/approvals/shortleave/update', this.item).then(res => {
                 this.reset();
                 this.search();
             });
@@ -193,7 +201,7 @@ export default {
 
         deleteNow(){
             this.loading = true;
-            axios.post('/approvals/on_duty/delete', this.item).then(res => {
+            axios.post('/approvals/shortleave/delete', this.item).then(res => {
                 this.reset();
                 this.search();
             });
@@ -201,7 +209,7 @@ export default {
 
         getEmployee(){
             this.reset();
-            axios.get('/approvals/overtime/employee/' + this.employee_code).then(res => {
+            axios.get('/approvals/shortleave/employee/' + this.employee_code).then(res => {
                 this.employee = res.data.employee;
                 this.item.employee_id = this.employee.id;
             });

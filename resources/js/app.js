@@ -85,6 +85,7 @@ import OnDuty from './components/elements/approvals/OnDuty.vue';
 import LoanAndAdvanceApproval from './components/elements/approvals/LoanAndAdvanceApproval.vue';
 import ReimbursementApproval from './components/elements/approvals/ReimbursementApproval.vue';
 import ExemptionAndDeductionApproval from './components/elements/approvals/ExemptionAndDeductionApproval.vue';
+import ShortLeaveApproval from './components/elements/approvals/ShortLeaveApproval.vue';
 
 /* Application Settings Import */
 import FinancialYear from './components/elements/application_settings/FinancialYear.vue';
@@ -163,7 +164,7 @@ app.component('exemption-and-deduction-approval', ExemptionAndDeductionApproval)
 app.component('financial-year', FinancialYear);
 app.component('user-and-roles', UserAndRoles);
 app.component('preferences', Preferences);
-
+app.component('short-leave', ShortLeaveApproval);
 
 
 
@@ -190,6 +191,7 @@ app.mount('#app');
 
 import AOS from 'aos';
 import 'aos/dist/aos.css';
+
 AOS.init({
     duration: 2000,
 });
