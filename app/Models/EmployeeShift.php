@@ -33,6 +33,10 @@ class EmployeeShift extends Model
         return $this->hasMany(EmployeeAttendance::class);
     }
 
+    public function special_days(){
+        return $this->hasMany(SpecialDays::class, 'special_day', 'dt');
+    }
+
     public function leave(){
         return $this->hasOne(LeaveApproval::class);
     }
@@ -49,18 +53,4 @@ class EmployeeShift extends Model
         return $this->hasOne(OnDuty::class);
     }
 
-    protected $appends = ['evalute'];
-
-    public function getEvaluteAttribute(){
-        $response = [
-            "leave" => null,
-            "time_update" => null,
-            "short_leave" => null,
-            "on_duty" => null,
-        ];
-        $response["on_duty"] = $this->on_duty ? true : false;
-
-        //LeaveApproval::
-        return $response;
-    }
 }

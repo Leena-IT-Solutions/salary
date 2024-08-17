@@ -10,7 +10,7 @@
 
 <div class="container-fluid px-4 py-5 m-0">
 
-<div>
+<div class="">
     <employee-attendance
     today="{{ $today }}"
     month="{{ $month }}"

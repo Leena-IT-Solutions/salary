@@ -11,6 +11,7 @@ Auth::routes(['verify' => true]);
 ************************************/
 
 Route::get('/attendance/save', [App\Http\Controllers\AttendanceMachineController::class, 'save']);
+Route::post('/attendance/evalute', [App\Http\Controllers\AttendanceMachineController::class, 'evalute']);
 
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/calender', [App\Http\Controllers\CalenderController::class, 'calender']);
