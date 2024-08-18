@@ -84,8 +84,10 @@ Route::post('/employee/employee_leave_group/update', [App\Http\Controllers\Emplo
 Route::post('/employee/employee_leave_group/delete', [App\Http\Controllers\EmployeeLeaveGroupController::class, 'delete']);
 
 /* Employee Salary */
-Route::get('/employee/salary_group_data/{id}/fetch', [App\Http\Controllers\EmployeeSalaryController::class, 'salary_group_data']);
-Route::post('/employee/salary_group_data/employee_salary/save', [App\Http\Controllers\EmployeeSalaryController::class, 'save']);
+Route::get('/employee/salary_group/{id}/salary_group', [App\Http\Controllers\EmployeeSalaryController::class, 'salary_group']);
+Route::get('/employee/salary_group/{id}/fetch', [App\Http\Controllers\EmployeeSalaryController::class, 'fetch']);
+Route::post('/employee/salary_group/employee_salary/save', [App\Http\Controllers\EmployeeSalaryController::class, 'save']);
+Route::post('/employee/salary_group/delete', [App\Http\Controllers\EmployeeSalaryController::class, 'delete']);
 
 
 
@@ -189,9 +191,17 @@ Route::post('/salary_settings/salary_group/add', [App\Http\Controllers\SalaryGro
 Route::post('/salary_settings/salary_group/update', [App\Http\Controllers\SalaryGroupController::class, 'update']);
 Route::post('/salary_settings/salary_group/delete', [App\Http\Controllers\SalaryGroupController::class, 'delete']);
 
-Route::get('/salary_settings/salary_group/{id}/data', [App\Http\Controllers\SalaryGroupDataController::class, 'data']);
-Route::get('/salary_settings/salary_group/{id}/data/fetch', [App\Http\Controllers\SalaryGroupDataController::class, 'fetch']);
-Route::post('/salary_settings/salary_group/data/update', [App\Http\Controllers\SalaryGroupDataController::class, 'update']);
+Route::get('/salary_settings/salary_groupable/{id}/data', [App\Http\Controllers\SalaryGroupableController::class, 'data']);
+Route::get('/salary_settings/salary_groupable/{id}/data/fetch', [App\Http\Controllers\SalaryGroupableController::class, 'fetch']);
+Route::get('/salary_settings/salary_groupable/{id}/data/earnings', [App\Http\Controllers\SalaryGroupableController::class, 'earnings']);
+Route::get('/salary_settings/salary_groupable/{id}/data/services', [App\Http\Controllers\SalaryGroupableController::class, 'services']);
+Route::get('/salary_settings/salary_groupable/{id}/data/reimbursements', [App\Http\Controllers\SalaryGroupableController::class, 'reimbursements']);
+Route::get('/salary_settings/salary_groupable/{id}/data/statutories', [App\Http\Controllers\SalaryGroupableController::class, 'statutories']);
+Route::post('/salary_settings/salary_groupable/data/update', [App\Http\Controllers\SalaryGroupableController::class, 'update']);
+
+// Route::get('/salary_settings/salary_group/{id}/data', [App\Http\Controllers\SalaryGroupDataController::class, 'data']);
+// Route::get('/salary_settings/salary_group/{id}/data/fetch', [App\Http\Controllers\SalaryGroupDataController::class, 'fetch']);
+// Route::post('/salary_settings/salary_group/data/update', [App\Http\Controllers\SalaryGroupDataController::class, 'update']);
 
 
 /* Leave Approval */

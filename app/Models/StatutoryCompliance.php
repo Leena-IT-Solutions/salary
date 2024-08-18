@@ -18,7 +18,25 @@ class StatutoryCompliance extends Model
         'is_pro_rata',
     ];
 
+    public function salary_groups(){
+        return $this->morphToMany(SalaryGroup::class, 'salary_groupable');
+    }
+
     public function statutory_compliance_conditions(){
         return $this->hasMany(StatutoryComplianceCondition::class);
+    }
+
+    protected $appends = ['employee_contribution', 'employer_contribution', 'is'];
+
+    public function getEmployeeContributionAttribute(){
+        return 0;
+    }
+
+    public function getEmployerContributionAttribute(){
+        return 0;
+    }
+
+    public function getIsAttribute(){
+        return false;
     }
 }

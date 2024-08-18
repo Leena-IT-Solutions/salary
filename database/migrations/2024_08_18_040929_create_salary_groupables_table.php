@@ -11,14 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('salary_group_data', function (Blueprint $table) {
-            $table->id();
-
-            $table->bigInteger('salary_group_id')->index();
-            $table->bigInteger('common_id')->index();
-            $table->string('what');
-
-            $table->timestamps();
+        Schema::create('salary_groupables', function (Blueprint $table) {
+            $table->foreignId('salary_group_id');
+            $table->bigInteger('salary_groupable_id')->index();
+            $table->string('salary_groupable_type');
         });
     }
 
@@ -27,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('salary_group_data');
+        Schema::dropIfExists('salary_groupables');
     }
 };

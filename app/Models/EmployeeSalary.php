@@ -15,11 +15,15 @@ class EmployeeSalary extends Model
         'effective_from',
         'note',
         'ctc',
-        'employer_contribution',
-        'gross',
+        'checking_gross_pay',
+        'gross_pay',
         'basic_pay',
+        'net_pay',
+        'employer_contribution',
         'remaining_amount',
         'earnings_total',
         'total_gross_percentage',
+        'per_hour',
+        'per_minute',
     ];
 }

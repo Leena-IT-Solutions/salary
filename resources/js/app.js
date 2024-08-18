@@ -63,7 +63,7 @@ import ExemptionAndDeductionComponent from './components/elements/salary_setting
 import StatutoryCompliance from './components/elements/salary_settings/StatutoryCompliance.vue';
 import StatutoryComplianceCondition from './components/elements/salary_settings/StatutoryComplianceCondition.vue';
 import SalaryGroup from './components/elements/salary_settings/SalaryGroup.vue';
-import SalaryGroupData from './components/elements/salary_settings/SalaryGroupData.vue';
+import SalaryGroupable from './components/elements/salary_settings/SalaryGroupable.vue';
 
 /* Employee Imports */
 import EmployeeManager from './components/elements/employee/EmployeeManager.vue';
@@ -137,7 +137,7 @@ app.component('exemption-and-deduction-component', ExemptionAndDeductionComponen
 app.component('statutory-compliance', StatutoryCompliance);
 app.component('statutory-compliance-condition', StatutoryComplianceCondition);
 app.component('salary-group', SalaryGroup);
-app.component('salary-group-data', SalaryGroupData);
+app.component('salary-groupable', SalaryGroupable);
 
 /* Employee Components */
 app.component('employee-manager', EmployeeManager);

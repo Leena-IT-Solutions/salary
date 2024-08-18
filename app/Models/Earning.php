@@ -16,15 +16,23 @@ class Earning extends Model
         'calculation',
         'pay_time',
         'value',
-        'is_fbp',
-        'is_fbp_restricted',
         'is_active',
-        'is_part_of_salary',
         'is_taxable',
         'is_pro_rata',
-        'is_epf',
-        'is_fullepf',
-        'is_esi',
+        'is_compensable',
+        'is_ctc',
+        'is_basic_pay',
+        'is_gross_pay',
         'is_in_payslip',
     ];
+
+    public function salary_groups(){
+        return $this->morphToMany(SalaryGroup::class, 'salary_groupable');
+    }
+
+    protected $appends = ['monthly'];
+
+    public function getMonthlyAttribute(){
+        return 0;
+    }
 }

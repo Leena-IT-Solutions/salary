@@ -21,4 +21,14 @@ class ServicesComponent extends Model
         'is_in_payslip',
         'is_compulsory',
     ];
+
+    public function salary_groups(){
+        return $this->morphToMany(SalaryGroup::class, 'salary_groupable');
+    }
+
+    protected $appends = ['monthly'];
+
+    public function getMonthlyAttribute(){
+        return 0;
+    }
 }

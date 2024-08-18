@@ -12,10 +12,23 @@ class SalaryGroup extends Model
     protected $fillable = [
         'salary_group_name',
         'note',
+        'multiplier',
         'is_active',
     ];
 
-    public function salary_group_data(){
-        return $this->hasMany(SalaryGroupData::class);
+    public function earnings(){
+        return $this->morphedByMany(Earning::class, 'salary_groupable');
+    }
+
+    public function services(){
+        return $this->morphedByMany(ServicesComponent::class, 'salary_groupable');
+    }
+
+    public function reimbursements(){
+        return $this->morphedByMany(ReimbursementComponent::class, 'salary_groupable');
+    }
+
+    public function statutories(){
+        return $this->morphedByMany(StatutoryCompliance::class, 'salary_groupable');
     }
 }

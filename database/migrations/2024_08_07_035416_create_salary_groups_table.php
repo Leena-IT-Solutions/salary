@@ -16,6 +16,7 @@ return new class extends Migration
 
             $table->string('salary_group_name');
             $table->string('note')->nullable();
+            $table->double('multiplier')->default(1);
             $table->boolean('is_active')->default(false);
 
             $table->timestamps();

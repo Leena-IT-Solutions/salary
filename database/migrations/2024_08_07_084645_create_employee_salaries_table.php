@@ -18,13 +18,18 @@ return new class extends Migration
             $table->bigInteger('salary_group_id')->index();
             $table->date('effective_from');
             $table->string('note')->nullable();
+            
             $table->double('ctc');
-            $table->double('employer_contribution')->nullable();
-            $table->double('gross')->nullable();
-            $table->double('basic_pay')->nullable();
-            $table->double('remaining_amount')->nullable();
-            $table->double('earnings_total')->nullable();
-            $table->double('total_gross_percentage')->nullable();
+            $table->double('checking_gross_pay');
+            $table->double('gross_pay');
+            $table->double('basic_pay');
+            $table->double('net_pay');
+            $table->double('employer_contribution');
+            $table->double('remaining_amount');
+            $table->double('earnings_total');
+            $table->double('total_gross_percentage');
+            $table->double('per_hour');
+            $table->double('per_minute');
 
             $table->timestamps();
         });

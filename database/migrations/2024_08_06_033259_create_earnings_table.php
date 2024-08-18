@@ -21,14 +21,12 @@ return new class extends Migration
             $table->set('pay_time', ['Fixed', 'Variable']);
             $table->double('value');
             $table->boolean('is_active')->default(false);
-            $table->boolean('is_fbp')->default(false);
-            $table->boolean('is_fbp_restricted')->default(false);
-            $table->boolean('is_part_of_salary')->default(false);
             $table->boolean('is_taxable')->default(false);
             $table->boolean('is_pro_rata')->default(false);
-            $table->boolean('is_epf')->default(false);
-            $table->boolean('is_fullepf')->default(false);
-            $table->boolean('is_esi')->default(false);
+            $table->boolean('is_compensable')->default(false);
+            $table->boolean('is_ctc')->default(false);
+            $table->boolean('is_basic_pay')->default(false);
+            $table->boolean('is_gross_pay')->default(false);
             $table->boolean('is_in_payslip')->default(false);
 
             $table->timestamps();

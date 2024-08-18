@@ -60,26 +60,17 @@
 
                         <forms-checkbox-is v-model="item.is_active" name="is_active" label="Mark this as Active" error="" classes=""></forms-checkbox-is>
 
-                        <forms-checkbox-is v-model="item.is_part_of_salary" name="is_part_of_salary" label="Make this earning a part of the employee's salary structure" error="" classes=""></forms-checkbox-is>
-
                         <forms-checkbox-is v-model="item.is_taxable" name="is_taxable" label="This is a taxable earning" error="" classes=""></forms-checkbox-is>
-
-                        <forms-checkbox-is @change="changedFBP()" v-model="item.is_fbp" name="is_fbp" label="Include this as a FBP component" error="" classes=""></forms-checkbox-is>
-
-                        <forms-checkbox-is v-if="item.is_fbp" v-model="item.is_fbp_restricted" name="is_fbp_restricted" label="Restrict Employee from Overriding the FBP Amount" error="" classes="ps-5"></forms-checkbox-is>
 
                         <forms-checkbox-is v-model="item.is_pro_rata" name="is_pro_rata" label="Calculate on pro-rata basis" error="" classes=""></forms-checkbox-is>
 
-                        <forms-checkbox-is v-model="item.is_epf" name="is_epf" label="Consider for EPF contribution" error="" classes=""></forms-checkbox-is>
+                        <forms-checkbox-is v-model="item.is_compensable" name="is_compensable" label="This earning is compensable" error="" classes=""></forms-checkbox-is>
 
-                        <template v-if="item.is_epf">
-                            <forms-radio-field v-model="item.is_fullepf" name="is_fullepf" label="PF Wage Condition" error="" classes="ps-5" :options="[
-                                {key: 'Always', val: 1},
-                                {key: 'Consider only if PF wage is below 15000', val: 0},
-                            ]"></forms-radio-field>
-                        </template>
+                        <forms-checkbox-is v-model="item.is_ctc" name="is_ctc" label="Make this earning a part of the employee's CTC" error="" classes=""></forms-checkbox-is>
 
-                        <forms-checkbox-is v-model="item.is_esi" name="is_esi" label="Consider for ESIC contribution" error="" classes=""></forms-checkbox-is>
+                        <forms-checkbox-is v-model="item.is_basic_pay" name="is_basic_pay" label="Consider for Basic Pay" error="" classes=""></forms-checkbox-is>
+
+                        <forms-checkbox-is v-model="item.is_gross_pay" name="is_gross_pay" label="Consider for Gross Pay" error="" classes=""></forms-checkbox-is>
 
                         <forms-checkbox-is v-model="item.is_in_payslip" name="is_in_payslip" label="Show this component in payslip" error="" classes=""></forms-checkbox-is>
 
@@ -171,12 +162,13 @@ export default {
                 is_fbp: false,
                 is_fbp_restricted: false,
                 is_active: false,
-                is_part_of_salary: false,
+                is_ctc: false,
                 is_taxable: false,
                 is_pro_rata: false,
-                is_epf: false,
+                is_compensable: false,
+                is_basic_pay: false,
                 is_fullepf: false,
-                is_esi: false,
+                is_gross_pay: false,
                 is_in_payslip: false,
             },
             items: [],
@@ -206,12 +198,13 @@ export default {
             this.item.is_fbp = false;
             this.item.is_fbp_restricted = null;
             this.item.is_active = false;
-            this.item.is_part_of_salary = false;
+            this.item.is_ctc = false;
             this.item.is_taxable = false;
             this.item.is_pro_rata = false;
-            this.item.is_epf = false;
+            this.item.is_compensable = false;
+            this.item.is_basic_pay = false;
             this.item.is_fullepf = false;
-            this.item.is_esi = false;
+            this.item.is_gross_pay = false;
             this.item.is_in_payslip = false;
         },
 
@@ -227,20 +220,15 @@ export default {
             this.item.is_fbp = item.is_fbp;
             this.item.is_fbp_restricted = item.is_fbp_restricted;
             this.item.is_active = item.is_active;
-            this.item.is_part_of_salary = item.is_part_of_salary;
+            this.item.is_ctc = item.is_ctc;
             this.item.is_taxable = item.is_taxable;
             this.item.is_pro_rata = item.is_pro_rata;
-            this.item.is_epf = item.is_epf;
+            this.item.is_compensable = item.is_compensable;
+            this.item.is_basic_pay = item.is_basic_pay;
             this.item.is_fullepf = item.is_fullepf;
-            this.item.is_esi = item.is_esi;
+            this.item.is_gross_pay = item.is_gross_pay;
             this.item.is_in_payslip = item.is_in_payslip;
             this.isForm = true;
-        },
-
-        changedFBP(){
-            if(this.item.is_fbp == false){
-                this.item.is_fbp_restricted = false;
-            }
         },
 
         fetch(){

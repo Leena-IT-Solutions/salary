@@ -18,4 +18,8 @@ class ReimbursementComponent extends Model
         'is_annual',
     ];
 
+    public function salary_groups(){
+        return $this->morphToMany(SalaryGroup::class, 'salary_groupable');
+    }
+
 }

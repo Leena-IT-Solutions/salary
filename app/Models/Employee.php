@@ -36,6 +36,14 @@ class Employee extends Model
         'uan',
     ];
 
+    public function employee_photo(){
+        return $this->hasOne(EmployeePhoto::class)->orderBy('id', 'desc')->latest();
+    }
+
+    public function employee_address(){
+        return $this->hasOne(EmployeeAddress::class)->orderBy('id', 'desc')->latest();
+    }
+
     public function employee_shift(){
         return $this->hasOne(EmployeeShift::class)->orderBy('dt', 'desc')->latest();
     }

@@ -6,10 +6,6 @@
 
 @section('content')
 
-    <salary-group-data :salary_group="{{ $salary_group }}"
-    :earnings="{{ $earnings }}"
-    :services="{{ $services }}"
-    :reimbursements="{{ $reimbursements }}"
-    :statutory="{{ $statutory }}"></salary-group-data>
+    <salary-groupable :salary_group="{{ $salary_group }}"></salary-groupable>
 
 @endsection

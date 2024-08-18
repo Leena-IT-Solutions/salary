@@ -138,12 +138,12 @@
                 <tbody>
                     <tr v-for="emp in employees" :key="emp.id">
                         <td>{{ emp.id }}</td>
-                        <td>{{ emp.first_name }} {{ emp.middle_name }} {{ emp.last_name }}</td>
-                        <td>{{ emp.employee_code }}</td>
-                        <td><span v-if="emp.employee_department">{{ emp.employee_department.department.department }}</span></td>
-                        <td><span v-if="emp.employee_designation">{{ emp.employee_designation.designation.designation }}</span></td>
-                        <td>{{ emp.phone }}</td>
-                        <td>{{ emp.email }}</td>
+                        <td class="text-nowrap">{{ emp.first_name }} {{ emp.middle_name }} {{ emp.last_name }}</td>
+                        <td class="text-nowrap">{{ emp.employee_code }}</td>
+                        <td class="text-nowrap"><span v-if="emp.employee_department">{{ emp.employee_department.department.department }}</span></td>
+                        <td class="text-nowrap"><span v-if="emp.employee_designation">{{ emp.employee_designation.designation.designation }}</span></td>
+                        <td class="text-nowrap">{{ emp.phone }}</td>
+                        <td class="text-nowrap">{{ emp.email }}</td>
                         <td class="text-end">
                             <button class="btn btn-outline-info btn-sm me-2" @click="edit(emp)"><i class="bi bi-pencil"></i></button>
                             <a class="btn btn-primary btn-sm me-2" :href="'/employee/profile/'+emp.id"><i class="bi bi-person"></i></a>

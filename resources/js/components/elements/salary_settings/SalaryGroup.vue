@@ -24,6 +24,8 @@
 
                         <forms-text-field v-model="item.salary_group_name" name="salary_group_name" label="Salary Group Name" error="" classes=""></forms-text-field>
 
+                        <forms-text-field v-model="item.multiplier" name="multiplier" label="Multiplier for calculating Overtime" error="" classes=""></forms-text-field>
+
                         <forms-text-field v-model="item.note" name="note" label="Note" error="" classes=""></forms-text-field>
 
                     </div>
@@ -80,7 +82,7 @@
                 <tbody>
                     <tr v-for="row in items" :key="row.id">
                         <td>{{ row.id }}</td>
-                        <td><a :href="'/salary_settings/salary_group/'+ row.id +'/data/'">{{ row.salary_group_name }}</a></td>
+                        <td><a :href="'/salary_settings/salary_groupable/'+ row.id +'/data/'">{{ row.salary_group_name }}</a></td>
                         <td>{{ row.is_active ? 'Enabled' : 'Disabled' }}</td>
                         <td>{{ row.note }}</td>
                         <td class="text-end">
@@ -110,6 +112,7 @@ export default {
                 id: null,
                 salary_group_name: null,
                 note: null,
+                multiplier: null,
                 is_active: null,
             },
             items: [],
@@ -131,6 +134,7 @@ export default {
             this.item.id = null;
             this.item.salary_group_name = null;
             this.item.note = null;
+            this.item.multiplier = null;
             this.item.is_active = null;
         },
 
@@ -138,6 +142,7 @@ export default {
             this.item.id = item.id;
             this.item.salary_group_name = item.salary_group_name;
             this.item.note = item.note;
+            this.item.multiplier = item.multiplier;
             this.item.is_active = item.is_active;
             this.isForm = true;
         },
