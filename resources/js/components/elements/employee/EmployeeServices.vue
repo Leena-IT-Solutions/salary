@@ -1,20 +1,24 @@
 <template>
     <div class="container-fluid">
 
-        <section-title title="Add Employee Document" class=""></section-title>
+        <section-title title="Add Department" class=""></section-title>
 
         <!-- Form -->
-        <div  v-if="employee_document" class="row g-4 mb-5">
+        <div  v-if="item" class="row g-4 mb-5">
 
-            <forms-text-field name="document_name" label="Document Name" v-model="employee_document.document_name" error="" classes=""></forms-text-field>
+            <forms-text-field name="employee_id" label="Employee ID" v-model="item.employee_id" error="" classes="col-12"></forms-text-field>
 
-            <forms-file-field @change="getImageObject($event)" v-model="employee_document.photo" name="document" label="Document" error="" classes=""></forms-file-field>
+            <forms-select-field name="services_component_id" label="Services" v-model="item.services_component_id" error="" classes="col-12 col-xl-4" :options="services"></forms-select-field>
 
-            <forms-submit-button name="" v-model="loading" label="Save Employee Document" @click="save()" classes="col-6"></forms-submit-button>
+            <forms-date-field name="from" label="From" v-model="item.from" error="" classes="col-12 col-lg-4"></forms-date-field>
+
+            <forms-date-field name="to" label="To" v-model="item.to" error="" classes="col-12 col-lg-4"></forms-date-field>
+
+            <forms-submit-button name="" v-model="loading" label="Save department" @click="save()" classes="col-6"></forms-submit-button>
 
             <div class="col-6 text-end">
-                <button v-if="employee_document.id != null && !isDelete" class="btn btn-danger" @click="deleteItem()">Delete Item</button>
-                <button v-if="employee_document.id != null && isDelete" class="btn btn-danger" @click="deleteNow()">Confirm & Delete</button>
+                <button v-if="item.id != null && !isDelete" class="btn btn-danger" @click="deleteItem()">Delete Item</button>
+                <button v-if="item.id != null && isDelete" class="btn btn-danger" @click="deleteNow()">Confirm & Delete</button>
             </div>
 
         </div>
@@ -26,7 +30,7 @@
             v-model="params.key" 
             error="" 
             classes="col" 
-            :options="[{key: 'ID', val: 'id'},{key: ' Employee Document', val: 'employee_document'},{key: 'Code', val: 'code'},]"></forms-select-field>
+            :options="[{key: 'ID', val: 'id'},{key: 'Department', val: 'department'},{key: 'Code', val: 'code'},]"></forms-select-field>
 
             <forms-text-field name="search" label="Type Search Sring" v-model="params.value" error="" classes="col"></forms-text-field>
 
@@ -41,17 +45,21 @@
                 <thead>
                     <tr>
                         <th @click="orderBy('id')" class="cursor-pointer" style="width: 60px;">ID</th>
-                        <th @click="orderBy('document_name')" class="cursor-pointer">Document</th>
+                        <th @click="orderBy('name')" class="cursor-pointer">Service</th>
+                        <th @click="orderBy('from')" class="cursor-pointer">From</th>
+                        <th @click="orderBy('to')" class="cursor-pointer">To</th>
                         <th class="text-end" style="width: 120px;">Action</th>
                     </tr>
                 </thead>
 
                 <tbody>
-                    <tr v-for="wl in employee_documents" :key="wl.id">
-                        <td>{{ wl.id }}</td>
-                        <td><img :src="wl.document" class="me-3" style="width: 60px;"> {{ wl.document_name }}</td>
+                    <tr v-for="row in items" :key="row.id">
+                        <td>{{ row.id }}</td>
+                        <td>{{ row.services_component.name }}</td>
+                        <td>{{ row.from }}</td>
+                        <td>{{ row.to }}</td>
                         <td class="text-end">
-                            <button class="btn btn-outline-info btn-sm me-2" @click="edit(wl)"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-outline-info btn-sm me-2" @click="edit(row)"><i class="bi bi-pencil"></i></button>
                         </td>
                     </tr>
                 </tbody>
@@ -68,20 +76,20 @@
 import axios from "axios";
 export default {
 
-    props: ['employee_id'],
+    props: ['employee_id', 'services'],
 
     data(){
         return {
             loading: false,
             isDelete: false,
-            employee_document: {
-                employee_id: null,
+            item: {
                 id: null,
-                photo: null,
-                document: {},
-                document_name: null,
+                employee_id: null,
+                services_component_id: null,
+                from: null,
+                to: null,
             },
-            employee_documents: [],
+            items: [],
             next_page_url: null,
             current_page: 1,
             params: {
@@ -96,13 +104,25 @@ export default {
 
     methods: {
 
-        getImageObject(e){
-            this.employee_document.document = e.target.files[0];
+        reset(){
+            this.item.id = null;
+            /* this.item.employee_id = null; */
+            this.item.services_component_id = null;
+            this.item.from = null;
+            this.item.account_type = null;
+        },
+
+        edit(item){
+            this.item.id = item.id;
+            this.item.employee_id = item.employee_id;
+            this.item.services_component_id = item.services_component_id;
+            this.item.from = item.from;
+            this.item.account_type = item.account_type;
         },
 
         fetch(){
 
-            let url = '/employee/employee_document/' + this.employee_id + '/fetch';
+            let url = '/employee/employee_services/'+this.item.employee_id+'/fetch/';
             if(this.next_page_url != null){
                 url = this.next_page_url;
             }
@@ -112,10 +132,10 @@ export default {
                 this.current_page = res.data.current_page;
 
                 if(this.next_page_url != null && this.current_page == 1){
-                    this.employee_documents = res.data.data;
+                    this.items = res.data.data;
                 } else {
                     res.data.data.forEach(item => {
-                        this.employee_documents.push(item);
+                        this.items.push(item);
                     });
                 }
 
@@ -126,7 +146,7 @@ export default {
         search(){
             this.current_page = 1;
             this.next_page_url = null;
-            this.employee_documents = [];
+            this.items = [];
             this.fetch();
         },
 
@@ -137,29 +157,16 @@ export default {
         },
 
         save(){
-            if(this.employee_document.id == null){
+            if(this.item.id == null){
                 this.add();
             } else {
                 this.update();
             }
         },
 
-        reset(){
-            this.employee_document.id = null;
-            this.employee_document.document_name = null;
-            this.employee_document.document = null;
-            this.employee_document.photo = null;
-        },
-
         add(){
             this.loading = true;
-
-            let fd = new FormData();
-            fd.append('document_name', this.employee_document.document_name);
-            fd.append('document', this.employee_document.document);
-            fd.append('employee_id', this.employee_document.employee_id);
-
-            axios.post('/employee/employee_document/add', fd).then(res => {
+            axios.post('/employee/employee_services/add', this.item).then(res => {
                 this.reset();
                 this.search();
             });
@@ -167,14 +174,7 @@ export default {
 
         update(){
             this.loading = true;
-
-            let fd = new FormData();
-            fd.append('id', this.employee_document.id);
-            fd.append('document_name', this.employee_document.document_name);
-            fd.append('document', this.employee_document.document);
-            fd.append('employee_id', this.employee_document.employee_id);
-
-            axios.post('/employee/employee_document/update', fd).then(res => {
+            axios.post('/employee/employee_services/update', this.item).then(res => {
                 this.reset();
                 this.search();
             });
@@ -186,22 +186,18 @@ export default {
 
         deleteNow(){
             this.loading = true;
-            axios.post('/employee/employee_document/delete', this.employee_document).then(res => {
+            axios.post('/employee/employee_services/delete', this.item).then(res => {
                 this.reset();
                 this.search();
             });
         },
 
-        edit(item){
-            this.employee_document.id = item.id;
-            this.employee_document.document_name = item.document_name;
-        },
-
     },
 
     created(){
+        this.item.employee_id = this.employee_id;
         this.fetch();
-        this.employee_document.employee_id = this.employee_id;
+        console.log(this.services);
     },
 
 }

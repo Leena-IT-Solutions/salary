@@ -76,6 +76,8 @@ import EmployeeDesignation from './components/elements/employee/EmployeeDesignat
 import EmployeeDepartment from './components/elements/employee/EmployeeDepartment.vue';
 import EmployeeLeaveGroup from './components/elements/employee/EmployeeLeaveGroup.vue';
 import EmployeeSalary from './components/elements/employee/EmployeeSalary.vue';
+import EmployeeBank from './components/elements/employee/EmployeeBank.vue';
+import EmployeeServices from './components/elements/employee/EmployeeServices.vue';
 
 /* Approvals Import */
 import LeaveApproval from './components/elements/approvals/LeaveApproval.vue';
@@ -150,6 +152,8 @@ app.component('employee-designation', EmployeeDesignation);
 app.component('employee-department', EmployeeDepartment);
 app.component('employee-leave-group', EmployeeLeaveGroup);
 app.component('employee-salary', EmployeeSalary);
+app.component('employee-bank', EmployeeBank);
+app.component('employee-services', EmployeeServices);
 
 /* Approvals Components */
 app.component('leave-approval', LeaveApproval);

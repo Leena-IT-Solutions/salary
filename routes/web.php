@@ -89,6 +89,18 @@ Route::get('/employee/salary_group/{id}/fetch', [App\Http\Controllers\EmployeeSa
 Route::post('/employee/salary_group/employee_salary/save', [App\Http\Controllers\EmployeeSalaryController::class, 'save']);
 Route::post('/employee/salary_group/delete', [App\Http\Controllers\EmployeeSalaryController::class, 'delete']);
 
+/* Employee Bank */
+Route::get('/employee/employee_bank/{id}/fetch', [App\Http\Controllers\EmployeeBankController::class, 'fetch']);
+Route::post('/employee/employee_bank/add', [App\Http\Controllers\EmployeeBankController::class, 'add']);
+Route::post('/employee/employee_bank/update', [App\Http\Controllers\EmployeeBankController::class, 'update']);
+Route::post('/employee/employee_bank/delete', [App\Http\Controllers\EmployeeBankController::class, 'delete']);
+
+/* Employee Services */
+Route::get('/employee/employee_services/{id}/fetch', [App\Http\Controllers\EmployeeServicesController::class, 'fetch']);
+Route::post('/employee/employee_services/add', [App\Http\Controllers\EmployeeServicesController::class, 'add']);
+Route::post('/employee/employee_services/update', [App\Http\Controllers\EmployeeServicesController::class, 'update']);
+Route::post('/employee/employee_services/delete', [App\Http\Controllers\EmployeeServicesController::class, 'delete']);
+
 
 
 

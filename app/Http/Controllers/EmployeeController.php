@@ -9,6 +9,7 @@ use App\Models\Designation;
 use App\Models\Department;
 use App\Models\LeaveGroup;
 use App\Models\SalaryGroup;
+use App\Models\ServicesComponent;
 
 class EmployeeController extends Controller
 {
@@ -23,7 +24,8 @@ class EmployeeController extends Controller
         $departments = Department::get(['id as val', 'department as key']);
         $leave_groups = LeaveGroup::get(['id as val', 'name as key']);
         $salary_groups = SalaryGroup::where('is_active', true)->get(['id as val', 'salary_group_name as key']);
-        return view('employee.profile', compact('employee', 'work_locations', 'designations', 'departments', 'leave_groups', 'salary_groups'));
+        $services = ServicesComponent::get(['id as val', 'name as key']);
+        return view('employee.profile', compact('employee', 'work_locations', 'designations', 'departments', 'leave_groups', 'salary_groups', 'services'));
     }
 
     public function fetch(Request $request){

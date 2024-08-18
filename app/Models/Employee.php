@@ -60,6 +60,10 @@ class Employee extends Model
         return $this->hasOne(EmployeeDesignation::class)->where('to', null)->latest();
     }
 
+    public function employee_service(){
+        return $this->hasOne(EmployeeService::class)->where('to', null)->latest();
+    }
+
     public function employee_shifts(){
         return $this->hasMany(EmployeeShift::class);
     }

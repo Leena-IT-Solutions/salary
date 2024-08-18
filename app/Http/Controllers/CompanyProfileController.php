@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Auth;
+use App\Models\Companyprofile;
 
 class CompanyProfileController extends Controller
 {
@@ -13,28 +13,24 @@ class CompanyProfileController extends Controller
     }
 
     public function fetch(){
-        return $company_profile = Auth::user()->company_profile;
+        return Companyprofile::get()->first();
     }
 
     public function update(Request $request){
 
-        $user = Auth::user();
-
-        $cp = $user->company_profile;
+        $cp = Companyprofile::get()->first();
 
         if($cp == null){
-            $user->company_profile()->create($request->all());
+            Companyprofile::get()->first()->create($request->all());
         } else {
-            $user->company_profile()->update($request->all());
+            Companyprofile::get()->first()->update($request->all());
         }
 
-        return $user->company_profile;
+        return Companyprofile::get()->first();
 
     }
 
     public function logo_upload(Request $request){
-
-        $user = Auth::user();
 
         if($file = $request->file('logo')){
             $name = time().'_'.mt_rand(100000,999999).'_'.$file->getClientOriginalName();
@@ -45,9 +41,9 @@ class CompanyProfileController extends Controller
                 "logo" => $path
             ];
 
-            $cp = $user->company_profile;
+            $cp = Companyprofile::get()->first();
             if($cp == null){
-                $user->company_profile()->create($data);
+                Companyprofile::get()->first()->create($data);
             } else {
                 $old_logo = $cp->logo;
 
@@ -57,10 +53,10 @@ class CompanyProfileController extends Controller
                     }
                 }
 
-                $user->company_profile()->update($data);
+                Companyprofile::get()->first()->update($data);
             }
 
-            return $user->company_profile;
+            return Companyprofile::get()->first();
         }
     }
 
