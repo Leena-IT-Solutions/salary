@@ -1,20 +1,28 @@
 <template>
     <div class="container-fluid">
 
-        <section-title title="Add Department" class=""></section-title>
+        <div class="row g-4 mb-4 align-items-center">
+            <forms-text-field @change="getEmployee()" name="employee_code" label="Enter Employee Code" v-model="employee_code" error="" classes="col-12 col-lg-6"></forms-text-field>
+            <div v-if="employee" class="col">
+                <span class="h5">{{ employee.first_name }} {{ employee.middle_name }} {{ employee.last_name }} - {{ employee.id }}</span>
+            </div>
+        </div>
 
         <!-- Form -->
         <div  v-if="item" class="row g-4 mb-5">
 
             <forms-text-field name="employee_id" label="Employee ID" v-model="item.employee_id" error="" classes="col-12"></forms-text-field>
 
-            <forms-select-field name="services_component_id" label="Services" v-model="item.services_component_id" error="" classes="col-12 col-xl-4" :options="services"></forms-select-field>
+            <forms-select-field name="earning_id" label="Variable Earning" v-model="item.earning_id" error="" classes="col-12 col-lg-4" 
+            :options="types"></forms-select-field>
 
-            <forms-date-field name="from" label="From" v-model="item.from" error="" classes="col-12 col-lg-4"></forms-date-field>
+            <forms-date-field name="app_date" label="Date" v-model="item.app_date" error="" classes="col-12 col-lg-4"></forms-date-field>
 
-            <forms-date-field name="to" label="To" v-model="item.to" error="" classes="col-12 col-lg-4"></forms-date-field>
+            <forms-text-field name="amount" label="Amount" v-model="item.amount" error="" classes="col-12 col-lg-4"></forms-text-field>
 
-            <forms-submit-button name="" v-model="loading" label="Save department" @click="save()" classes="col-6"></forms-submit-button>
+            <forms-text-field name="note" label="Note" v-model="item.note" error="" classes="col-12"></forms-text-field>
+
+            <forms-submit-button name="" v-model="loading" label="Save" @click="save()" classes="col-6"></forms-submit-button>
 
             <div class="col-6 text-end">
                 <button v-if="item.id != null && !isDelete" class="btn btn-danger" @click="deleteItem()">Delete Item</button>
@@ -45,9 +53,11 @@
                 <thead>
                     <tr>
                         <th @click="orderBy('id')" class="cursor-pointer" style="width: 60px;">ID</th>
-                        <th @click="orderBy('name')" class="cursor-pointer">Service</th>
-                        <th @click="orderBy('from')" class="cursor-pointer">From</th>
-                        <th @click="orderBy('to')" class="cursor-pointer">To</th>
+                        <th class="cursor-pointer">Employee</th>
+                        <th @click="orderBy('app_date')" class="cursor-pointer">Date</th>
+                        <th class="cursor-pointer">Variable Earning</th>
+                        <th @click="orderBy('amount')" class="cursor-pointer">Amount</th>
+                        <th @click="orderBy('note')" class="cursor-pointer">Note</th>
                         <th class="text-end" style="width: 120px;">Action</th>
                     </tr>
                 </thead>
@@ -55,9 +65,11 @@
                 <tbody>
                     <tr v-for="row in items" :key="row.id">
                         <td>{{ row.id }}</td>
-                        <td>{{ row.services_component.name }}</td>
-                        <td>{{ row.from }}</td>
-                        <td>{{ row.to }}</td>
+                        <td>{{ row.employee.first_name }} {{ row.employee.middle_name }} {{ row.employee.last_name }}</td>
+                        <td>{{ row.app_date }}</td>
+                        <td>{{ row.earning.name }}</td>
+                        <td>{{ row.amount }}/-</td>
+                        <td>{{ row.note }}</td>
                         <td class="text-end">
                             <button class="btn btn-outline-info btn-sm me-2" @click="edit(row)"><i class="bi bi-pencil"></i></button>
                         </td>
@@ -76,7 +88,7 @@
 import axios from "axios";
 export default {
 
-    props: ['employee_id', 'services'],
+    props: ['types'],
 
     data(){
         return {
@@ -85,9 +97,10 @@ export default {
             item: {
                 id: null,
                 employee_id: null,
-                services_component_id: null,
-                from: null,
-                to: null,
+                earning_id: null,
+                app_date: null,
+                amount: null,
+                note: null,
             },
             items: [],
             next_page_url: null,
@@ -98,7 +111,9 @@ export default {
                 by: 'id',
                 order: 'desc',
                 rows: 1,
-            }
+            },
+            employee_code: null,
+            employee: null,
         };
     },
 
@@ -106,22 +121,25 @@ export default {
 
         reset(){
             this.item.id = null;
-            this.item.services_component_id = null;
-            this.item.from = null;
-            this.item.account_type = null;
+            this.item.employee_id = null;
+            this.item.earning_id = null;
+            this.item.app_date = null;
+            this.item.amount = null;
+            this.item.note = null;
         },
 
         edit(item){
             this.item.id = item.id;
             this.item.employee_id = item.employee_id;
-            this.item.services_component_id = item.services_component_id;
-            this.item.from = item.from;
-            this.item.account_type = item.account_type;
+            this.item.earning_id = item.earning_id;
+            this.item.app_date = item.app_date;
+            this.item.amount = item.amount;
+            this.item.note = item.note;
         },
 
         fetch(){
 
-            let url = '/employee/employee_services/'+this.item.employee_id+'/fetch/';
+            let url = '/approvals/variable_pay/fetch';
             if(this.next_page_url != null){
                 url = this.next_page_url;
             }
@@ -165,7 +183,7 @@ export default {
 
         add(){
             this.loading = true;
-            axios.post('/employee/employee_services/add', this.item).then(res => {
+            axios.post('/approvals/variable_pay/add', this.item).then(res => {
                 this.reset();
                 this.search();
             });
@@ -173,7 +191,7 @@ export default {
 
         update(){
             this.loading = true;
-            axios.post('/employee/employee_services/update', this.item).then(res => {
+            axios.post('/approvals/variable_pay/update', this.item).then(res => {
                 this.reset();
                 this.search();
             });
@@ -185,16 +203,23 @@ export default {
 
         deleteNow(){
             this.loading = true;
-            axios.post('/employee/employee_services/delete', this.item).then(res => {
+            axios.post('/approvals/variable_pay/delete', this.item).then(res => {
                 this.reset();
                 this.search();
+            });
+        },
+
+        getEmployee(){
+            this.reset();
+            axios.get('/approvals/variable_pay/employee/' + this.employee_code).then(res => {
+                this.employee = res.data.employee;
+                this.item.employee_id = this.employee.id;
             });
         },
 
     },
 
     created(){
-        this.item.employee_id = this.employee_id;
         this.fetch();
     },
 

@@ -28,6 +28,9 @@ Route::post('/employee_shift/save', [App\Http\Controllers\EmployeeShiftControlle
 Route::get('/attendance', [App\Http\Controllers\AttendanceController::class, 'attendance']);
 Route::get('/attendance/fetch', [App\Http\Controllers\AttendanceController::class, 'fetch']);
 
+Route::get('/run_payroll', [App\Http\Controllers\RunPayrollController::class, 'run_payroll']);
+
+
 
 /***********************************
 # Employee Routes 
@@ -239,6 +242,22 @@ Route::post('/approvals/overtime/add', [App\Http\Controllers\OvertimeApprovalCon
 Route::post('/approvals/overtime/update', [App\Http\Controllers\OvertimeApprovalController::class, 'update']);
 Route::post('/approvals/overtime/delete', [App\Http\Controllers\OvertimeApprovalController::class, 'delete']);
 Route::get('/approvals/overtime/employee/{id}', [App\Http\Controllers\OvertimeApprovalController::class, 'employee']);
+
+/* Fine */
+Route::get('/approvals/fine', [App\Http\Controllers\FineApprovalController::class, 'index']);
+Route::get('/approvals/fine/fetch', [App\Http\Controllers\FineApprovalController::class, 'fetch']);
+Route::post('/approvals/fine/add', [App\Http\Controllers\FineApprovalController::class, 'add']);
+Route::post('/approvals/fine/update', [App\Http\Controllers\FineApprovalController::class, 'update']);
+Route::post('/approvals/fine/delete', [App\Http\Controllers\FineApprovalController::class, 'delete']);
+Route::get('/approvals/fine/employee/{id}', [App\Http\Controllers\FineApprovalController::class, 'employee']);
+
+/* Variable Pay */
+Route::get('/approvals/variable_pay', [App\Http\Controllers\VariablePayApprovalController::class, 'index']);
+Route::get('/approvals/variable_pay/fetch', [App\Http\Controllers\VariablePayApprovalController::class, 'fetch']);
+Route::post('/approvals/variable_pay/add', [App\Http\Controllers\VariablePayApprovalController::class, 'add']);
+Route::post('/approvals/variable_pay/update', [App\Http\Controllers\VariablePayApprovalController::class, 'update']);
+Route::post('/approvals/variable_pay/delete', [App\Http\Controllers\VariablePayApprovalController::class, 'delete']);
+Route::get('/approvals/variable_pay/employee/{id}', [App\Http\Controllers\VariablePayApprovalController::class, 'employee']);
 
 /* Time Update */
 Route::get('/approvals/time_update', [App\Http\Controllers\TimeUpdateController::class, 'time_update']);

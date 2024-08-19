@@ -88,6 +88,8 @@ import LoanAndAdvanceApproval from './components/elements/approvals/LoanAndAdvan
 import ReimbursementApproval from './components/elements/approvals/ReimbursementApproval.vue';
 import ExemptionAndDeductionApproval from './components/elements/approvals/ExemptionAndDeductionApproval.vue';
 import ShortLeaveApproval from './components/elements/approvals/ShortLeaveApproval.vue';
+import FineApproval from './components/elements/approvals/FineApproval.vue';
+import VariablePayApproval from './components/elements/approvals/VariablePayApproval.vue';
 
 /* Application Settings Import */
 import FinancialYear from './components/elements/application_settings/FinancialYear.vue';
@@ -163,6 +165,8 @@ app.component('on-duty', OnDuty);
 app.component('loan-and-advance-approval', LoanAndAdvanceApproval);
 app.component('reimbursement-approval', ReimbursementApproval);
 app.component('exemption-and-deduction-approval', ExemptionAndDeductionApproval);
+app.component('fine-approval', FineApproval);
+app.component('variable-pay-approval', VariablePayApproval);
 
 /* Application Settings Components */
 app.component('financial-year', FinancialYear);

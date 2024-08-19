@@ -3,7 +3,7 @@
 
         <div class="mb-4">
             <div>
-                <h6 class="text-uppercase fw-bold m-0 d-inline-block mb-2">Dashboard
+                <h6 class="text-uppercase fw-bold m-0 d-inline-block mb-2">Overview
                     <!-- <hr class="w-50 border-3 my-2"> -->
                 </h6>
             </div>
@@ -16,7 +16,7 @@
                 :class="cpath == '/' ? 'active' : ''" 
                 type="button">
                     <i class="bi bi-gear me-2"></i>
-                    Overview
+                    Dashboard
                 </a>
 
                 <a href="/calender" 
@@ -41,6 +41,14 @@
                 type="button">
                     <i class="bi bi-airplane me-2"></i>
                     Attendance
+                </a>
+
+                <a href="/run_payroll" 
+                class="btn btn-lg btn-primary btn-sm text-start"
+                :class="cpath == '/run_payroll' ? 'active' : ''"
+                type="button">
+                    <i class="bi bi-airplane me-2"></i>
+                    Run Payroll
                 </a>
 
             </div>
@@ -92,6 +100,22 @@
                 type="button">
                     <i class="bi bi-person me-2"></i>
                     Overtime
+                </a>
+
+                <a href="/approvals/fine" 
+                class="btn btn-lg btn-primary btn-sm text-start"
+                :class="cpath == '/approvals/fine' ? 'active' : ''" 
+                type="button">
+                    <i class="bi bi-person me-2"></i>
+                    Fine
+                </a>
+
+                <a href="/approvals/variable_pay" 
+                class="btn btn-lg btn-primary btn-sm text-start"
+                :class="cpath == '/approvals/variable_pay' ? 'active' : ''" 
+                type="button">
+                    <i class="bi bi-person me-2"></i>
+                    Variable Pay
                 </a>
 
                 <a href="/approvals/loan_and_advance" 
