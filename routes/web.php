@@ -29,6 +29,13 @@ Route::get('/attendance', [App\Http\Controllers\AttendanceController::class, 'at
 Route::get('/attendance/fetch', [App\Http\Controllers\AttendanceController::class, 'fetch']);
 
 Route::get('/run_payroll', [App\Http\Controllers\RunPayrollController::class, 'run_payroll']);
+Route::get('/overview/run_payroll/fetch', [App\Http\Controllers\RunPayrollController::class, 'fetch']);
+Route::post('/overview/run_payroll/add', [App\Http\Controllers\RunPayrollController::class, 'add']);
+Route::post('/overview/run_payroll/update', [App\Http\Controllers\RunPayrollController::class, 'update']);
+Route::post('/overview/run_payroll/delete', [App\Http\Controllers\RunPayrollController::class, 'delete']);
+
+Route::post('/overview/run_payroll/fetch_employees', [App\Http\Controllers\RunPayrollController::class, 'fetch_employees']);
+Route::post('/overview/run_payroll/shift_dates', [App\Http\Controllers\RunPayrollController::class, 'shift_dates']);
 
 
 

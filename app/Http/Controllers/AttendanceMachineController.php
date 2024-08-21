@@ -252,19 +252,25 @@ class AttendanceMachineController extends Controller
             }
 
             if(sizeof($employee_shift->special_days) > 0){
+
+                $prev_date = EmployeeShift::where('employee_id', $employee_id)->where('dt', date('Y-m-d', strtotime('-1 day', strtotime($on_date))))->first()->lop;
+                $next_date = EmployeeShift::where('employee_id', $employee_id)->where('dt', date('Y-m-d', strtotime('+1 day', strtotime($on_date))))->first()->lop;
+
                 foreach($employee_shift->special_days as $sp_day){
                     switch($sp_day->day_type){
                         case "Holiday":
                         $employee_shift_data["status"] = "Holiday";
-                        $employee_shift_data["lop"] = 0;
+                        $employee_shift_data["lop"] = ($prev_date == 1 && $next_date == 1) ? 1 : 0;
                         break;
                         case "Weekoff":
                         $employee_shift_data["status"] = "Weekoff";
-                        $employee_shift_data["lop"] = 0;
+                        $employee_shift_data["lop"] = ($prev_date == 1 && $next_date == 1) ? 1 : 0;
                         break;
                     }
                 }
             }
+
+            
 
             $employee_shift->update($employee_shift_data);
         }

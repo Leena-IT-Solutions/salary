@@ -74,7 +74,7 @@ class Employee extends Model
 
     public function employee_leave_group(){
         $today = date("Y-m-d");
-        return $this->hasOne(EmployeeLeaveGroup::class)
+        $this->hasOne(EmployeeLeaveGroup::class)
         ->where(function($q) use($today) {
             $q->where('to', null)->orWhere('to', '>=', $today);
         })
@@ -87,7 +87,7 @@ class Employee extends Model
     }
 
     public function employee_salary(){
-        $today = date("Y-m-d");
-        return $this->hasOne(EmployeeSalary::class)->where('effective_from', '<=', $today)->orderBy('id', 'desc')->latest();
+        $from = date('Y-m-d');
+        return $this->hasOne(EmployeeSalary::class)->whereDate('effective_from', '<=', $from)->orderBy('id', 'desc')->latest();
     }
 }

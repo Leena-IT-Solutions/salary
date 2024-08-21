@@ -26,4 +26,12 @@ class EmployeeSalary extends Model
         'per_hour',
         'per_minute',
     ];
+
+    public function salary_group(){
+        return $this->belongsTo(SalaryGroup::class);
+    }
+
+    public function es_statutories(){
+        return $this->hasMany(ESStatutory::class);
+    }
 }

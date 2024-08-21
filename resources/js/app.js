@@ -23,6 +23,7 @@ import SectionTitle from './components/elements/SectionTitle.vue';
 /* Calender Imports */
 import Calender from './components/elements/calender/Calender.vue';
 import YearForm from './components/elements/calender/YearForm.vue';
+import RunPayroll from './components/elements/overview/RunPayroll.vue';
 
 /* Employee Shift Manager */
 import EmployeeShiftManager from './components/elements/employee_shift/EmployeeShiftManager.vue';
@@ -106,6 +107,8 @@ app.component('app-calender', Calender);
 app.component('year-form', YearForm);
 app.component('employee-shift-manager', EmployeeShiftManager);
 app.component('employee-attendance', EmployeeAttendance);
+app.component('run-payroll', RunPayroll);
+
 
 
 /* Form Components */

@@ -19,6 +19,7 @@ class SettingsController extends Controller
     public $early_penalty;
     public $early_hrmin;
     public $early_prorata;
+    public $workingdc;
     
     public function __construct()
     {
@@ -35,6 +36,8 @@ class SettingsController extends Controller
         $this->early_penalty    = Setting::where('key', 'Penalty On Early Going Mark in LOP')->first()->value;
         $this->early_hrmin      = Setting::where('key', 'On Early Going Calculate LOP as per')->first()->value;
         $this->early_prorata    = Setting::where('key', "Calculate Early Going Day's Salary on Pro-rata basis")->first()->value;
+        $this->workingdc              = Setting::where('key', 'Working Days Consideration')->first()->value;
+        
     }
 
     

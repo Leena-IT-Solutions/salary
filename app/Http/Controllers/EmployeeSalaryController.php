@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 
 use App\Models\EmployeeSalary;
 use App\Models\SalaryGroup;
+use App\Models\ESStatutory;
 
 class EmployeeSalaryController extends Controller
 {
@@ -32,13 +33,35 @@ class EmployeeSalaryController extends Controller
     }
 
     public function save(Request $request){
+        $statutories = $request->statutories;
+        $request->request->remove('statutories');
+        $employee_salary_id = null;
         $es = null;
         if(isset($request->id)){
+            $employee_salary_id = $request->id;
             $es = EmployeeSalary::find($request->id)->update($request->all());
         } else {
             $es = EmployeeSalary::create($request->all());
+            $employee_salary_id = $es->id;
         }
-        return $es;
+
+        if(isset($request->id)){
+            ESStatutory::where('employee_salary_id', $employee_salary_id)->delete();
+        }
+
+        foreach($statutories as $s){
+            if($s["is"]){
+                $data = [
+                    "employee_salary_id" => $employee_salary_id,
+                    "salary_group_id" => $request->salary_group_id,
+                    "statutory_compliance_id" => $s["id"],
+                    "statutory_compliance_condition_id" => $s["is_id"]
+                ];
+                ESStatutory::create($data);
+            }
+        }
+
+        return $employee_salary_id;
     }
 
     public function delete(Request $request){

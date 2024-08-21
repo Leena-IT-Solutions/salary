@@ -4,9 +4,9 @@
         <!-- Form -->
         <div  v-if="item" class="row g-4 mb-5">
 
-            <forms-select-field @change="startCalculation()" name="salary_group_id" label="Salary Group" v-model="item.salary_group_id" error="" classes="col-12 col-xl-4" :options="salary_groups"></forms-select-field>
+            <forms-select-field @input="startCalculation()" name="salary_group_id" label="Salary Group" v-model="item.salary_group_id" error="" classes="col-12 col-xl-4" :options="salary_groups"></forms-select-field>
 
-            <forms-number-field @change="startCalculation()" name="ctc" label="Cost to Company - CTC per Month" v-model="item.ctc" error="" classes="col-12 col-lg-4"></forms-number-field>
+            <forms-number-field @input="startCalculation()" name="ctc" label="Cost to Company - CTC per Month" v-model="item.ctc" error="" classes="col-12 col-lg-4"></forms-number-field>
 
             <forms-date-field name="effective_from" label="Effective From" v-model="item.effective_from" error="" classes="col-12 col-lg-4"></forms-date-field>
 
@@ -213,9 +213,9 @@ export default {
                 salary_group_id: null,
                 effective_from: null,
                 note: null,
-                
                 ctc: 0,
                 checking_gross_pay: null,
+                new_checking_gross_pay: null,
                 gross_pay: null,
                 basic_pay: null,
                 net_pay: null,
@@ -259,6 +259,7 @@ export default {
             this.reimbursements = [];
             this.statutory = [];
             this.item.checking_gross_pay = 0;
+            this.item.new_checking_gross_pay = 0;
             this.item.gross_pay = 0;
             this.item.basic_pay = 0;
             this.item.net_pay = 0;
@@ -314,7 +315,9 @@ export default {
         },
 
         save(){
-            axios.post('/employee/salary_group/employee_salary/save', this.item).then(res => {
+            let data = this.item;
+            data.statutories = this.statutories;
+            axios.post('/employee/salary_group/employee_salary/save', data).then(res => {
                 this.reset();
                 this.search();
             });
@@ -351,6 +354,7 @@ export default {
             this.reimbursements = [];
             this.statutory = [];
             this.item.checking_gross_pay = 0;
+            this.item.new_checking_gross_pay = 0;
             this.item.gross_pay = 0;
             this.item.basic_pay = 0;
             this.item.net_pay = 0;
@@ -415,7 +419,7 @@ export default {
             arr.forEach(val => {
                 sum += (val*1);
             });
-            return sum/arr.length;
+            return sum/(arr.length);
         },
 
         calculateEmployerContribution(){
@@ -433,7 +437,7 @@ export default {
                         if(
                             cond.is_active && 
                             (cond.gender == "All" || cond.gender == this.employee.gender) && 
-                            (cond.state == "All" || this.employee.employee_work_location.work_location.state) &&
+                            (cond.state == "All" || cond.state == this.employee.employee_work_location.work_location.state) &&
                             (cond.employer_contribution != null && cond.employer_contribution != 0) &&
                             cond.salary_type != "Gross Pay"
                         ){
@@ -470,6 +474,8 @@ export default {
                                             monthly = cond.max_employer_contribution;
                                         }
                                     }
+                                    /* Added Later */
+                                    row.is = true;
                                     row.employer_contribution = Math.round(monthly);
 
                                 }
@@ -515,6 +521,9 @@ export default {
                                             monthly = cond.max_employer_contribution;
                                         }
                                     }
+
+                                    /* Added Later */
+                                    row.is = true;
                                     row.employer_contribution = Math.round(monthly);
 
                                 }
@@ -522,7 +531,7 @@ export default {
                             }
                         }
 
-                        this.item.checking_gross_pay =this.item.ctc - this.calculateEmployerContribution();
+                        this.item.new_checking_gross_pay = this.item.ctc - this.calculateEmployerContribution();
 
                         if(
                             cond.is_active && 
@@ -534,7 +543,7 @@ export default {
                         ){
                             if(cond != null){
 
-                                let salary_amount = this.item.checking_gross_pay;
+                                let salary_amount = this.item.new_checking_gross_pay;
                                 let min = cond.min_salary != null ? cond.min_salary : 0;
                                 let max = cond.max_salary != null ? cond.max_salary : 0;
 
@@ -558,7 +567,7 @@ export default {
             let x = ((this.item.ctc - this.calculateEmployerContribution()) - (this.item.earnings_total + this.calculateEmployerContribution())) / 2;
             let y = (this.item.ctc - this.calculateEmployerContribution()) / ((x/this.item.total_gross_percentage) * (100 + this.item.total_gross_percentage));
             let z = y * x;
-            this.item.gross_pay = Math.round(this.item.checking_gross_pay - z);
+            this.item.gross_pay = Math.round(this.item.new_checking_gross_pay - z);
             this.item.remaining_amount = Math.round(this.item.gross_pay - this.item.earnings_total);
             this.calculateAfterGrossSalary();
             this.item.employer_contribution = this.calculateEmployerContribution();
@@ -636,9 +645,6 @@ export default {
                             let salary_amount = 0;
                             let min = cond.min_salary != null ? cond.min_salary : 0;
                             let max = cond.max_salary != null ? cond.max_salary : 0;
-                            if(cond.salary_type == "CTC"){}
-                            if(cond.salary_type == "Gross Pay"){}
-                            if(cond.salary_type == "Basic Pay"){}
 
                             if(cond.salary_type == "Basic Pay"){
                                 salary_amount = this.item.basic_pay;
@@ -650,27 +656,40 @@ export default {
                                 salary_amount = 0;
                             }
 
-                            if(salary_amount >= min && (max == 0 || salary_amount <= max )){}
-
-                            if(cond.calculation == "Flat"){
-                                row.employee_contribution = Math.round(cond.employee_contribution * 1);
-                            }
-
-                            if(cond.calculation == "Percentage"){
-                                if(row.is && cond.salary_type == "Gross Pay"){
-                                    row.employee_contribution = Math.round(salary_amount * cond.employee_contribution / 100);
+                            if(salary_amount >= min && (max == 0 || salary_amount <= max )){
+                                if(cond.calculation == "Flat"){
+                                    row.employee_contribution = Math.round(cond.employee_contribution * 1);
+                                    /* Added Later */
+                                    row.is = true;
+                                    row.is_id = cond.id;
+                                }
+    
+                                if(cond.calculation == "Percentage"){
+                                    if(row.is && cond.salary_type == "Gross Pay"){
+                                        row.employee_contribution = Math.round(salary_amount * cond.employee_contribution / 100);
+                                        /* Added Later */
+                                        row.is = true;
+                                        row.is_id = cond.id;
+                                    }
+                                }
+    
+                                if(cond.calculation == "Percentage"){
+                                    if(cond.salary_type == "Basic Pay" || cond.salary_type == "CTC"){
+                                        row.employee_contribution = Math.round(salary_amount * cond.employee_contribution / 100);
+                                        /* Added Later */
+                                        row.is = true;
+                                        row.is_id = cond.id;
+                                    }
+                                }
+    
+                                if(cond.calculation == "CSV"){
+                                    row.employee_contribution = Math.round(this.calculateAverage(cond.employee_contribution));
+                                    /* Added Later */
+                                    row.is = true;
+                                    row.is_id = cond.id;
                                 }
                             }
 
-                            if(cond.calculation == "Percentage"){
-                                if(cond.salary_type == "Basic Pay" || cond.salary_type == "CTC"){
-                                    row.employee_contribution = Math.round(salary_amount * cond.employee_contribution / 100);
-                                }
-                            }
-
-                            if(cond.calculation == "CSV"){
-                                row.employee_contribution = Math.round(this.calculateAverage(cond.employee_contribution));
-                            }
                         }
                     });
                 }
