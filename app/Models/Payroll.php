@@ -16,7 +16,15 @@ class Payroll extends Model
         'to',
         'working_days',
         'actual_days',
+        'ctc',
+        'basic_pay',
         'gross_pay',
-        'net_pay',
+        'total_earning',
+        'overtime_earning',
+        'reimbursement',
+        'loan_disbursal',
+        'gross_salary',
+        'gross_deduction',
+        'net_payable_amount',
     ];
 }

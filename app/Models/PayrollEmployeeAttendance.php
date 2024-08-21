@@ -12,7 +12,9 @@ class PayrollEmployeeAttendance extends Model
     protected $fillable = [
         'payroll_employee_id',
         'lop',
+        'payable_days',
         'ot_hours',
+        'ot_amount',
     ];
 
 }

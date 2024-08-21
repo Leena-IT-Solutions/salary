@@ -16,16 +16,16 @@ return new class extends Migration
 
             $table->bigInteger('payroll_id')->index();
             $table->bigInteger('employee_id')->index();
-            $table->double('ctc');
-            $table->double('basic_pay');
-            $table->double('gross_pay');
-            $table->double('total_earning');
-            $table->double('overtime_earning');
-            $table->double('reimbursement');
-            $table->double('loan_disbursal');
-            $table->double('gross_salary');
-            $table->double('gross_deduction');
-            $table->double('net_payable_amount');
+            $table->double('ctc')->default(0);
+            $table->double('basic_pay')->default(0);
+            $table->double('gross_pay')->default(0);
+            $table->double('total_earning')->default(0);
+            $table->double('overtime_earning')->default(0);
+            $table->double('reimbursement')->default(0);
+            $table->double('loan_disbursal')->default(0);
+            $table->double('gross_salary')->default(0);
+            $table->double('gross_deduction')->default(0);
+            $table->double('net_payable_amount')->default(0);
 
             $table->timestamps();
         });

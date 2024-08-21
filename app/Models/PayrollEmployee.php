@@ -12,7 +12,15 @@ class PayrollEmployee extends Model
     protected $fillable = [
         'payroll_id',
         'employee_id',
+        'ctc',
+        'basic_pay',
         'gross_pay',
-        'net_pay',
+        'total_earning',
+        'overtime_earning',
+        'reimbursement',
+        'loan_disbursal',
+        'gross_salary',
+        'gross_deduction',
+        'net_payable_amount',
     ];
 }
