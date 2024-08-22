@@ -127,7 +127,7 @@
                 <tbody>
                     <tr v-for="row in items" :key="row.id">
                         <td>{{ row.id }}</td>
-                        <td>{{ row.payroll_name }}</td>
+                        <td><a :href="'/payslip/payroll/'+row.id">{{ row.payroll_name }}</a></td>
                         <td>{{ row.from }}</td>
                         <td>{{ row.to }}</td>
                         <td class="text-end">

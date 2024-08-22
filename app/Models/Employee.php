@@ -60,6 +60,12 @@ class Employee extends Model
         return $this->hasOne(EmployeeDesignation::class)->where('to', null)->latest();
     }
 
+    public function employee_bank(){
+        return $this->hasOne(EmployeeBank::class)->orderBy('id', 'desc')->latest();
+    }
+
+    
+
     public function employee_service(){
         return $this->hasOne(EmployeeService::class)->where('to', null)->latest();
     }

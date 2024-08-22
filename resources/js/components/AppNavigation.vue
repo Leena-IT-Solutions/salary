@@ -45,7 +45,7 @@
 
                 <a href="/run_payroll" 
                 class="btn btn-lg btn-primary btn-sm text-start"
-                :class="cpath == '/run_payroll' ? 'active' : ''"
+                :class="cpath == '/run_payroll' || cpath == '/payslip' ? 'active' : ''"
                 type="button">
                     <i class="bi bi-airplane me-2"></i>
                     Run Payroll

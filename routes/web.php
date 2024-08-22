@@ -33,9 +33,11 @@ Route::get('/overview/run_payroll/fetch', [App\Http\Controllers\RunPayrollContro
 Route::post('/overview/run_payroll/add', [App\Http\Controllers\RunPayrollController::class, 'add']);
 Route::post('/overview/run_payroll/update', [App\Http\Controllers\RunPayrollController::class, 'update']);
 Route::post('/overview/run_payroll/delete', [App\Http\Controllers\RunPayrollController::class, 'delete']);
-
 Route::post('/overview/run_payroll/fetch_employees', [App\Http\Controllers\RunPayrollController::class, 'fetch_employees']);
 Route::post('/overview/run_payroll/shift_dates', [App\Http\Controllers\RunPayrollController::class, 'shift_dates']);
+
+Route::get('/payslip/payroll/{id}', [App\Http\Controllers\PayslipController::class, 'payslip']);
+
 
 
 

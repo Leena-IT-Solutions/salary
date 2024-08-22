@@ -209,7 +209,7 @@ class RunPayrollController extends Controller
 
             /* Calculate Overtime */
             $ot_hours = $this->calculateOT($request, $employee_id);
-            $ot_amount = $employee_salary->per_hour * $ot_hours;
+            $ot_amount = round($employee_salary->per_hour * $ot_hours);
             $payroll_employee_attendance_data["ot_hours"] = $ot_hours;
             $payroll_employee_attendance_data["ot_amount"] = $ot_amount;
 
@@ -467,7 +467,7 @@ class RunPayrollController extends Controller
                 "breakupable_type" => "App\Models\Earning",
                 "name_in_payslip" => $vpa->earning->name_in_payslip,
                 "standard_amount" => 0,
-                "actual_payable_amount" => $vpa->amount,
+                "actual_payable_amount" => round($vpa->amount),
                 "employer_contribution_amount" => 0,
                 "is_basic_pay" => $vpa->earning->is_basic_pay,
                 "is_gross_pay" => $vpa->earning->is_gross_pay,
@@ -493,7 +493,7 @@ class RunPayrollController extends Controller
                 "breakupable_type" => "App\Models\ReimbursementApproval",
                 "name_in_payslip" => $row->reimbursement_component->name_in_payslip,
                 "standard_amount" => 0,
-                "actual_payable_amount" => $row->amount,
+                "actual_payable_amount" => round($row->amount),
                 "employer_contribution_amount" => 0,
             ];
             $items[] = $payroll_employee_breakup_data;
@@ -515,7 +515,7 @@ class RunPayrollController extends Controller
                 "breakupable_type" => "App\Models\LoanAndAdvanceApproval",
                 "name_in_payslip" => "Loan",
                 "standard_amount" => 0,
-                "actual_payable_amount" => $row->loan_amount,
+                "actual_payable_amount" => round($row->loan_amount),
                 "employer_contribution_amount" => 0,
             ];
             $items[] = $payroll_employee_breakup_data;
@@ -540,7 +540,7 @@ class RunPayrollController extends Controller
                 "breakupable_type" => "App\Models\ServicesComponent",
                 "name_in_payslip" => $row->services_component->name_in_payslip,
                 "standard_amount" => 0,
-                "actual_payable_amount" => $row->services_component->value,
+                "actual_payable_amount" => round($row->services_component->value),
                 "employer_contribution_amount" => 0,
             ];
             $items[] = $payroll_employee_breakup_data;
@@ -562,7 +562,7 @@ class RunPayrollController extends Controller
                 "breakupable_type" => "App\Models\FineApproval",
                 "name_in_payslip" => $row->note,
                 "standard_amount" => 0,
-                "actual_payable_amount" => $row->amount,
+                "actual_payable_amount" => round($row->amount),
                 "employer_contribution_amount" => 0,
             ];
             $items[] = $payroll_employee_breakup_data;
@@ -586,7 +586,7 @@ class RunPayrollController extends Controller
                 "breakupable_type" => "App\Models\LoanAndAdvanceApproval",
                 "name_in_payslip" => "Loan EMI",
                 "standard_amount" => 0,
-                "actual_payable_amount" => $row->emi_amount,
+                "actual_payable_amount" => round($row->emi_amount),
                 "employer_contribution_amount" => 0,
             ];
             $items[] = $payroll_employee_breakup_data;
@@ -595,36 +595,27 @@ class RunPayrollController extends Controller
     }
 
     public Function calculateSalaryComponents($earnings, $variable_pay){
-        // $data = [];
-        // foreach($salary_calculations["earnings"] as $ind => $ee){
 
-        //     $earnings = $salary_calculations["earnings"][$ind];
-        //     $vps = $salary_calculations["variable_pay"][$ind];
+        $beta = [
+            "basic_pay" => 0,
+            "gross_pay" => 0,
+            "total_earning" => 0,
+        ];
 
-            $beta = [
-                "basic_pay" => 0,
-                "gross_pay" => 0,
-                "total_earning" => 0,
-            ];
+        foreach($earnings as $earning){
+            $beta["total_earning"] += $earning["actual_payable_amount"];
+            $beta["basic_pay"] += $earning["is_basic_pay"] ? $earning["actual_payable_amount"] : 0;
+            $beta["gross_pay"] += $earning["is_gross_pay"] ? $earning["actual_payable_amount"] : 0;
+        }
 
-            foreach($earnings as $earning){
-                $beta["total_earning"] += $earning["actual_payable_amount"];
-                $beta["basic_pay"] += $earning["is_basic_pay"] ? $earning["actual_payable_amount"] : 0;
-                $beta["gross_pay"] += $earning["is_gross_pay"] ? $earning["actual_payable_amount"] : 0;
-            }
+        foreach($variable_pay as $vp){
+            $beta["total_earning"] += $vp["actual_payable_amount"];
+            $beta["basic_pay"] += $vp["is_basic_pay"] ? $vp["actual_payable_amount"] : 0;
+            $beta["gross_pay"] += $vp["is_gross_pay"] ? $vp["actual_payable_amount"] : 0;
+        }
 
-            foreach($variable_pay as $vp){
-                $beta["total_earning"] += $vp["actual_payable_amount"];
-                $beta["basic_pay"] += $vp["is_basic_pay"] ? $vp["actual_payable_amount"] : 0;
-                $beta["gross_pay"] += $vp["is_gross_pay"] ? $vp["actual_payable_amount"] : 0;
-            }
+        return $beta;
 
-            return $beta;
-
-        //     $data[] = $beta;
-        // }
-
-        // return $data;
     }
 
     public function calculateStatutoryCompliance($employee_salary, $payroll_employee_data, $from, $k){
@@ -695,8 +686,8 @@ class RunPayrollController extends Controller
                 "breakupable_type" => "App\Models\StatutoryComplianceCondition",
                 "name_in_payslip" => $statutory->statutory_compliance->scheme_name,
                 "standard_amount" => 0,
-                "actual_payable_amount" => $data["employee_contro"],
-                "employer_contribution_amount" => $data["employer_contro"],
+                "actual_payable_amount" => round($data["employee_contro"]),
+                "employer_contribution_amount" => round($data["employer_contro"]),
             ];
             $items[] = $payroll_employee_breakup_data;
 
