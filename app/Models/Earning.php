@@ -30,6 +30,10 @@ class Earning extends Model
         return $this->morphToMany(SalaryGroup::class, 'salary_groupable');
     }
 
+    public function breakup(){
+        return $this->morphOne(PayrollEmployeeBreakup::class, 'breakupable');
+    }
+
     protected $appends = ['monthly'];
 
     public function getMonthlyAttribute(){

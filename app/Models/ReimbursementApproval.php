@@ -25,4 +25,8 @@ class ReimbursementApproval extends Model
     public function reimbursement_component(){
         return $this->belongsTo(ReimbursementComponent::class);
     }
+
+    public function breakup(){
+        return $this->morphOne(PayrollEmployeeBreakup::class, 'breakupable');
+    }
 }

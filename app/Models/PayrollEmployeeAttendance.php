@@ -17,4 +17,8 @@ class PayrollEmployeeAttendance extends Model
         'ot_amount',
     ];
 
+    public function breakup(){
+        return $this->morphOne(PayrollEmployeeBreakup::class, 'breakupable');
+    }
+
 }

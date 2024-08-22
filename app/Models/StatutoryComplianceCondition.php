@@ -24,4 +24,8 @@ class StatutoryComplianceCondition extends Model
         'max_employer_contribution',
         'is_active',
     ];
+
+    public function breakup(){
+        return $this->morphOne(PayrollEmployeeBreakup::class, 'breakupable');
+    }
 }

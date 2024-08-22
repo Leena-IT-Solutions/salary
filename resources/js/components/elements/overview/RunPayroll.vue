@@ -86,7 +86,7 @@
                 
             </div>
 
-            <forms-submit-button name="" v-model="loading" label="Save department" @click="save()" classes="col-6"></forms-submit-button>
+            <forms-submit-button name="" v-model="loading" label="Run Payroll" @click="save()" classes="col-6"></forms-submit-button>
 
             <div class="col-6 text-end">
                 <button v-if="item.id != null && !isDelete" class="btn btn-danger" @click="deleteItem()">Delete Item</button>
@@ -184,10 +184,7 @@ export default {
 
         reset(){
             this.item.id = null;
-            this.item.financial_year_id = null;
             this.item.payroll_name = null;
-            this.item.from = null;
-            this.item.to = null;
             this.item.working_days = null;
             this.item.actual_days = null;
             this.item.gross_pay = null;
@@ -299,16 +296,16 @@ export default {
             this.loading = true;
             axios.post('/overview/run_payroll/add', this.item).then(res => {
                 console.log(res.data);
-                // this.reset();
-                // this.search();
+                this.reset();
+                this.search();
             });
         },
 
         update(){
             this.loading = true;
             axios.post('/overview/run_payroll/update', this.item).then(res => {
-                // this.reset();
-                // this.search();
+                this.reset();
+                this.search();
             });
         },
 

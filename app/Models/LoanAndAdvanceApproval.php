@@ -26,4 +26,8 @@ class LoanAndAdvanceApproval extends Model
     public function employee(){
         return $this->belongsTo(Employee::class);
     }
+
+    public function breakup(){
+        return $this->morphOne(PayrollEmployeeBreakup::class, 'breakupable');
+    }
 }

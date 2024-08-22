@@ -15,12 +15,12 @@ return new class extends Migration
             $table->id();
 
             $table->bigInteger('payroll_employee_id')->index();
-            $table->bigInteger('amountable_id')->index();
-            $table->string('amountable_type');
             $table->string('name_in_payslip');
             $table->double('standard_amount')->default(0);
             $table->double('actual_payable_amount')->default(0);
             $table->double('employer_contribution_amount')->default(0);
+            $table->bigInteger('breakupable_id')->index();
+            $table->string('breakupable_type');
 
             $table->timestamps();
         });

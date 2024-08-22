@@ -27,4 +27,19 @@ class Payroll extends Model
         'gross_deduction',
         'net_payable_amount',
     ];
+
+    public function payroll_employees(){
+        return $this->hasMany(PayrollEmployee::class);
+    }
+
+    protected static function booted () {
+        static::deleting(function(Payroll $payroll) {
+            $employees = $payroll->payroll_employees()->get();
+            foreach($employees as $employee){
+                $employee->payroll_employee_attendances()->delete();
+                $employee->payroll_employee_breakups()->delete();
+            }
+            $payroll->payroll_employees()->delete();
+        });
+    }
 }

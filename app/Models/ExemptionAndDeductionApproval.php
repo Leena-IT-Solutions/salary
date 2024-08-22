@@ -25,4 +25,8 @@ class ExemptionAndDeductionApproval extends Model
     public function exe_and_ded_component(){
         return $this->belongsTo(ExeAndDedComponent::class);
     }
+
+    public function breakup(){
+        return $this->morphOne(PayrollEmployeeBreakup::class, 'breakupable');
+    }
 }

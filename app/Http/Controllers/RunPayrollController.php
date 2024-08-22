@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\AttendanceMachineController;
-use App\Models\Payroll;
 use App\Models\FinancialYear;
 use App\Models\Employee;
 use App\Models\SpecialDays;
@@ -17,6 +16,10 @@ use App\Models\ReimbursementApproval;
 use App\Models\LoanAndAdvanceApproval;
 use App\Models\EmployeeService;
 use App\Models\FineApproval;
+use App\Models\Payroll;
+use App\Models\PayrollEmployee;
+use App\Models\PayrollEmployeeAttendance;
+use App\Models\PayrollEmployeeBreakup;
 use DatePeriod;
 use DateTime;
 use DateInterval;
@@ -53,7 +56,7 @@ class RunPayrollController extends Controller
     }
 
     public function delete(Request $request){
-        return Payroll::find($request->id)->delete();
+        Payroll::find($request->id)->delete();
     }
 
     public function add(Request $request){
@@ -215,8 +218,8 @@ class RunPayrollController extends Controller
 
             $all[] = [
                 "payroll_employee_id" => 0,
-                "amountable_id" => 0,
-                "amountable_type" => "Overtime",
+                "breakupable_id" => 0,
+                "breakupable_type" => "App\Models\PayrollEmployeeAttendance",
                 "name_in_payslip" => "Overtime",
                 "standard_amount" => 0,
                 "actual_payable_amount" => $ot_amount,
@@ -314,13 +317,52 @@ class RunPayrollController extends Controller
 
         }
 
-        return [
-            /* "salary_calculations" => $salary_calculations, */
+        $calculation_data = [
             "payroll" => $payroll,
-            "employee" => $payroll_employee,
-            "att" => $payroll_employee_attendance,
-            "breakup" => $payroll_employee_breakup,
+            "payroll_employee" => $payroll_employee,
+            "payroll_employee_attendance" => $payroll_employee_attendance,
+            "payroll_employee_breakup" => $payroll_employee_breakup,
         ];
+
+        return $this->save_payroll($calculation_data, $request->id);
+
+    }
+
+    public function save_payroll($data, $id=null){
+        if($id){
+            $payroll = Payroll::find($id);
+            $payroll->update($data["payroll"]);
+            foreach($payroll->payroll_employees()->get() as $employee){
+                $employee->delete();
+            }
+        } else {
+            $payroll = Payroll::create($data["payroll"]);
+        }
+        
+
+        foreach($data["payroll_employee"] as $ind => $pe){
+            
+            /* Employee Record Save */
+            $pe["payroll_id"] = $payroll->id;
+            $payroll_employee = PayrollEmployee::create($pe);
+            $payroll_employee_id = $payroll_employee->id;
+
+            /* Attendance Record Save */
+            $pea = $data["payroll_employee_attendance"][$ind];
+            $pea["payroll_employee_id"] = $payroll_employee_id;
+            $attendance = PayrollEmployeeAttendance::create($pea);
+
+            /* Breakup Record Save */
+            $peb = $data["payroll_employee_breakup"][$ind];
+            foreach($peb as $breakup){
+                if($breakup["breakupable_type"] == "App\Models\PayrollEmployeeAttendance"){
+                    $breakup["breakupable_id"] = $attendance->id;
+                }
+                $breakup["payroll_employee_id"] = $payroll_employee_id;
+                $pebreakup = PayrollEmployeeBreakup::create($breakup);
+            }
+        }
+        return Payroll::with('payroll_employees.payroll_employee_breakups.breakupable', 'payroll_employees.payroll_employee_attendances')->find($payroll->id);
     }
 
     public function run_lop(Request $request){
@@ -393,8 +435,8 @@ class RunPayrollController extends Controller
 
                 $payroll_employee_breakup_data = [
                     "payroll_employee_id" => 0,
-                    "amountable_id" => $earning->id,
-                    "amountable_type" => "Earning",
+                    "breakupable_id" => $earning->id,
+                    "breakupable_type" => "App\Models\Earning",
                     "name_in_payslip" => $earning->name_in_payslip,
                     "standard_amount" => $earning->standard,
                     "actual_payable_amount" => $earning->actual,
@@ -421,8 +463,8 @@ class RunPayrollController extends Controller
         foreach($vpas as $vpa){
             $payroll_employee_breakup_data = [
                 "payroll_employee_id" => 0,
-                "amountable_id" => $vpa->earning->id,
-                "amountable_type" => "Earning",
+                "breakupable_id" => $vpa->earning->id,
+                "breakupable_type" => "App\Models\Earning",
                 "name_in_payslip" => $vpa->earning->name_in_payslip,
                 "standard_amount" => 0,
                 "actual_payable_amount" => $vpa->amount,
@@ -447,8 +489,8 @@ class RunPayrollController extends Controller
         foreach($data as $row){
             $payroll_employee_breakup_data = [
                 "payroll_employee_id" => 0,
-                "amountable_id" => $row->reimbursement_component->id,
-                "amountable_type" => "Reimbursement",
+                "breakupable_id" => $row->reimbursement_component->id,
+                "breakupable_type" => "App\Models\ReimbursementApproval",
                 "name_in_payslip" => $row->reimbursement_component->name_in_payslip,
                 "standard_amount" => 0,
                 "actual_payable_amount" => $row->amount,
@@ -469,8 +511,8 @@ class RunPayrollController extends Controller
         foreach($data as $row){
             $payroll_employee_breakup_data = [
                 "payroll_employee_id" => 0,
-                "amountable_id" => $row->id,
-                "amountable_type" => "LoanDisbursal",
+                "breakupable_id" => $row->id,
+                "breakupable_type" => "App\Models\LoanAndAdvanceApproval",
                 "name_in_payslip" => "Loan",
                 "standard_amount" => 0,
                 "actual_payable_amount" => $row->loan_amount,
@@ -494,8 +536,8 @@ class RunPayrollController extends Controller
         foreach($data as $row){
             $payroll_employee_breakup_data = [
                 "payroll_employee_id" => 0,
-                "amountable_id" => $row->services_component->id,
-                "amountable_type" => "Service",
+                "breakupable_id" => $row->services_component->id,
+                "breakupable_type" => "App\Models\ServicesComponent",
                 "name_in_payslip" => $row->services_component->name_in_payslip,
                 "standard_amount" => 0,
                 "actual_payable_amount" => $row->services_component->value,
@@ -516,8 +558,8 @@ class RunPayrollController extends Controller
         foreach($data as $row){
             $payroll_employee_breakup_data = [
                 "payroll_employee_id" => 0,
-                "amountable_id" => $row->id,
-                "amountable_type" => "Fine",
+                "breakupable_id" => $row->id,
+                "breakupable_type" => "App\Models\FineApproval",
                 "name_in_payslip" => $row->note,
                 "standard_amount" => 0,
                 "actual_payable_amount" => $row->amount,
@@ -540,8 +582,8 @@ class RunPayrollController extends Controller
         foreach($data as $row){
             $payroll_employee_breakup_data = [
                 "payroll_employee_id" => 0,
-                "amountable_id" => $row->id,
-                "amountable_type" => "LoanDisbursal",
+                "breakupable_id" => $row->id,
+                "breakupable_type" => "App\Models\LoanAndAdvanceApproval",
                 "name_in_payslip" => "Loan EMI",
                 "standard_amount" => 0,
                 "actual_payable_amount" => $row->emi_amount,
@@ -649,8 +691,8 @@ class RunPayrollController extends Controller
 
             $payroll_employee_breakup_data = [
                 "payroll_employee_id" => 0,
-                "amountable_id" => $statutory->statutory_compliance_condition->id,
-                "amountable_type" => "statutory",
+                "breakupable_id" => $statutory->statutory_compliance_condition->id,
+                "breakupable_type" => "App\Models\StatutoryComplianceCondition",
                 "name_in_payslip" => $statutory->statutory_compliance->scheme_name,
                 "standard_amount" => 0,
                 "actual_payable_amount" => $data["employee_contro"],

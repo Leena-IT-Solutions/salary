@@ -11,11 +11,15 @@ class PayrollEmployeeBreakup extends Model
 
     protected $fillable = [
         'payroll_employee_id',
-        'amountable_id',
-        'amountable_type',
         'name_in_payslip',
         'standard_amount',
         'actual_payable_amount',
         'employer_contribution_amount',
+        'breakupable_id',
+        'breakupable_type',
     ];
+
+    public function breakupable() {
+        return $this->morphTo();
+    }
 }
