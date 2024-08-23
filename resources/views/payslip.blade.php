@@ -8,15 +8,24 @@
 
 <page-header title="Payslip for {{ $payroll->payroll_name }}"></page-header>
 
+<div class="container-fluid px-4 mt-5">
+    <a class="btn btn-primary me-2" href="/pdf/payslip/{{$payroll->id}}" target="_blank">Payslips</a>
+    <a class="btn btn-primary me-2" href="/pdf/bank_letter/{{$payroll->id}}" target="_blank">Bank Letter</a>
+    <a class="btn btn-primary me-2" href="/pdf/ca_report/{{$payroll->id}}" target="_blank">CA Report PDF</a>
+    <a class="btn btn-primary me-2" href="/excel/ca_report/{{$payroll->id}}" target="_blank">CA Report Excel</a>
+    
+</div>
+
 <div class="container-fluid px-4 py-5 m-0">
 
     @foreach($payroll->payroll_employees as $emp)
+
     <table class="table border border-dark border-3 m-0">
         <thead>
             <tr>
-                <th style="width: 120px;" class="text-center align-middle">
-                    <img style="width: 100px;" src="{{ $company->logo }}" alt="{{ $company->company_name }}">
-                </th>
+                <!-- <th style="width: 120px;" class="text-center align-middle">
+                    <img style="width: 100px;" src="{{asset($company->logo)}}" alt="{{ $company->company_name }}">
+                </th> -->
                 <th colspan="3" class="text-center align-middle">
                     <h3 class="fw-bold">{{ $company->company_name }}</h3>
                     <p class="m-0 fw-light">{{ $company->address }} {{ $company->city }} {{ $company->pincode }} {{ $company->state }} {{ $company->country }}</p>
