@@ -28,6 +28,10 @@ Route::post('/employee_shift/save', [App\Http\Controllers\EmployeeShiftControlle
 Route::get('/attendance', [App\Http\Controllers\AttendanceController::class, 'attendance']);
 Route::get('/attendance/fetch', [App\Http\Controllers\AttendanceController::class, 'fetch']);
 
+Route::get('/attendance_evalution_report', [App\Http\Controllers\AttendanceController::class, 'attendance_evalution_report']);
+Route::get('/attendance_evalution_report/get_data', [App\Http\Controllers\AttendanceController::class, 'get_data']);
+Route::post('/attendance_evalution_report/run_lop', [App\Http\Controllers\AttendanceController::class, 'run_lop']);
+
 Route::get('/run_payroll', [App\Http\Controllers\RunPayrollController::class, 'run_payroll']);
 Route::get('/overview/run_payroll/fetch', [App\Http\Controllers\RunPayrollController::class, 'fetch']);
 Route::post('/overview/run_payroll/add', [App\Http\Controllers\RunPayrollController::class, 'add']);

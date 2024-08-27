@@ -17,18 +17,24 @@
                 <td class="text-no-wrap" style="width:320px;">
                     <div class="w-50">
                         <div class="image image-s img-cover">
-                            <img src="{{ $employee->employee_photo->media }}" alt="">
+                            @if($employee->employee_photo)
+                                <img src="{{ $employee->employee_photo->media }}" alt="">
+                            @endif
                         </div>
                     </div>
                 </td>
                 <td class="align-middle">
                     <span class="h4 fw-bold d-block">
                         {{ $employee->first_name }} {{ $employee->middle_name }} {{ $employee->last_name }}
-                        <span class="small text-secondary">
-                            : {{ $employee->employee_designation->designation->designation }} - {{ $employee->employee_designation->designation->code }}
-                        </span>
+                        @if($employee->employee_designation)
+                            <span class="small text-secondary">
+                                : {{ $employee->employee_designation->designation->designation }} - {{ $employee->employee_designation->designation->code }}
+                            </span>
+                        @endif
                     </span>
-                    <span class="d-block small">{{ $employee->employee_address->address }} {{ $employee->employee_address->city }} {{ $employee->employee_address->pincode }} {{ $employee->employee_address->state }} {{ $employee->employee_address->country }}</span>
+                    @if($employee->employee_address)
+                        <span class="d-block small">{{ $employee->employee_address->address }} {{ $employee->employee_address->city }} {{ $employee->employee_address->pincode }} {{ $employee->employee_address->state }} {{ $employee->employee_address->country }}</span>
+                    @endif
                     <span class="d-block">{{ $employee->phone }}</span>
                     <span class="d-block">{{ $employee->email }}</span>
                 </td>
@@ -39,7 +45,11 @@
             </tr>
             <tr>
                 <td class="text-no-wrap" style="width:320px;">Department</td>
-                <td>{{ $employee->employee_department->department->department }} - {{ $employee->employee_department->department->code }}</td>
+                @if($employee->employee_department)
+                    @if($employee->employee_department->department)
+                        <td>{{ $employee->employee_department->department->department }} - {{ $employee->employee_department->department->code }}</td>
+                    @endif
+                @endif
             </tr>
             <tr>
                 <td class="text-no-wrap" style="width:320px;">Date of Birth</td>

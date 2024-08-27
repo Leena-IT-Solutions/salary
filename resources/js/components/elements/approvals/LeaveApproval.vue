@@ -2,7 +2,10 @@
     <div class="container-fluid">
 
         <div class="row g-4 mb-4">
-            <forms-text-field @change="getEmployee()" name="employee_code" label="Enter Employee Code" v-model="employee_code" error="" classes="col-12 col-lg-6"></forms-text-field>
+            <forms-text-field @change="getEmployee()" 
+            @input="this.employee_code = this.employee_code.toUpperCase();"
+            name="employee_code" label="Enter Employee Code" v-model="employee_code" error="" 
+            classes="col-12 col-lg-6"></forms-text-field>
     
             <forms-select-field @change="getEmployee()" name="selected_fy" label="Financial Year" v-model="selected_fy" error="" classes="col-12 col-lg-6" 
             :options="fys"></forms-select-field>
@@ -267,12 +270,14 @@ export default {
         },
 
         getEmployee(){
-            this.reset();
-            axios.get('/approvals/leave/employee/' + this.employee_code + '/fy/' + this.selected_fy).then(res => {
-                this.employee = res.data.employee;
-                this.used = res.data.leaves_availed;
-                this.item.employee_id = this.employee.id;
-            });
+            if(this.employee_code && this.selected_fy){
+                this.reset();
+                axios.get('/approvals/leave/employee/' + this.employee_code + '/fy/' + this.selected_fy).then(res => {
+                    this.employee = res.data.employee;
+                    this.used = res.data.leaves_availed;
+                    this.item.employee_id = this.employee.id;
+                });
+            }
         },
 
         getUsed(id){
@@ -297,9 +302,9 @@ export default {
 
     created(){
         this.fetch();
-        /* if(this.fy){
+        if(this.fy){
             this.selected_fy = this.fy.id;
-        } */
+        }
     },
 
 }

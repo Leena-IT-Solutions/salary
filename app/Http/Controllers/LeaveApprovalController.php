@@ -85,6 +85,7 @@ class LeaveApprovalController extends Controller
         ->first();
 
         $lghs = $response['employee']->employee_leave_group->leave_group->lgh()->get();
+
         foreach($lghs as $lgh){
             
             $leave_master_id = $lgh->leave_master_id;

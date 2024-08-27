@@ -661,8 +661,8 @@ class RunPayrollController extends Controller
                 $data["employee_contro"] = $cond->employee_contribution == null || $cond->employee_contribution == 0 ? 0 : ($salary_amount * $cond->employee_contribution) / 100;
                 $data["employer_contro"] = $cond->employer_contribution == null || $cond->employer_contribution == 0 ? 0 : ($salary_amount * $cond->employer_contribution) / 100;
             } else if($cond->calculation == "CSV"){
-                $data["employee_contro"] = $cond->employee_contribution == null || $cond->employee_contribution == 0 ? 0 : readCSV($cond->employee_contribution, $from);
-                $data["employer_contro"] = $cond->employer_contribution == null || $cond->employer_contribution == 0 ? 0 : readCSV($cond->employer_contribution, $from);
+                $data["employee_contro"] = $cond->employee_contribution == null || $cond->employee_contribution == 0 ? 0 : $this->readCSV($cond->employee_contribution, $from);
+                $data["employer_contro"] = $cond->employer_contribution == null || $cond->employer_contribution == 0 ? 0 : $this->readCSV($cond->employer_contribution, $from);
             }
 
             // max_employee_contribution

@@ -2,7 +2,10 @@
     <div class="container-fluid">
 
         <div class="row g-4 mb-4 align-items-center">
-            <forms-text-field @change="getEmployee()" name="employee_code" label="Enter Employee Code" v-model="employee_code" error="" classes="col-12 col-lg-6"></forms-text-field>
+            <forms-text-field 
+            @change="getEmployee()" 
+            @input="this.employee_code = this.employee_code.toUpperCase();"
+            name="employee_code" label="Enter Employee Code" v-model="employee_code" error="" classes="col-12 col-lg-6"></forms-text-field>
             <div v-if="employee" class="col">
                 <span class="h5">{{ employee.first_name }} {{ employee.middle_name }} {{ employee.last_name }} - {{ employee.id }}</span>
             </div>
@@ -11,7 +14,7 @@
         <!-- Form -->
         <div  v-if="item" class="row g-4 mb-5">
 
-            <forms-text-field name="employee_id" label="Employee ID" v-model="item.employee_id" error="" classes="col-12"></forms-text-field>
+            <!-- <forms-text-field name="employee_id" label="Employee ID" v-model="item.employee_id" error="" classes="col-12"></forms-text-field> -->
 
             <forms-select-field name="earning_id" label="Variable Earning" v-model="item.earning_id" error="" classes="col-12 col-lg-4" 
             :options="types"></forms-select-field>

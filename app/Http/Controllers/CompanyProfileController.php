@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Companyprofile;
+use App\Models\CompanyProfile;
 
 class CompanyProfileController extends Controller
 {
@@ -13,20 +13,23 @@ class CompanyProfileController extends Controller
     }
 
     public function fetch(){
-        return Companyprofile::get()->first();
+        return CompanyProfile::get()->first();
     }
 
     public function update(Request $request){
 
-        $cp = Companyprofile::get()->first();
+        $input = $request->all();
+        $input["user_id"] = 1;
+
+        $cp = CompanyProfile::get()->first();
 
         if($cp == null){
-            Companyprofile::get()->first()->create($request->all());
+            CompanyProfile::create($input);
         } else {
-            Companyprofile::get()->first()->update($request->all());
+            CompanyProfile::get()->first()->update($input);
         }
 
-        return Companyprofile::get()->first();
+        return CompanyProfile::get()->first();
 
     }
 
@@ -41,9 +44,9 @@ class CompanyProfileController extends Controller
                 "logo" => $path
             ];
 
-            $cp = Companyprofile::get()->first();
+            $cp = CompanyProfile::get()->first();
             if($cp == null){
-                Companyprofile::get()->first()->create($data);
+                CompanyProfile::create($data);
             } else {
                 $old_logo = $cp->logo;
 
@@ -53,10 +56,10 @@ class CompanyProfileController extends Controller
                     }
                 }
 
-                Companyprofile::get()->first()->update($data);
+                CompanyProfile::get()->first()->update($data);
             }
 
-            return Companyprofile::get()->first();
+            return CompanyProfile::get()->first();
         }
     }
 

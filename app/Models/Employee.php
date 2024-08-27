@@ -71,7 +71,7 @@ class Employee extends Model
     }
 
     public function employee_shifts(){
-        return $this->hasMany(EmployeeShift::class);
+        return $this->hasMany(EmployeeShift::class)->orderBy('dt', 'asc');
     }
 
     public function employee_leave_groups(){
@@ -80,7 +80,7 @@ class Employee extends Model
 
     public function employee_leave_group(){
         $today = date("Y-m-d");
-        $this->hasOne(EmployeeLeaveGroup::class)
+        return $this->hasOne(EmployeeLeaveGroup::class)
         ->where(function($q) use($today) {
             $q->where('to', null)->orWhere('to', '>=', $today);
         })
