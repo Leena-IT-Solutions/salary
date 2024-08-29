@@ -79,45 +79,42 @@ class PayrollEmployee extends Model
     }
 
     public function displaywords($number){
-        $words = array('0' => '', '1' => 'one', '2' => 'two',
-        '3' => 'three', '4' => 'four', '5' => 'five', '6' => 'six',
-        '7' => 'seven', '8' => 'eight', '9' => 'nine',
-        '10' => 'ten', '11' => 'eleven', '12' => 'twelve',
-        '13' => 'thirteen', '14' => 'fourteen',
-        '15' => 'fifteen', '16' => 'sixteen', '17' => 'seventeen',
-        '18' => 'eighteen', '19' =>'nineteen', '20' => 'twenty',
-        '30' => 'thirty', '40' => 'forty', '50' => 'fifty',
-        '60' => 'sixty', '70' => 'seventy',
-        '80' => 'eighty', '90' => 'ninety');
-        $digits = array('', '', 'hundred', 'thousand', 'lakh', 'crore');
-    
-        $number = explode(".", $number);
-        $result = array("","");
-        $j =0;
-        foreach($number as $val){
-            // loop each part of number, right and left of dot
-            for($i=0;$i<strlen($val);$i++){
-                // look at each part of the number separately  [1] [5] [4] [2]  and  [5] [8]
-    
-                $numberpart = str_pad($val[$i], strlen($val)-$i, "0", STR_PAD_RIGHT); // make 1 => 1000, 5 => 500, 4 => 40 etc.
-                if($numberpart <= 20){ // if it's below 20 the number should be one word
-                    $numberpart = 1*substr($val, $i,2); // use two digits as the word
-                    $i++; // increment i since we used two digits
-                    $result[$j] .= $words[$numberpart] ." ";
-                }else{
-                    //echo $numberpart . "<br>\n"; //debug
-                    if($numberpart > 90){  // more than 90 and it needs a $digit.
-                        $result[$j] .= $words[$val[$i]] . " " . $digits[strlen($numberpart)-1] . " "; 
-                    }else if($numberpart != 0){ // don't print zero
-                        $result[$j] .= $words[str_pad($val[$i], strlen($val)-$i, "0", STR_PAD_RIGHT)] ." ";
-                    }
-                }
-            }
-            $j++;
+        $number_after_decimal = round($number - ($num = floor($number)), 2) * 100;
+
+        // Check if there is any number after decimal
+        $amt_hundred = null;
+        $count_length = strlen($num);
+        $x = 0;
+        $string = array();
+        $change_words = array(
+            0 => 'Zero', 1 => 'One', 2 => 'Two',
+            3 => 'Three', 4 => 'Four', 5 => 'Five', 6 => 'Six',
+            7 => 'Seven', 8 => 'Eight', 9 => 'Nine',
+            10 => 'Ten', 11 => 'Eleven', 12 => 'Twelve',
+            13 => 'Thirteen', 14 => 'Fourteen', 15 => 'Fifteen',
+            16 => 'Sixteen', 17 => 'Seventeen', 18 => 'Eighteen',
+            19 => 'Nineteen', 20 => 'Twenty', 30 => 'Thirty',
+            40 => 'Fourty', 50 => 'Fifty', 60 => 'Sixty',
+            70 => 'Seventy', 80 => 'Eighty', 90 => 'Ninety'
+        );
+        $here_digits = array('', 'Hundred', 'Thousand', 'Lakh', 'Crore');
+        while ($x < $count_length) {
+            $get_divider = ($x == 2) ? 10 : 100;
+            $number = floor($num % $get_divider);
+            $num = floor($num / $get_divider);
+            $x += $get_divider == 10 ? 1 : 2;
+            if ($number) {
+                $add_plural = (($counter = count($string)) && $number > 9) ? 's' : null;
+                $amt_hundred = ($counter == 1 && $string[0]) ? ' and ' : null;
+                $string[] = ($number < 21) ? $change_words[$number] . ' ' . $here_digits[$counter] . $add_plural . '
+        ' . $amt_hundred : $change_words[floor($number / 10) * 10] . ' ' . $change_words[$number % 10] . '
+        ' . $here_digits[$counter] . $add_plural . ' ' . $amt_hundred;
+            } else $string[] = null;
         }
-        if(trim($result[0]) != "") echo $result[0] . "Rupees ";
-        if($result[1] != "") echo $result[1] . "Paise";
-        echo " Only";
+        $implode_to_Words = implode('', array_reverse($string));
+        $get_word_after_point = ($number_after_decimal > 0) ? "Point " . ($change_words[$number_after_decimal / 10] . "
+            " . $change_words[$number_after_decimal % 10]) : '';
+        return ($implode_to_Words ? $implode_to_Words : ' ') . $get_word_after_point;
     }
     
 }
