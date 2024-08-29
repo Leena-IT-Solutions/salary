@@ -52,10 +52,11 @@ class PDFController extends Controller
         $company = CompanyProfile::first();
         $payroll = Payroll::find($id);
         $path = "pdfs/bank_letter_".$id.".pdf";
+        
         Pdf::view('pdf.bank_letter', ['company' => $company, 'payroll' => $payroll])
         ->save($path);
         // return view('pdf.bank_letter', compact('payroll', 'company'));
-        return redirect("/".$path);
+        //return redirect("/".$path);
     }
 
     public function excel_ca_report($id){

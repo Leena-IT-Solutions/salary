@@ -448,6 +448,19 @@ class RunPayrollController extends Controller
                 $items[] = $payroll_employee_breakup_data;
             }
         }
+        /* Add Remaining Amount as Special Allowance to earnings */
+        $items[] = [
+            "payroll_employee_id" => 0,
+            "breakupable_id" => $employee_salary->id,
+            "breakupable_type" => "App\Models\EmployeeSalary",
+            "name_in_payslip" => "Special Allowance",
+            "standard_amount" => $employee_salary->remaining_amount,
+            "actual_payable_amount" => $earning->is_pro_rata ? round($employee_salary->remaining_amount * $k) : round($employee_salary->remaining_amount),
+            "employer_contribution_amount" => 0,
+            "is_basic_pay" => false,
+            "is_gross_pay" => true,
+        ];
+
         return $items;
     }
 

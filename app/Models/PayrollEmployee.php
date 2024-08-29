@@ -42,6 +42,7 @@ class PayrollEmployee extends Model
             ->where('breakupable_type', 'App\Models\PayrollEmployeeAttendance')
             ->orWhere('breakupable_type', 'App\Models\Earning')
             ->orWhere('breakupable_type', 'App\Models\ReimbursementApproval')
+            ->orWhere('breakupable_type', 'App\Models\EmployeeSalary')
             ->orWhere(function($qq){
                 $qq
                 ->where('breakupable_type', 'App\Models\LoanAndAdvanceApproval')
