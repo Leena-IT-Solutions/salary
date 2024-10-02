@@ -63,10 +63,12 @@
 
 <div class="p-5">
 
+    
+
     <table class="table table-bordered border-dark fs-6">
         
         <tr>
-            <th colspan="{{ (sizeof($statutories) * 2) + 13}}">
+            <th colspan="{{ (sizeof($statutories) * 2) + 15}}">
                 <h1 class="text-uppercase fw-bold">{{ $company->company_name }}</h1>
                 <h6>{{ $company->address }} {{ $company->city }} {{ $company->pincode }} {{ $company->state }} {{ $company->country }}</h6>
                 <h4 class="p-2">Salary for payroll {{ $payroll->payroll_name }}</h4>
@@ -75,7 +77,8 @@
 
         <thead class="text-center text-uppercase">
             <tr style="font-size: 10px;">
-                <th colspan="3">Basic Information</th>
+                <th colspan="2">Basic Information</th>
+                <th colspan="3">Days</th>
                 <th colspan="4">Earning</th>
                 <th colspan="3">Pay Types</th>
                 <th colspan="{{ sizeof($statutories) }}">Employee</th>
@@ -86,7 +89,9 @@
             <tr style="font-size: 10px;">
                 <th style="width: 80px;" class="text-center">SR NO</th>
                 <th class="">Name</th>
+                <th class="">Total</th>
                 <th class="">LOP</th>
+                <th class="">Present</th>
                 <th class="">Earning</th>
                 <th class="">OT</th>
                 <th class="">Reim</th>
@@ -129,7 +134,25 @@
                 <tr style="font-size: 10px;">
                     <td class="text-center">{{ $ind + 1 }}</td>
                     <td class="">{{ $emp->employee->first_name }} {{ $emp->employee->middle_name }} {{ $emp->employee->last_name }}</td>
+                    <td class="text-center">
+                    @if($wdc)
+                        @if($wdc->value == "Actual Days")
+                            {{ $payroll->actual_days }}
+                        @elseif($wdc->value == "Working Days")
+                            {{ $payroll->working_days }}
+                        @endif
+                    @endif
+                    </td>
                     <td class="text-center">{{ $emp->payroll_employee_attendances->lop }}</td>
+                    <td class="text-center">
+                    @if($wdc)
+                        @if($wdc->value == "Actual Days")
+                            {{ $payroll->actual_days - $emp->payroll_employee_attendances->lop }}
+                        @elseif($wdc->value == "Working Days")
+                            {{ $payroll->working_days - $emp->payroll_employee_attendances->lop }}
+                        @endif
+                    @endif
+                    </td>
                     <td class="text-center">{{ $emp->total_earning }}</td>
                     <td class="text-center">{{ $emp->overtime_earning }}</td>
                     <td class="text-center">{{ $emp->reimbursement }}</td>
@@ -160,26 +183,26 @@
             @endforeach
 
             <tr class="fw-bold" style="font-size: 10px;">
-                <td class="text-end" colspan="{{ (sizeof($statutories) * 2) + 12}}">Total Payable Amount</td>
+                <td class="text-end" colspan="{{ (sizeof($statutories) * 2) + 14}}">Total Payable Amount</td>
                 <td class="text-end">Rs {{ $payroll->net_payable_amount }}/-</td>
             </tr>
 
             @foreach($employer_statu_comps as $sc)
             <tr class="fw-bold" style="font-size: 10px;">
-                <td class="text-end" colspan="{{ (sizeof($statutories) * 2) + 12}}">{{ $sc["key"] }}</td>
+                <td class="text-end" colspan="{{ (sizeof($statutories) * 2) + 14}}">{{ $sc["key"] }}</td>
                 <td class="text-end">Rs {{ $sc["val"] }}/-</td>
             </tr>
             @endforeach
 
             @foreach($employee_statu_comps as $sc)
             <tr class="fw-bold" style="font-size: 10px;">
-                <td class="text-end" colspan="{{ (sizeof($statutories) * 2) + 12}}">{{ $sc["key"] }}</td>
+                <td class="text-end" colspan="{{ (sizeof($statutories) * 2) + 14}}">{{ $sc["key"] }}</td>
                 <td class="text-end">Rs {{ $sc["val"] }}/-</td>
             </tr>
             @endforeach
 
             <tr class="fw-bold" style="font-size: 10px;">
-                <td class="text-end" colspan="{{ (sizeof($statutories) * 2) + 12}}">Total payable amount to government for statutory compliance</td>
+                <td class="text-end" colspan="{{ (sizeof($statutories) * 2) + 14}}">Total payable amount to government for statutory compliance</td>
                 <td class="text-end">Rs {{ $total_statutory_compliance_amount }}/-</td>
             </tr>
 

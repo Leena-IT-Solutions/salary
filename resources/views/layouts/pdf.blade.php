@@ -10,6 +10,7 @@
     @yield('head')
 
     <style>
+        body { margin: 15mm; }
         * {
             margin: 0;
             padding: 0;

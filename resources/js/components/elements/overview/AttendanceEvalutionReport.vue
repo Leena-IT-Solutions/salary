@@ -24,12 +24,13 @@
                         <button @click="shift_dates('next')" class="btn btn-dark">NEXT</button>
                     </div>
                     <div class="col-auto">
-                        <button @click="evalutePayCycle()" :disabled="loading" class="btn btn-primary">
+                        <button @click="evalutePayCycle()" :disabled="loading" class="btn btn-primary me-2">
                             <span v-if="!loading">Evalute Pay Cycle</span>
                             <span v-if="loading" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
                             <span v-if="loading" role="status"> Evaluting</span>
                         </button>
 
+                        <a class="btn btn-primary" target="_blank" :href="'/pdf/attendance/'+item.from+'/'+item.to">Download</a>
                     </div>
                 </div>
             </div>
