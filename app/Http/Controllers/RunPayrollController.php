@@ -455,7 +455,8 @@ class RunPayrollController extends Controller
             "breakupable_type" => "App\Models\EmployeeSalary",
             "name_in_payslip" => "Special Allowance",
             "standard_amount" => $employee_salary->remaining_amount,
-            "actual_payable_amount" => $earning->is_pro_rata ? round($employee_salary->remaining_amount * $k) : round($employee_salary->remaining_amount),
+            "actual_payable_amount" => round($employee_salary->remaining_amount * $k),
+            /* "actual_payable_amount" => $earning->is_pro_rata ? round($employee_salary->remaining_amount * $k) : round($employee_salary->remaining_amount * $k), */
             "employer_contribution_amount" => 0,
             "is_basic_pay" => false,
             "is_gross_pay" => true,
