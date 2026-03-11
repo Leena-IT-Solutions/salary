@@ -77,7 +77,7 @@
 
         <thead class="text-center text-uppercase">
             <tr style="font-size: 10px;">
-                <th colspan="2">Basic Information</th>
+                <th colspan="5">Basic Information</th>
                 <th colspan="3">Days</th>
                 <th colspan="4">Earning</th>
                 <th colspan="3">Pay Types</th>
@@ -89,6 +89,9 @@
             <tr style="font-size: 10px;">
                 <th style="width: 80px;" class="text-center">SR NO</th>
                 <th class="">Name</th>
+                <th class="">ESIC NO</th>
+                <th class="">PF NO</th>
+                <th class="">UAN</th>
                 <th class="">Total</th>
                 <th class="">LOP</th>
                 <th class="">Present</th>
@@ -134,6 +137,9 @@
                 <tr style="font-size: 10px;">
                     <td class="text-center">{{ $ind + 1 }}</td>
                     <td class="">{{ $emp->employee->first_name }} {{ $emp->employee->middle_name }} {{ $emp->employee->last_name }}</td>
+                    <td class="text-center">{{ $emp->employee->esic }}</td>
+                    <td class="text-center">{{ $emp->employee->pf }}</td>
+                    <td class="text-center">{{ $emp->employee->uan }}</td>
                     <td class="text-center">
                     @if($wdc)
                         @if($wdc->value == "Actual Days")

@@ -95,6 +95,8 @@
 
             <forms-text-field name="uan" label="UAN" v-model="employee.uan" error="" classes="col-12 col-xl-3"></forms-text-field>
 
+            <forms-text-field name="esic" label="ESIC" v-model="employee.esic" error="" classes="col-12"></forms-text-field>
+
             <forms-submit-button name="" v-model="loading" label="Save employee" @click="save()" classes="col-6"></forms-submit-button>
 
             <div class="col-6 text-end">
@@ -194,6 +196,7 @@ export default {
                 pan: null,
                 pf: null,
                 uan: null,
+                esic: null,
             },
             employees: [],
             next_page_url: null,
@@ -280,6 +283,7 @@ export default {
             this.employee.pan = null;
             this.employee.pf = null;
             this.employee.uan = null;
+            this.employee.esic = null;
         },
 
         add(){
@@ -337,6 +341,7 @@ export default {
             this.employee.pan = item.pan;
             this.employee.pf = item.pf;
             this.employee.uan = item.uan;
+            this.employee.esic = item.esic;
         },
 
     },

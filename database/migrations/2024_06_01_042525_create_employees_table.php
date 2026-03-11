@@ -25,19 +25,20 @@ return new class extends Migration
             $table->date('doe')->nullable();
             $table->date('dob');
             $table->set('gender', ['Male', 'Female', 'Other']);
-            $table->set('blood_group', ['O +ve','O -ve','A +ve','A -ve','B +ve','B -ve','AB +ve','AB -ve','HH','Other',]);
-            $table->set('religion', ['Hindu','Muslim','Christian','Sikh','Buddhist','Jain','Atheist','Other']);
+            $table->set('blood_group', ['O +ve', 'O -ve', 'A +ve', 'A -ve', 'B +ve', 'B -ve', 'AB +ve', 'AB -ve', 'HH', 'Other']);
+            $table->set('religion', ['Hindu', 'Muslim', 'Christian', 'Sikh', 'Buddhist', 'Jain', 'Atheist', 'Other']);
             $table->string('cast', 100)->nullable();
             $table->string('subcast', 100)->nullable();
             $table->string('mothertongue', 100);
             $table->string('nationality', 100);
             $table->set('marital_status', ['Married', 'Widowed', 'Separated', 'Divorced', 'Single', 'Other']);
-            $table->set('qualification', ['Primary School','Secondary School','High School','Undergraduate','Graduate','Diploma','Masters','Doctorate','Other'])->nullable();
+            $table->set('qualification', ['Primary School', 'Secondary School', 'High School', 'Undergraduate', 'Graduate', 'Diploma', 'Masters', 'Doctorate', 'Other'])->nullable();
             $table->string('degree', 100)->nullable();
             $table->string('aadhar', 16)->nullable();
             $table->string('pan', 16)->nullable();
             $table->string('pf', 100)->nullable();
             $table->string('uan', 100)->nullable();
+            $table->string('esic', 100)->nullable();
 
             $table->timestamps();
         });

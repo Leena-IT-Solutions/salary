@@ -34,66 +34,80 @@ class Employee extends Model
         'pan',
         'pf',
         'uan',
+        'esic',
     ];
 
-    public function employee_photo(){
+    public function employee_photo()
+    {
         return $this->hasOne(EmployeePhoto::class)->orderBy('id', 'desc')->latest();
     }
 
-    public function employee_address(){
+    public function employee_address()
+    {
         return $this->hasOne(EmployeeAddress::class)->orderBy('id', 'desc')->latest();
     }
 
-    public function employee_shift(){
+    public function employee_shift()
+    {
         return $this->hasOne(EmployeeShift::class)->orderBy('dt', 'desc')->latest();
     }
 
-    public function employee_work_location(){
+    public function employee_work_location()
+    {
         return $this->hasOne(EmployeeWorkLocation::class)->where('to', null)->latest();
     }
 
-    public function employee_department(){
+    public function employee_department()
+    {
         return $this->hasOne(EmployeeDepartment::class)->where('to', null)->latest();
     }
 
-    public function employee_designation(){
+    public function employee_designation()
+    {
         return $this->hasOne(EmployeeDesignation::class)->where('to', null)->latest();
     }
 
-    public function employee_bank(){
+    public function employee_bank()
+    {
         return $this->hasOne(EmployeeBank::class)->orderBy('id', 'desc')->latest();
     }
 
-    
-
-    public function employee_service(){
+    public function employee_service()
+    {
         return $this->hasOne(EmployeeService::class)->where('to', null)->latest();
     }
 
-    public function employee_shifts(){
+    public function employee_shifts()
+    {
         return $this->hasMany(EmployeeShift::class)->orderBy('dt', 'asc');
     }
 
-    public function employee_leave_groups(){
+    public function employee_leave_groups()
+    {
         return $this->hasMany(EmployeeLeaveGroup::class);
     }
 
-    public function employee_leave_group(){
-        $today = date("Y-m-d");
+    public function employee_leave_group()
+    {
+        $today = date('Y-m-d');
+
         return $this->hasOne(EmployeeLeaveGroup::class)
-        ->where(function($q) use($today) {
-            $q->where('to', null)->orWhere('to', '>=', $today);
-        })
-        ->where('from', "<=", $today)
-        ->latest();
+            ->where(function ($q) use ($today) {
+                $q->where('to', null)->orWhere('to', '>=', $today);
+            })
+            ->where('from', '<=', $today)
+            ->latest();
     }
 
-    public function employee_salaries(){
+    public function employee_salaries()
+    {
         return $this->hasMany(EmployeeSalary::class);
     }
 
-    public function employee_salary(){
+    public function employee_salary()
+    {
         $from = date('Y-m-d');
+
         return $this->hasOne(EmployeeSalary::class)->whereDate('effective_from', '<=', $from)->orderBy('id', 'desc')->latest();
     }
 }
