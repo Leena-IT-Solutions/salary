@@ -12,66 +12,80 @@
     <!-- Scripts -->
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 </head>
-<body>
+<body class="bg-light">
     <div id="app">
 
-        <div class="my_layout align-items-top">
+        <div class="my_layout">
 
-            <div class="my_layout_sidebar bg-primary shadow">
-
-                <div class="row border-bottom align-items-center m-0">
-                    <div class="col">
-                        <h4 class="text-uppercase text-light fw-bold m-0 p-0 px-3 py-2 py-lg-3">Payroll</h4>
-                    </div>
-                    <div class="col-auto d-block d-lg-none">
-                        <button 
-                        class="btn btn-clear btn-lg border-0 text-light"
-                        data-bs-toggle="offcanvas" 
-                        data-bs-target="#offcanvasExample" 
-                        aria-controls="offcanvasExample">
-                            <i class="bi bi-list"></i>
-                        </button>
+            <!-- Sidebar -->
+            <aside class="my_layout_sidebar d-none d-lg-flex flex-column shadow-premium">
+                <div class="sidebar-header border-bottom border-white border-opacity-10 py-4 px-4 mb-2">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="logo-box bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;">
+                            <i class="bi bi-cash-stack text-primary fs-5"></i>
+                        </div>
+                        <h4 class="text-white fw-bold m-0 letter-spacing-1">PAYROLL</h4>
                     </div>
                 </div>
 
-                <div class="container d-none d-lg-block overflow-auto">
+                <div class="sidebar-content flex-grow-1 overflow-auto custom-scrollbar">
                     <app-navigation></app-navigation>
+                </div>
+
+                <div class="sidebar-footer p-4 border-top border-white border-opacity-10">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="avatar bg-white rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold shadow-sm" style="width: 40px; height: 40px;">
+                            {{ substr(Auth::user()->name, 0, 1) }}
+                        </div>
+                        <div class="user-info overflow-hidden">
+                            <p class="text-white fw-semibold m-0 text-truncate">{{ Auth::user()->name }}</p>
+                            <p class="text-white text-opacity-50 small m-0 text-truncate">Administrator</p>
+                        </div>
+                    </div>
                 </div>
 
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
                     @csrf
                 </form>
-                
-            </div>
+            </aside>
 
-            <div class="my_layout_main">
-                @yield('content')
+            <!-- Main Content Area -->
+            <div class="my_layout_main d-flex flex-column">
+                
+                <!-- Top Navbar for Mobile -->
+                <nav class="navbar d-lg-none bg-primary shadow-sm px-3">
+                    <div class="container-fluid">
+                        <span class="navbar-brand text-white fw-bold">PAYROLL</span>
+                        <button class="btn btn-link text-white p-0 border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample">
+                            <i class="bi bi-list fs-1"></i>
+                        </button>
+                    </div>
+                </nav>
+
+                <main class="flex-grow-1">
+                    @yield('content')
+                </main>
             </div>
 
         </div>
 
-        <!-- This is sidebar -->
-        <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
-            <div class="card bg-primary h-100">
-
-                <div class="card-header">
-                    <div class="row align-items-top h-100">
-                        <div class="col">
-                            <h5 class="text-light p-0 m-0 text-uppercase">Payroll</h5>
-                        </div>
-                        <div class="col-auto text-end text-light">
-                            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card-body overflow-auto">
-                    <app-navigation></app-navigation>
-                </div>
-
+        <!-- Mobile Sidebar (Offcanvas) -->
+        <div class="offcanvas offcanvas-start bg-primary" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
+            <div class="offcanvas-header border-bottom border-white border-opacity-10 py-4">
+                <h5 class="offcanvas-title text-white fw-bold" id="offcanvasExampleLabel text-uppercase">PAYROLL</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body p-0">
+                <app-navigation></app-navigation>
             </div>
         </div>
 
     </div>
+
+    <style>
+        .letter-spacing-1 { letter-spacing: 1px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+    </style>
 </body>
 </html>

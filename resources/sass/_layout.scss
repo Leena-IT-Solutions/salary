@@ -1,15 +1,67 @@
 .my_layout {
-    height: calc(100vh - 20px);
+    height: 100vh;
     display: grid;
-    grid-template-columns: auto;
-    grid-template-rows: 45px auto;
+    grid-template-columns: 1fr;
+    grid-template-rows: 60px auto;
+    background-color: $light;
+
+    &_sidebar {
+        background: linear-gradient(135deg, $primary 0%, darken($primary, 15%) 100%);
+        color: white;
+        transition: all 0.3s ease;
+        z-index: 1000;
+        
+        .nav-item {
+            margin: 0.25rem 0.75rem;
+            .nav-link {
+                border-radius: 0.75rem;
+                padding: 0.75rem 1rem;
+                color: rgba(255, 255, 255, 0.8);
+                transition: all 0.2s ease;
+                
+                &:hover {
+                    color: white;
+                    background: rgba(255, 255, 255, 0.1);
+                    transform: translateX(5px);
+                }
+                
+                &.active {
+                    color: white;
+                    background: rgba(255, 255, 255, 0.2);
+                    font-weight: 500;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                }
+            }
+        }
+    }
+
+    &_main {
+        overflow-y: auto;
+        padding: 0;
+        background-color: $light;
+    }
 }
 
-// Large devices (desktops, 992px and up)
+// Full Sidebar for desktops
 @media (min-width: 992px) {
     .my_layout {
-        height: 100vh;
-        grid-template-columns: 320px auto;
+        grid-template-columns: 280px auto;
         grid-template-rows: auto;
+        
+        &_sidebar {
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            box-shadow: 4px 0 24px rgba($dark, 0.05);
+        }
     }
+}
+
+// Custom Glassmorphism Card
+.glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: $card-border-radius;
+    box-shadow: $card-shadow;
 }

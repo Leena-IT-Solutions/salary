@@ -12,32 +12,29 @@
     <!-- Scripts -->
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 </head>
-<body>
+<body class="bg-primary bg-gradient text-white">
     <div id="app">
 
+        <div class="container min-vh-100 d-flex align-items-center justify-content-center">
+            <div class="row w-100 justify-content-center">
 
-        <div class="container h-full">
-            <div class="row h-100 justify-content-center align-items-center">
+                <div class="col-11 col-md-8 col-lg-6 col-xl-5 col-xxl-4">
 
-                <div class="col-11 col-md-8 col-lg-7 col-xl-6 col-xxl-5">
-
-                    <div class="container text-center mb-4">
-                        <a class="btn btn-clear border-0" href="/">
-                            <div style="width:100px;" class="mx-auto">
-                                <div class="image image-s image-cover">
-                                    <img src="/images/logo.png" alt="">
-                                </div>
-                            </div>
-                            <h1>{{ config('app.name', 'Laravel') }}</h1>
-                        </a>
+                    <div class="text-center mb-5" data-aos="zoom-in">
+                        <div class="logo-box bg-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow-premium" style="width: 80px; height: 80px;">
+                            <i class="bi bi-cash-stack text-primary fs-1"></i>
+                        </div>
+                        <h1 class="fw-bold text-uppercase letter-spacing-2 m-0">{{ config('app.name', 'PAYROLL') }}</h1>
+                        <p class="text-white text-opacity-75 small mt-1">Advanced Salary Management System</p>
                     </div>
 
-                    <div class="container shadow rounded px-4 py-5 mb-4">
+                    <div class="card bg-white rounded-2xl shadow-lg border-0 px-4 py-5 mb-4 text-dark" data-aos="fade-up" data-aos-delay="200">
                         @yield('content')
                     </div>
 
-                    <div class="container text-center">
-                        <a class="btn btn-clear border-0" target="_blank" href="https://leenaitsolutions.com">Powered by <strong>LITS</strong></a>
+                    <div class="text-center text-white text-opacity-75 small" data-aos="fade-up" data-aos-delay="400">
+                        <a class="text-white text-decoration-none fw-semibold" target="_blank" href="https://leenaitsolutions.com">Powered by LITS</a>
+                        <span class="mx-2 opacity-25">|</span>
                         &copy; {{ date('Y') }}
                     </div>
 
@@ -45,8 +42,12 @@
 
             </div>
         </div>
-
         
     </div>
+
+    <style>
+        .letter-spacing-2 { letter-spacing: 2px; }
+        .bg-gradient { background: linear-gradient(135deg, $primary 0%, darken($primary, 20%) 100%) !important; }
+    </style>
 </body>
 </html>

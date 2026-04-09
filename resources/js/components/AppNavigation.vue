@@ -1,401 +1,244 @@
 <template>
-    <div class="container text-light py-4">
+    <div class="nav-container py-4">
 
-        <div class="mb-4">
-            <div>
-                <h6 class="text-uppercase fw-bold m-0 d-inline-block mb-2">Overview
-                    <!-- <hr class="w-50 border-3 my-2"> -->
-                </h6>
-            </div>
-    
-            <div class="d-grid gap-1">
-                
-                <a 
-                href="/" 
-                class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-gear me-2"></i>
-                    Dashboard
+        <!-- Overview Section -->
+        <div class="nav-section mb-4">
+            <h6 class="nav-section-title">Overview</h6>
+            <div class="nav-items">
+                <a href="/" class="nav-item-link" :class="{ 'active': cpath == '/' }">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Dashboard</span>
                 </a>
-
-                <a href="/calender" 
-                class="btn btn-lg btn-primary btn-sm text-start"
-                :class="cpath == '/calender' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-person me-2"></i>
-                    Calender
+                <a href="/calender" class="nav-item-link" :class="{ 'active': cpath == '/calender' }">
+                    <i class="bi bi-calendar3"></i>
+                    <span>Calendar</span>
                 </a>
-
-                <a href="/employee_shift" 
-                class="btn btn-lg btn-primary btn-sm text-start"
-                :class="cpath == '/employee_shift' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-person me-2"></i>
-                    Employee Shift Manager
+                <a href="/employee_shift" class="nav-item-link" :class="{ 'active': cpath == '/employee_shift' }">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Shift Manager</span>
                 </a>
-
-                <a href="/attendance" 
-                class="btn btn-lg btn-primary btn-sm text-start"
-                :class="cpath == '/attendance' ? 'active' : ''"
-                type="button">
-                    <i class="bi bi-airplane me-2"></i>
-                    Attendance
+                <a href="/attendance" class="nav-item-link" :class="{ 'active': cpath == '/attendance' }">
+                    <i class="bi bi-fingerprint"></i>
+                    <span>Attendance</span>
                 </a>
-
-                <a href="/attendance_evalution_report" 
-                class="btn btn-lg btn-primary btn-sm text-start"
-                :class="cpath == '/attendance_evalution_report' ? 'active' : ''"
-                type="button">
-                    <i class="bi bi-airplane me-2"></i>
-                    Attendance Evalution Report
+                <a href="/attendance_evalution_report" class="nav-item-link" :class="{ 'active': cpath == '/attendance_evalution_report' }">
+                    <i class="bi bi-file-earmark-bar-graph"></i>
+                    <span>Evaluation Report</span>
                 </a>
-
-                <a href="/run_payroll" 
-                class="btn btn-lg btn-primary btn-sm text-start"
-                :class="cpath == '/run_payroll' || cpath == '/payslip' ? 'active' : ''"
-                type="button">
-                    <i class="bi bi-airplane me-2"></i>
-                    Run Payroll
+                <a href="/run_payroll" class="nav-item-link" :class="{ 'active': cpath == '/run_payroll' || cpath == '/payslip' }">
+                    <i class="bi bi-cash-stack"></i>
+                    <span>Run Payroll</span>
                 </a>
-
             </div>
         </div>
 
-        <!-- Approvals -->
-        <div class="mb-4">
-            <div>
-                <h6 class="text-uppercase fw-bold m-0 d-inline-block mb-2">Apporvals</h6>
-            </div>
-    
-            <div class="d-grid gap-1">
-                
-                <a href="/approvals/leave" 
-                class="btn btn-lg btn-primary btn-sm text-start"
-                :class="cpath == '/approvals/leave' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-person me-2"></i>
-                    Leave
+        <!-- Approvals Section -->
+        <div class="nav-section mb-4">
+            <h6 class="nav-section-title">Approvals</h6>
+            <div class="nav-items">
+                <a href="/approvals/leave" class="nav-item-link" :class="{ 'active': cpath == '/approvals/leave' }">
+                    <i class="bi bi-calendar-check"></i>
+                    <span>Leave</span>
                 </a>
-
-                <a href="/approvals/time_update" 
-                class="btn btn-lg btn-primary btn-sm text-start"
-                :class="cpath == '/approvals/time_update' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-person me-2"></i>
-                    Time Update
+                <a href="/approvals/time_update" class="nav-item-link" :class="{ 'active': cpath == '/approvals/time_update' }">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Time Update</span>
                 </a>
-
-                <a href="/approvals/on_duty" 
-                class="btn btn-lg btn-primary btn-sm text-start"
-                :class="cpath == '/approvals/on_duty' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-person me-2"></i>
-                    On Duty
+                <a href="/approvals/on_duty" class="nav-item-link" :class="{ 'active': cpath == '/approvals/on_duty' }">
+                    <i class="bi bi-briefcase"></i>
+                    <span>On Duty</span>
                 </a>
-
-                <a href="/approvals/shortleave" 
-                class="btn btn-lg btn-primary btn-sm text-start"
-                :class="cpath == '/approvals/shortleave' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-person me-2"></i>
-                    Short Leave
+                <a href="/approvals/shortleave" class="nav-item-link" :class="{ 'active': cpath == '/approvals/shortleave' }">
+                    <i class="bi bi-hourglass-split"></i>
+                    <span>Short Leave</span>
                 </a>
-
-                <a href="/approvals/overtime" 
-                class="btn btn-lg btn-primary btn-sm text-start"
-                :class="cpath == '/approvals/overtime' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-person me-2"></i>
-                    Overtime
+                <a href="/approvals/overtime" class="nav-item-link" :class="{ 'active': cpath == '/approvals/overtime' }">
+                    <i class="bi bi-watch"></i>
+                    <span>Overtime</span>
                 </a>
-
-                <a href="/approvals/fine" 
-                class="btn btn-lg btn-primary btn-sm text-start"
-                :class="cpath == '/approvals/fine' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-person me-2"></i>
-                    Fine
+                <a href="/approvals/fine" class="nav-item-link" :class="{ 'active': cpath == '/approvals/fine' }">
+                    <i class="bi bi-exclamation-octagon"></i>
+                    <span>Fine</span>
                 </a>
-
-                <a href="/approvals/variable_pay" 
-                class="btn btn-lg btn-primary btn-sm text-start"
-                :class="cpath == '/approvals/variable_pay' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-person me-2"></i>
-                    Variable Pay
+                <a href="/approvals/variable_pay" class="nav-item-link" :class="{ 'active': cpath == '/approvals/variable_pay' }">
+                    <i class="bi bi-plus-circle"></i>
+                    <span>Variable Pay</span>
                 </a>
-
-                <a href="/approvals/loan_and_advance" 
-                class="btn btn-lg btn-primary btn-sm text-start"
-                :class="cpath == '/approvals/loan_and_advance' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-person me-2"></i>
-                    Loans and Advance
+                <a href="/approvals/loan_and_advance" class="nav-item-link" :class="{ 'active': cpath == '/approvals/loan_and_advance' }">
+                    <i class="bi bi-bank"></i>
+                    <span>Loans & Advance</span>
                 </a>
-
-                <a href="/approvals/reimbursement" 
-                class="btn btn-lg btn-primary btn-sm text-start"
-                :class="cpath == '/approvals/reimbursement' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-person me-2"></i>
-                    Reimbursement
+                <a href="/approvals/reimbursement" class="nav-item-link" :class="{ 'active': cpath == '/approvals/reimbursement' }">
+                    <i class="bi bi-receipt"></i>
+                    <span>Reimbursement</span>
                 </a>
-
-                <a href="/approvals/exemption_and_deduction" 
-                class="btn btn-lg btn-primary btn-sm text-start"
-                :class="cpath == '/approvals/exemption_and_deduction' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-person me-2"></i>
-                    Exemption and Deduction
+                <a href="/approvals/exemption_and_deduction" class="nav-item-link" :class="{ 'active': cpath == '/approvals/exemption_and_deduction' }">
+                    <i class="bi bi-calculator"></i>
+                    <span>Exemption & Ded.</span>
                 </a>
-
             </div>
         </div>
 
-        <div class="mb-4">
-            <div>
-                <h6 class="text-uppercase fw-bold m-0 d-inline-block mb-2">Employee</h6>
-            </div>
-    
-            <div class="d-grid gap-1">
-                
-                <a href="/employee/employee_manager" 
-                class="btn btn-lg btn-primary btn-sm text-start"
-                :class="cpath == '/employee/employee_manager' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-person me-2"></i>
-                    Employee Manager
+        <!-- Employee Section -->
+        <div class="nav-section mb-4">
+            <h6 class="nav-section-title">Employees</h6>
+            <div class="nav-items">
+                <a href="/employee/employee_manager" class="nav-item-link" :class="{ 'active': cpath == '/employee/employee_manager' }">
+                    <i class="bi bi-people"></i>
+                    <span>Employee Manager</span>
                 </a>
-
             </div>
         </div>
 
-        <div class="mb-4">
-            <div>
-                <h6 class="text-uppercase fw-bold m-0 d-inline-block mb-2">Organisation Settings</h6>
-            </div>
-
-            <div class="d-grid gap-1">
-
-                <a 
-                href="/organisation_settings/company_profile" 
-                class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/organisation_settings/company_profile' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-buildings me-2"></i>
-                    Company Profile
+        <!-- Organization Settings -->
+        <div class="nav-section mb-4">
+            <h6 class="nav-section-title">Organization</h6>
+            <div class="nav-items">
+                <a href="/organisation_settings/company_profile" class="nav-item-link" :class="{ 'active': cpath == '/organisation_settings/company_profile' }">
+                    <i class="bi bi-buildings"></i>
+                    <span>Company Profile</span>
                 </a>
-                
-                <a 
-                href="/organisation_settings/work_location" 
-                class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/organisation_settings/work_location' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-pin-map me-2"></i>
-                    Work Locations
+                <a href="/organisation_settings/work_location" class="nav-item-link" :class="{ 'active': cpath == '/organisation_settings/work_location' }">
+                    <i class="bi bi-geo-alt"></i>
+                    <span>Work Locations</span>
                 </a>
-
-                <a 
-                href="/organisation_settings/departments" 
-                class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/organisation_settings/departments' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-person-workspace me-2"></i>
-                    Departments
+                <a href="/organisation_settings/departments" class="nav-item-link" :class="{ 'active': cpath == '/organisation_settings/departments' }">
+                    <i class="bi bi-diagram-3"></i>
+                    <span>Departments</span>
                 </a>
-
-                <a 
-                href="/organisation_settings/designations" 
-                class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/organisation_settings/designations' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-mortarboard me-2"></i>
-                    Designation
+                <a href="/organisation_settings/designations" class="nav-item-link" :class="{ 'active': cpath == '/organisation_settings/designations' }">
+                    <i class="bi bi-award"></i>
+                    <span>Designations</span>
                 </a>
-
-                <a 
-                href="/organisation_settings/working_shifts" 
-                class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/organisation_settings/working_shifts' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-clock me-2"></i>
-                    Working Shifts
+                <a href="/organisation_settings/working_shifts" class="nav-item-link" :class="{ 'active': cpath == '/organisation_settings/working_shifts' }">
+                    <i class="bi bi-clock"></i>
+                    <span>Working Shifts</span>
                 </a>
-
-                <a 
-                href="/organisation_settings/leaves_setup" 
-                class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/organisation_settings/leaves_setup' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-umbrella me-2"></i>
-                    Leaves Setup
+                <a href="/organisation_settings/leaves_setup" class="nav-item-link" :class="{ 'active': cpath == '/organisation_settings/leaves_setup' }">
+                    <i class="bi bi-calendar-event"></i>
+                    <span>Leaves Setup</span>
                 </a>
-
-            </div>
-    
-        </div>
-
-        <div class="mb-4">
-            <div>
-                <h6 class="text-uppercase fw-bold m-0 d-inline-block mb-2">Salary Settings</h6>
-            </div>
-    
-            <div class="d-grid gap-1">
-
-                <a 
-                href="/salary_settings/earnings" 
-                class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/salary_settings/earnings' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-currency-rupee me-2"></i>
-                    Earnings
-                </a>
-
-                <a 
-                href="/salary_settings/services" 
-                class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/salary_settings/services' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-currency-rupee me-2"></i>
-                    Services
-                </a>
-
-                <a 
-                href="/salary_settings/reimbursement" 
-                class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/salary_settings/reimbursement' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-currency-rupee me-2"></i>
-                    Reimbursement
-                </a>
-
-                <a 
-                href="/salary_settings/exemption_and_deduction" 
-                class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/salary_settings/exemption_and_deduction' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-currency-rupee me-2"></i>
-                    Exemption And Deduction
-                </a>
-
-                <a 
-                href="/salary_settings/statutory_compliance" 
-                class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/salary_settings/statutory_compliance' ? 'active' : ''"   
-                type="button">
-                    <i class="bi bi-currency-rupee me-2"></i>
-                    Statutory Compliance
-                </a>
-
-                <a 
-                href="/salary_settings/salary_group" 
-                class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/salary_settings/salary_group' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-currency-rupee me-2"></i>
-                    Salary Groups
-                </a>
-
-                <a 
-                href="/" 
-                class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-currency-rupee me-2"></i>
-                    Payslip Formats
-                </a>
-
-                <!-- <a 
-                href="/" 
-                class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-currency-rupee me-2"></i>
-                    Taxes
-                </a> -->
-
-                <!-- <a 
-                href="/" 
-                class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-currency-rupee me-2"></i>
-                    Pay Schedule
-                </a> -->
-
-                <a 
-                href="/" 
-                class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-currency-rupee me-2"></i>
-                    Email Template
-                </a>
-
             </div>
         </div>
 
-        <div class="mb-4">
-            <div>
-                <h6 class="text-uppercase fw-bold m-0 d-inline-block mb-2">Application Settings</h6>
-            </div>
-    
-            <div class="d-grid gap-1">
-
-                <a 
-                href="/application_settings/financial_year" 
-                class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/application_settings/financial_year' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-currency-rupee me-2"></i>
-                    Financial Year
+        <!-- Salary Settings -->
+        <div class="nav-section mb-4">
+            <h6 class="nav-section-title">Salary Settings</h6>
+            <div class="nav-items">
+                <a href="/salary_settings/earnings" class="nav-item-link" :class="{ 'active': cpath == '/salary_settings/earnings' }">
+                    <i class="bi bi-wallet2"></i>
+                    <span>Earnings</span>
                 </a>
-
-                <a 
-                href="/application_settings/user_and_roles" 
-                class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/application_settings/user_and_roles' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-currency-rupee me-2"></i>
-                    User & Roles
+                <a href="/salary_settings/services" class="nav-item-link" :class="{ 'active': cpath == '/salary_settings/services' }">
+                    <i class="bi bi-gear-wide-connected"></i>
+                    <span>Services</span>
                 </a>
-
-                <a 
-                href="/application_settings/preference" 
-                class="btn btn-lg btn-primary btn-sm text-start" 
-                :class="cpath == '/application_settings/preference' ? 'active' : ''" 
-                type="button">
-                    <i class="bi bi-currency-rupee me-2"></i>
-                    Preference
+                <a href="/salary_settings/reimbursement" class="nav-item-link" :class="{ 'active': cpath == '/salary_settings/reimbursement' }">
+                    <i class="bi bi-credit-card"></i>
+                    <span>Reimbursement</span>
                 </a>
-
-                <a class="btn btn-lg btn-primary btn-sm text-start" href="/logout"
-                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                    <i class="bi bi-box-arrow-right me-2"></i>
-                    Logout
+                <a href="/salary_settings/exemption_and_deduction" class="nav-item-link" :class="{ 'active': cpath == '/salary_settings/exemption_and_deduction' }">
+                    <i class="bi bi-patch-minus"></i>
+                    <span>Exemption & Ded.</span>
                 </a>
-
+                <a href="/salary_settings/statutory_compliance" class="nav-item-link" :class="{ 'active': cpath == '/salary_settings/statutory_compliance' }">
+                    <i class="bi bi-shield-check"></i>
+                    <span>Statutory Comp.</span>
+                </a>
+                <a href="/salary_settings/salary_group" class="nav-item-link" :class="{ 'active': cpath == '/salary_settings/salary_group' }">
+                    <i class="bi bi-layers"></i>
+                    <span>Salary Groups</span>
+                </a>
             </div>
         </div>
-        
+
+        <!-- Application Settings -->
+        <div class="nav-section mb-4">
+            <h6 class="nav-section-title">Application</h6>
+            <div class="nav-items">
+                <a href="/application_settings/financial_year" class="nav-item-link" :class="{ 'active': cpath == '/application_settings/financial_year' }">
+                    <i class="bi bi-calendar-range"></i>
+                    <span>Financial Year</span>
+                </a>
+                <a href="/application_settings/user_and_roles" class="nav-item-link" :class="{ 'active': cpath == '/application_settings/user_and_roles' }">
+                    <i class="bi bi-person-badge"></i>
+                    <span>User & Roles</span>
+                </a>
+                <a href="/application_settings/preference" class="nav-item-link" :class="{ 'active': cpath == '/application_settings/preference' }">
+                    <i class="bi bi-sliders"></i>
+                    <span>Preference</span>
+                </a>
+                <a class="nav-item-link text-danger" href="/logout" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </div>
 
     </div>
 </template>
 
 <script>
 export default {
-
-    data(){
+    data() {
         return {
             cpath: "",
         };
     },
-
-    created(){
-
+    created() {
         this.cpath = window.location.pathname;
     },
-
 }
 </script>
+
+<style lang="scss" scoped>
+.nav-container {
+    padding: 0 1rem;
+}
+
+.nav-section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 0.75rem;
+    padding-left: 1rem;
+    letter-spacing: 0.05em;
+}
+
+.nav-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.nav-item-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    font-weight: 400;
+
+    i {
+        font-size: 1.1rem;
+    }
+
+    &:hover {
+        color: white;
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateX(4px);
+    }
+
+    &.active {
+        color: white;
+        background: rgba(255, 255, 255, 0.2);
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+}
+</style>
