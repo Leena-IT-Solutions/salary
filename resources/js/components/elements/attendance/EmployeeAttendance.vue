@@ -115,7 +115,7 @@
                                             <div class="fw-bold text-dark">{{ emp.first_name }} {{ emp.last_name }}</div>
                                             <div class="text-muted small">{{ emp.middle_name }}</div>
                                         </td>
-                                        <td><span class="badge bg-light text-dark font-monospace">{{ emp.employee_code }}</span></td>
+                                        <td><span class="badge bg-light text-dark font-monospace fs-6 px-3 py-2 border">{{ emp.employee_code }}</span></td>
                                         <td>
                                             <div class="fw-500">{{ emp.employee_shifts[0].working_shift.name }}</div>
                                             <div class="small text-muted">
