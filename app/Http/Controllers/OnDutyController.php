@@ -1,10 +1,10 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\OnDuty;
 use App\Models\Employee;
 use App\Models\EmployeeShift;
-
 use Illuminate\Http\Request;
 
 class OnDutyController extends Controller
@@ -14,59 +14,86 @@ class OnDutyController extends Controller
     }
 
     public function fetch(Request $request){
-        $by = 'id';
-        $order = 'desc';
-        $key = null;
-        $value = null;
+        $by = $request->get('by', 'id');
+        $order = $request->get('order', 'desc');
+        $search = $request->get('value');
 
-        $by = isset($request->by) ? $request->by : $by;
-        $order = isset($request->order) ? $request->order : $order;
-        $key = isset($request->key) ? $request->key : $key;
-        $value = isset($request->value) ? $request->value : $value;
+        $query = OnDuty::with('employee')->orderBy($by, $order);
 
-        $items = OnDuty::orderBy($by, $order);
-        if($key != null && $value != null){
-            $items = $items->where($key, 'LIKE', '%'.$value.'%');
+        if($search){
+            $query->where(function($q) use ($search) {
+                $q->where('on_date', 'LIKE', "%$search%")
+                  ->orWhere('reason', 'LIKE', "%$search%")
+                  ->orWhereHas('employee', function($eq) use ($search) {
+                      $eq->where('first_name', 'LIKE', "%$search%")
+                         ->orWhere('last_name', 'LIKE', "%$search%")
+                         ->orWhere('employee_code', 'LIKE', "%$search%")
+                         ->orWhere('email', 'LIKE', "%$search%")
+                         ->orWhere('phone', 'LIKE', "%$search%");
+                  });
+            });
         }
-        return $items->with('employee')->simplePaginate(25);
+
+        return $query->simplePaginate(25);
     }
 
     public function add(Request $request){
+        $request->validate([
+            'employee_id' => 'required',
+            'from_date' => 'required|date',
+            'to_date' => 'required|date|after_or_equal:from_date',
+            'reason' => 'required',
+        ]);
+
         $from = strtotime($request->from_date);
         $to = strtotime($request->to_date);
-        $diff = ($to - $from) / 86400;
-        $dates = [];
-        for($i=0;$i<=$diff;$i++){
-            $dates[] = date('Y-m-d', strtotime("+".$i." days", $from));
+
+        for ($i=$from; $i <= $to; $i = $i + 86400) { 
+            $on_date = date('Y-m-d', $i);
+            $shift = EmployeeShift::where('dt', $on_date)->where('employee_id', $request->employee_id)->first();
+            
+            if ($shift) {
+                OnDuty::create([
+                    "employee_id" => $request->employee_id,
+                    "employee_shift_id" => $shift->id,
+                    "on_date" => $on_date,
+                    "reason" => $request->reason,
+                ]);
+            }
         }
-        foreach($dates as $on_date){
-            $data = [
-                "employee_id" => $request->employee_id,
-                "employee_shift_id" => EmployeeShift::where('dt', $on_date)->where('employee_id', $request->employee_id)->first()->id,
-                "on_date" => $on_date,
-                "reason" => $request->reason,
-            ];
-            OnDuty::create($data);
-        }
-        return ["message" => "Successful"];
+        return response()->json(['message' => 'On Duty records added successfully']);
     }
 
     public function update(Request $request){
-        return OnDuty::find($request->id)->update($request->all());
+        $request->validate([
+            'on_date' => 'required|date',
+            'reason' => 'required',
+        ]);
+
+        $input = $request->all();
+        $shift = EmployeeShift::where('dt', $request->on_date)->where('employee_id', $request->employee_id)->first();
+        if ($shift) {
+            $input["employee_shift_id"] = $shift->id;
+        }
+        
+        OnDuty::find($request->id)->update($input);
+        return response()->json(['message' => 'On Duty record updated successfully']);
     }
 
     public function delete(Request $request){
-        return OnDuty::find($request->id)->delete();
+        OnDuty::find($request->id)->delete();
+        return response()->json(['message' => 'On Duty record deleted successfully']);
     }
 
     public function employee($id){
-
-        $response = [
-            "employee" => null,
+        return [
+            "employee" => Employee::where(function($q) use ($id) {
+                $q->where('employee_code', $id)
+                  ->orWhere('phone', 'LIKE', "%$id%")
+                  ->orWhere('email', 'LIKE', "%$id%")
+                  ->orWhere('first_name', 'LIKE', "%$id%")
+                  ->orWhere('last_name', 'LIKE', "%$id%");
+            })->first()
         ];
-        
-        $response["employee"] = Employee::where('employee_code', $id)->first();
-
-        return $response;
     }
 }

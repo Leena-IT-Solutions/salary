@@ -14,47 +14,88 @@ class ShortleaveApprovalController extends Controller
     }
 
     public function fetch(Request $request){
-        $by = 'id';
-        $order = 'desc';
-        $key = null;
-        $value = null;
+        $by = $request->get('by', 'id');
+        $order = $request->get('order', 'desc');
+        $search = $request->get('value');
 
-        $by = isset($request->by) ? $request->by : $by;
-        $order = isset($request->order) ? $request->order : $order;
-        $key = isset($request->key) ? $request->key : $key;
-        $value = isset($request->value) ? $request->value : $value;
+        $query = ShortLeave::with('employee')
+            ->select('*', 'in_time as from_time', 'out_time as to_time')
+            ->orderBy($by, $order);
 
-        $items = ShortLeave::orderBy($by, $order);
-        if($key != null && $value != null){
-            $items = $items->where($key, 'LIKE', '%'.$value.'%');
+        if($search){
+            $query->where(function($q) use ($search) {
+                $q->where('status', 'LIKE', "%$search%")
+                  ->orWhere('on_date', 'LIKE', "%$search%")
+                  ->orWhere('reason', 'LIKE', "%$search%")
+                  ->orWhereHas('employee', function($eq) use ($search) {
+                      $eq->where('first_name', 'LIKE', "%$search%")
+                         ->orWhere('last_name', 'LIKE', "%$search%")
+                         ->orWhere('employee_code', 'LIKE', "%$search%")
+                         ->orWhere('email', 'LIKE', "%$search%")
+                         ->orWhere('phone', 'LIKE', "%$search%");
+                  });
+            });
         }
-        return $items->with('employee')->simplePaginate(25);
+
+        return $query->simplePaginate(25);
     }
 
     public function add(Request $request){
-        $input = $request->all();
-        $input["employee_shift_id"] = EmployeeShift::where('dt', $request->on_date)->where('employee_id', $request->employee_id)->first()->id;
+        $request->validate([
+            'employee_id' => 'required',
+            'on_date' => 'required|date',
+            'from_time' => 'required',
+            'to_time' => 'required',
+            'status' => 'required',
+        ]);
+
+        $input = $request->except(['from_time', 'to_time']);
+        $input['in_time'] = $request->from_time;
+        $input['out_time'] = $request->to_time;
+        $input['is_lop'] = $input['is_lop'] ?? 'Yes';
+
+        $shift = EmployeeShift::where('dt', $request->on_date)->where('employee_id', $request->employee_id)->first();
+        if (!$shift) {
+            return response()->json(['errors' => ['on_date' => ['No shift found for this date.']]], 422);
+        }
+        $input["employee_shift_id"] = $shift->id;
         return ShortLeave::create($input);
     }
 
     public function update(Request $request){
-        $input = $request->all();
-        $input["employee_shift_id"] = EmployeeShift::where('dt', $request->on_date)->where('employee_id', $request->employee_id)->first()->id;
+        $request->validate([
+            'on_date' => 'required|date',
+            'from_time' => 'required',
+            'to_time' => 'required',
+            'status' => 'required',
+        ]);
+
+        $input = $request->except(['from_time', 'to_time']);
+        $input['in_time'] = $request->from_time;
+        $input['out_time'] = $request->to_time;
+        $input['is_lop'] = $input['is_lop'] ?? 'Yes';
+
+        $shift = EmployeeShift::where('dt', $request->on_date)->where('employee_id', $request->employee_id)->first();
+        if ($shift) {
+            $input["employee_shift_id"] = $shift->id;
+        }
         return ShortLeave::find($request->id)->update($input);
     }
 
     public function delete(Request $request){
-        return ShortLeave::find($request->id)->delete();
+        ShortLeave::find($request->id)->delete();
+        return response()->json(['message' => 'Short leave deleted successfully']);
     }
 
     public function employee($id){
-
-        $response = [
-            "employee" => null,
+        return [
+            "employee" => Employee::where(function($q) use ($id) {
+                $q->where('employee_code', $id)
+                  ->orWhere('phone', 'LIKE', "%$id%")
+                  ->orWhere('email', 'LIKE', "%$id%")
+                  ->orWhere('first_name', 'LIKE', "%$id%")
+                  ->orWhere('last_name', 'LIKE', "%$id%");
+            })->first()
         ];
-        
-        $response["employee"] = Employee::where('employee_code', $id)->first();
-
-        return $response;
     }
 }

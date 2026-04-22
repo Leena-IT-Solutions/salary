@@ -16,7 +16,7 @@ return new class extends Migration
 
             $table->string('leave_type');
             $table->string('code');
-            $table->set('is_lop', ['Yes', 'No']);
+            $table->enum('is_lop', ['Yes', 'No']);
 
             $table->timestamps();
         });

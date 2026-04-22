@@ -17,7 +17,7 @@ return new class extends Migration
             $table->bigInteger('employee_id')->index();
             $table->string('account_name');
             $table->string('account_number');
-            $table->set('account_type', ['Savings', 'Current', 'Salary', 'NRI']);
+            $table->enum('account_type', ['Savings', 'Current', 'Salary', 'NRI']);
             $table->string('bank_name');
             $table->string('branch');
             $table->string('ifsc');

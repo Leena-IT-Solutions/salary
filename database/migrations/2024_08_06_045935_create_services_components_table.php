@@ -17,8 +17,8 @@ return new class extends Migration
             $table->bigInteger('services_type_id')->index();
             $table->string('name');
             $table->string('name_in_payslip');
-            $table->set('calculation', ['Flat', 'CTC', 'Basic']);
-            $table->set('pay_time', ['Fixed', 'Variable']);
+            $table->enum('calculation', ['Flat', 'CTC', 'Basic']);
+            $table->enum('pay_time', ['Fixed', 'Variable']);
             $table->double('value');
             $table->boolean('is_active')->default(false);
             $table->boolean('is_pro_rata')->default(false);

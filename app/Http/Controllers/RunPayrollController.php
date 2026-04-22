@@ -48,7 +48,7 @@ class RunPayrollController extends Controller
         $key = isset($request->key) ? $request->key : $key;
         $value = isset($request->value) ? $request->value : $value;
 
-        $items = Payroll::orderBy($by, $order);
+        $items = Payroll::withCount('payroll_employees')->orderBy($by, $order);
         if($key != null && $value != null){
             $items = $items->where($key, 'LIKE', '%'.$value.'%');
         }

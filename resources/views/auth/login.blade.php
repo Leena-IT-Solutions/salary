@@ -55,6 +55,13 @@
                 @endif
             </div>
 
+            <div class="col-12 mt-4 pt-3 border-top text-center">
+                <p class="text-muted mb-0 small">Are you a new employee?</p>
+                <a class="fw-bold text-decoration-none" href="{{ route('register') }}">
+                    {{ __('Create Employee Account') }}
+                </a>
+            </div>
+
         </div>
     </form>
 

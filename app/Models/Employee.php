@@ -110,4 +110,10 @@ class Employee extends Model
 
         return $this->hasOne(EmployeeSalary::class)->whereDate('effective_from', '<=', $from)->orderBy('id', 'desc')->latest();
     }
+
+    public function scopeActive($query)
+    {
+        return $query->whereNull('doe');
+    }
 }
+

@@ -19,9 +19,9 @@ return new class extends Migration
             $table->bigInteger('employee_shift_id')->index();
             $table->date('on_date');
             $table->string('reason')->nullable();
-            $table->set('status', ['Approved', 'Rejected']);
-            $table->set('is_halfday', ['Yes', 'No']);
-            $table->set('is_lop', ['Yes', 'No']);
+            $table->enum('status', ['Pending', 'Approved', 'Rejected'])->default('Pending');
+            $table->enum('is_halfday', ['Yes', 'No']);
+            $table->enum('is_lop', ['Yes', 'No']);
 
             $table->timestamps();
         });

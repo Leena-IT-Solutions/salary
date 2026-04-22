@@ -19,7 +19,7 @@ return new class extends Migration
             $table->date('on_date');
             $table->smallInteger('hrs');
             $table->string('note')->nullable();
-            $table->set('status', ['Approved', 'Rejected']);
+            $table->enum('status', ['Pending', 'Approved', 'Rejected'])->default('Pending');
 
             $table->timestamps();
         });

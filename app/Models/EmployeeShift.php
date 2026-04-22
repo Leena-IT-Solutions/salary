@@ -53,4 +53,8 @@ class EmployeeShift extends Model
         return $this->hasOne(OnDuty::class);
     }
 
+    public function overtime(){
+        return $this->hasOne(OvertimeApproval::class);
+    }
+
 }

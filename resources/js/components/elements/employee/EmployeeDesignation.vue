@@ -1,213 +1,162 @@
 <template>
-    <div class="container-fluid">
+    <div class="designation-suite">
+        <div class="row g-4">
+            <!-- Assignment Section -->
+            <div class="col-12 col-xl-5">
+                <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                    <div class="card-header bg-white py-3 px-4 border-0">
+                        <h6 class="fw-bold mb-0 text-dark">Role Appointment</h6>
+                    </div>
+                    <div class="card-body p-4 bg-light-subtle">
+                        <div class="row g-3">
+                            <forms-select-field name="designation_id" label="Professional Title" v-model="employee_designation.designation_id" :options="designations" classes="col-12"></forms-select-field>
+                            
+                            <div class="col-12">
+                                <div class="row g-3">
+                                    <forms-date-field name="from" label="Appointment Start" v-model="employee_designation.from" classes="col-6"></forms-date-field>
+                                    <forms-date-field name="to" label="Termination/Promotion" v-model="employee_designation.to" classes="col-6"></forms-date-field>
+                                </div>
+                            </div>
 
-        <section-title title="Add Employee Designation" class=""></section-title>
-
-        <div  v-if="employee_designation" class="row g-4 mb-5">
-
-            <forms-select-field name="designation_id" label="Designation" v-model="employee_designation.designation_id" error="" classes="col-12 col-xl-4" :options="designations"></forms-select-field>
-
-            <forms-date-field name="from" label="From" v-model="employee_designation.from" error="" classes="col-12 col-lg-4"></forms-date-field>
-
-            <forms-date-field name="to" label="To" v-model="employee_designation.to" error="" classes="col-12 col-lg-4"></forms-date-field>
-
-            <forms-submit-button name="" v-model="loading" label="Save Employee Designation" @click="save()" classes="col-6"></forms-submit-button>
-
-            <div class="col-6 text-end">
-                <button v-if="employee_designation.id != null && !isDelete" class="btn btn-danger" @click="deleteItem()">Delete Item</button>
-                <button v-if="employee_designation.id != null && isDelete" class="btn btn-danger" @click="deleteNow()">Confirm & Delete</button>
+                            <div class="col-12 d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                                <div v-if="employee_designation.id">
+                                    <button v-if="!isDelete" class="btn btn-outline-danger btn-sm rounded-pill px-3" @click="isDelete = true">
+                                        End Promotion
+                                    </button>
+                                    <button v-else class="btn btn-danger btn-sm rounded-pill px-3 animate-pulse" @click="deleteNow()">
+                                        Confirm
+                                    </button>
+                                </div>
+                                <div v-else></div>
+                                
+                                <forms-submit-button v-model="loading" :label="employee_designation.id ? 'Modify Tenure' : 'Appoint Role'" @click="save()" classes="px-4 shadow-sm"></forms-submit-button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-        </div>
+            <!-- Promotion Track Section -->
+            <div class="col-12 col-xl-7">
+                <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                    <div class="card-header bg-white py-3 px-4 border-0 d-flex justify-content-between align-items-center">
+                        <h6 class="fw-bold mb-0 text-dark">Professional Trajectory</h6>
+                        <span class="badge bg-soft-warning text-warning px-3 rounded-pill">Career Path</span>
+                    </div>
 
-        <!-- Search -->
-        <div class="row mb-4">
-            
-            <forms-select-field name="column" label="Column"  placeholder=""
-            v-model="params.key" 
-            error="" 
-            classes="col" 
-            :options="[{key: 'ID', val: 'id'},{key: ' Employee Designation', val: 'employee_designation'},{key: 'Code', val: 'code'},]"></forms-select-field>
+                    <div class="p-4" v-if="employee_designations.length === 0">
+                        <div class="text-center opacity-25 py-5">
+                            <i class="bi bi-award-fill display-1"></i>
+                            <p class="mt-2 fw-bold">No historical role appointments</p>
+                        </div>
+                    </div>
 
-            <forms-text-field name="search" label="Type Search Sring" v-model="params.value" error="" classes="col"></forms-text-field>
-
-            <div class="col-auto">
-                <button class="btn btn-primary h-100" @click="search()">Search</button>
+                    <div class="table-responsive" v-else>
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light-subtle">
+                                <tr class="text-uppercase small fw-800 text-muted">
+                                    <th class="ps-4 py-3">Official Designation</th>
+                                    <th>Tenure Period</th>
+                                    <th class="pe-4 text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="wl in employee_designations" :key="wl.id" class="transition-all hover-glow border-bottom border-light" @click="edit(wl)">
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center">
+                                            <div class="role-icon me-3 bg-soft-primary text-primary rounded-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="bi bi-person-workspace"></i>
+                                            </div>
+                                            <div class="fw-bold text-dark">{{ getDesignations(wl.designation_id) }}</div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2 small fw-bold text-muted">
+                                            <span class="fw-mono">{{ wl.from }}</span>
+                                            <span class="text-light opacity-50">/</span>
+                                            <span class="fw-mono">{{ wl.to || 'Ongoing' }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="pe-4 text-end">
+                                        <button class="btn btn-sm btn-white border shadow-sm rounded-circle p-2" @click.stop="edit(wl)">
+                                            <i class="bi bi-pencil-square text-primary"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th @click="orderBy('id')" class="cursor-pointer" style="width: 60px;">ID</th>
-                        <th @click="orderBy('employee_designation')" class="cursor-pointer"> Designation</th>
-                        <th @click="orderBy('employee_designation')" class="cursor-pointer">Form</th>
-                        <th @click="orderBy('employee_designation')" class="cursor-pointer">to</th>
-                        <th class="text-end" style="width: 120px;">Action</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    <tr v-for="wl in employee_designations" :key="wl.id">
-                        <td>{{ wl.id }}</td>
-                        <td>{{ getDesignations(wl.designation_id) }}</td>
-                        <td>{{ wl.from }}</td>
-                        <td>{{ wl.to }}</td>
-                        <td class="text-end">
-                            <button class="btn btn-outline-info btn-sm me-2" @click="edit(wl)"><i class="bi bi-pencil"></i></button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <div class="text-center">
-                <button class="btn btn-dark" :disabled="next_page_url == null" @click="fetch()">Load More</button>
-            </div>
-        </div>
-
     </div>
 </template>
 
 <script>
 import axios from "axios";
 export default {
-
     props: ['employee_id', 'designations'],
-
     data(){
         return {
             loading: false,
             isDelete: false,
             employee_designation: {
-                employee_id: null,
-                id: null,
-                designation_id: null,
-                from: null,
-                to: null,
+                employee_id: null, id: null, designation_id: null, from: null, to: null,
             },
             employee_designations: [],
-            next_page_url: null,
-            current_page: 1,
-            params: {
-                key: null,
-                value: null,
-                by: 'id',
-                order: 'desc',
-                rows: 1,
-            }
+            params: { key: null, value: null, by: 'id', order: 'desc', rows: 10 }
         };
     },
-
     methods: {
-
         fetch(){
-
-            let url = '/employee/employee_designation/' + this.employee_id + '/fetch';
-            if(this.next_page_url != null){
-                url = this.next_page_url;
-            }
-
-            axios.get(url, {params: this.params}).then(res => {
-                this.next_page_url = res.data.next_page_url;
-                this.current_page = res.data.current_page;
-
-                if(this.next_page_url != null && this.current_page == 1){
-                    this.employee_designations = res.data.data;
-                } else {
-                    res.data.data.forEach(item => {
-                        this.employee_designations.push(item);
-                    });
-                }
-
+            axios.get('/employee/employee_designation/' + this.employee_id + '/fetch', {params: this.params}).then(res => {
+                this.employee_designations = res.data.data;
                 this.loading = false;
             });
         },
-
-        search(){
-            this.current_page = 1;
-            this.next_page_url = null;
-            this.employee_designations = [];
-            this.fetch();
-        },
-
-        orderBy(col){
-            this.params.by = col;
-            this.params.order = this.params.order == 'asc' ? 'desc' : 'asc';
-            this.search();
-        },
-
         save(){
-            if(this.employee_designation.id == null){
-                this.add();
-            } else {
-                this.update();
-            }
+            this.loading = true;
+            let url = this.employee_designation.id ? '/employee/employee_designation/update' : '/employee/employee_designation/add';
+            axios.post(url, this.employee_designation).then(res => {
+                this.reset();
+                this.fetch();
+            }).finally(() => this.loading = false);
         },
-
         reset(){
-            this.employee_designation.id = null;
-            this.employee_designation.designation_id = null;
-            this.employee_designation.from = null;
-            this.employee_designation.to = null;
+            Object.keys(this.employee_designation).forEach(key => this.employee_designation[key] = (key === 'employee_id' ? this.employee_id : null));
+            this.isDelete = false;
         },
-
-        add(){
-            this.loading = true;
-            axios.post('/employee/employee_designation/add', this.employee_designation).then(res => {
-                this.reset();
-                this.search();
-            });
-        },
-
-        update(){
-            this.loading = true;
-            axios.post('/employee/employee_designation/update', this.employee_designation).then(res => {
-                this.reset();
-                this.search();
-            });
-        },
-
-        deleteItem(){
-            this.isDelete = true;
-        },
-
         deleteNow(){
             this.loading = true;
             axios.post('/employee/employee_designation/delete', this.employee_designation).then(res => {
                 this.reset();
-                this.search();
-            });
+                this.fetch();
+            }).finally(() => this.loading = false);
         },
-
         edit(item){
-            this.employee_designation.id = item.id;
-            this.employee_designation.designation_id = item.designation_id;
-            this.employee_designation.from = item.from;
-            this.employee_designation.to = item.to;
+            Object.keys(this.employee_designation).forEach(key => this.employee_designation[key] = item[key]);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         },
-
         getDesignations(id){
-            let key = null;
-            this.designations.forEach(loc => {
-                if(loc.val == id){
-                    key = loc.key;
-                }
-            });
-            return key;
+            let des = this.designations.find(d => d.val == id);
+            return des ? des.key : 'Unknown Role';
         }
-
     },
-
     created(){
         this.fetch();
         this.employee_designation.employee_id = this.employee_id;
     },
-
 }
 </script>
 
-<style>
-.cursor-pointer {
-    cursor: pointer;
-}
+<style scoped>
+.designation-suite { padding: 1rem 0; }
+.bg-soft-primary { background-color: #eef2ff; }
+.bg-soft-warning { background-color: #fffbeb; }
+.transition-all { transition: all 0.2s ease; }
+.hover-glow:hover { background-color: #f8fafc; cursor: pointer; }
+.fw-800 { font-weight: 800; }
+.fw-mono { font-family: ui-monospace, SFMono-Regular, monospace; }
+.animate-pulse { animation: pulse 2s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
 </style>

@@ -29,21 +29,31 @@ class EmployeeController extends Controller
     }
 
     public function fetch(Request $request){
-        $by = 'id';
-        $order = 'desc';
-        $key = null;
-        $value = null;
+        $by = $request->get('by', 'id');
+        $order = $request->get('order', 'desc');
+        $key = $request->get('key');
+        $value = $request->get('value');
 
-        $by = isset($request->by) ? $request->by : $by;
-        $order = isset($request->order) ? $request->order : $order;
-        $key = isset($request->key) ? $request->key : $key;
-        $value = isset($request->value) ? $request->value : $value;
+        $employees = Employee::active()->orderBy($by, $order);
 
-        $employees = Employee::orderBy($by, $order);
-        if($key != null && $value != null){
-            $employees = $employees->where($key, 'LIKE', '%'.$value.'%');
+        if($value != null){
+            if($key != null && $key != 'all'){
+                $employees = $employees->where($key, 'LIKE', '%'.$value.'%');
+            } else {
+                $employees = $employees->where(function($query) use ($value) {
+                    $query->where('first_name', 'LIKE', '%'.$value.'%')
+                          ->orWhere('last_name', 'LIKE', '%'.$value.'%')
+                          ->orWhere('employee_code', 'LIKE', '%'.$value.'%')
+                          ->orWhere('phone', 'LIKE', '%'.$value.'%')
+                          ->orWhere('email', 'LIKE', '%'.$value.'%')
+                          ->orWhere('id', 'LIKE', '%'.$value.'%');
+                });
+            }
         }
-        return $employees->with('employee_department.department')->with('employee_designation.designation')->simplePaginate(25);
+
+        return $employees->with('employee_department.department')
+                         ->with('employee_designation.designation')
+                         ->simplePaginate(25);
     }
 
     public function add(Request $request){
@@ -56,5 +66,18 @@ class EmployeeController extends Controller
 
     public function delete(Request $request){
         return Employee::find($request->id)->delete();
+    }
+
+    public function search(Request $request){
+        $q = $request->get('q');
+        if(!$q) return [];
+        
+        return Employee::where('employee_code', 'LIKE', "%$q%")
+            ->orWhere('phone', 'LIKE', "%$q%")
+            ->orWhere('email', 'LIKE', "%$q%")
+            ->orWhere('first_name', 'LIKE', "%$q%")
+            ->orWhere('last_name', 'LIKE', "%$q%")
+            ->take(10)
+            ->get(['id', 'employee_code', 'first_name', 'last_name', 'phone', 'email']);
     }
 }

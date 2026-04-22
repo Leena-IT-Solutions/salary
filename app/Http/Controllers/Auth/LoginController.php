@@ -64,9 +64,24 @@ class LoginController extends Controller
 
  
         if (Auth::attempt($user)) {
+            $u = Auth::user();
+            if ($u->role == 'Employee') {
+                $employee = \App\Models\Employee::where('email', $u->email)->first();
+                if (!$employee || $employee->doe) {
+                    Auth::logout();
+                    return back()->withErrors([
+                        'user' => 'Your access has been revoked as per company employment status.',
+                    ])->onlyInput('user');
+                }
+            }
             $request->session()->regenerate();
  
-            return redirect()->intended('home');
+            // Redirect based on role
+            if ($u->role == 'Admin') {
+                return redirect()->intended('home');
+            } else {
+                return redirect()->intended('employee/dashboard');
+            }
         }
  
         return back()->withErrors([

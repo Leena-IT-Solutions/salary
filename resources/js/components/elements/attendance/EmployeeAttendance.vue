@@ -1,180 +1,265 @@
 <template>
-    <div class="container-fluid position-relative">
-        
-        <!-- Filter -->
-        <div class="row g-3 mb-4">
-            <forms-select-field
-            @change="fetch()"
-            name="work_location_id" label="Work Location" v-model="employeeFilter.work_location_id" error="" classes="col" :options="work_locations"></forms-select-field>
+    <div class="attendance-wrapper pb-5">
+        <div class="attendance-container animate__animated animate__fadeIn">
+            
+            <!-- Premium Filter & Nav Section -->
+            <div class="card border-0 shadow-premium mb-4 overflow-hidden">
+                <div class="card-body p-4 bg-white">
+                    <div class="row g-4 align-items-center">
+                        <div class="col-lg-6">
+                            <div class="row g-3">
+                                <forms-select-field
+                                    @change="fetch()"
+                                    name="work_location_id" 
+                                    label="Work Location" 
+                                    v-model="employeeFilter.work_location_id" 
+                                    error="" 
+                                    classes="col-12 col-md-6" 
+                                    :options="work_locations">
+                                </forms-select-field>
 
-            <forms-select-field
-            @change="fetch()"
-            name="department_id" label="Departments" v-model="employeeFilter.department_id" error="" classes="col" :options="location_departments"></forms-select-field>
+                                <forms-select-field
+                                    @change="fetch()"
+                                    name="department_id" 
+                                    label="Departments" 
+                                    v-model="employeeFilter.department_id" 
+                                    error="" 
+                                    classes="col-12 col-md-6" 
+                                    :options="location_departments">
+                                </forms-select-field>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-6 border-start-lg">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <button class="btn btn-outline-primary btn-icon rounded-circle me-3 shadow-sm" @click="prevDay()">
+                                    <i class="bi bi-chevron-left"></i>
+                                </button>
+                                
+                                <div class="position-relative">
+                                    <div class="text-center px-4 py-2 bg-light rounded-pill min-width-200 shadow-sm border cursor-pointer hover-lift" 
+                                         @click="triggerDatePicker"
+                                         title="Click to select a date">
+                                        <h5 class="fw-bold m-0 text-primary d-flex align-items-center justify-content-center">
+                                            <i class="bi bi-calendar-event me-2"></i>
+                                            {{ formatDisplayDate(employeeFilter.current_date) }}
+                                            <i class="bi bi-caret-down-fill ms-2 small opacity-50"></i>
+                                        </h5>
+                                    </div>
+                                    <!-- Hidden Date Input -->
+                                    <input type="date" ref="datePicker" 
+                                           class="position-absolute translate-middle opacity-0" 
+                                           style="top: 50%; left: 50%; width: 100%; z-index: -1;"
+                                           v-model="employeeFilter.current_date" 
+                                           @change="fetch()">
+                                </div>
 
-            <forms-select-field
-            @change="changeReportType()"
-            name="report_type" label="Report Type" v-model="employeeFilter.report_type" error="" classes="col" :options="[{key: 'Daily Report', val: 'Daily'}]"></forms-select-field>
+                                <button class="btn btn-outline-primary btn-icon rounded-circle ms-3 shadow-sm" @click="nextDay()">
+                                    <i class="bi bi-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
 
-        </div>
-
-        <!-- Calender Navigation -->
-        <div class="container-fluid">
-            <div class="row justify-content-center align-items-center mb-4" v-if="employeeFilter.report_type == 'Daily'">
-                <div class="col-auto">
-                    <button class="btn btn-dark btn-sm" @click="prevDay()">PREV</button>
-                </div>
-                <div class="col-auto fs-4"><div>{{ employeeFilter.current_date }}</div></div>
-                <div class="col-auto">
-                    <button class="btn btn-dark btn-sm" @click="nextDay()">NEXT</button>
+                    </div>
                 </div>
             </div>
-    
-            <div class="row justify-content-center align-items-center mb-4" v-if="employeeFilter.report_type == 'Monthly'">
-                <div class="col-auto">
-                    <button class="btn btn-dark btn-sm" @click="prevMonth()">PREV</button>
-                </div>
-                <div class="col-auto fs-4"><div>{{ employeeFilter.current_month_name }}, {{ employeeFilter.current_year }}</div></div>
-                <div class="col-auto">
-                    <button class="btn btn-dark btn-sm" @click="nextMonth()">NEXT</button>
-                </div>
+
+            <!-- Legend -->
+            <div class="d-flex flex-wrap justify-content-center gap-3 mb-4 legend-container">
+                <span class="legend-item bg-danger-subtle text-danger border border-danger border-opacity-10 py-1 px-3 rounded-pill small fw-bold">
+                    <i class="bi bi-house-door me-1"></i> Weekoff / Holiday
+                </span>
+                <span class="legend-item bg-secondary-subtle text-secondary border border-secondary border-opacity-10 py-1 px-3 rounded-pill small fw-bold">
+                    <i class="bi bi-person-x me-1"></i> Absent
+                </span>
+                <span class="legend-item bg-success-subtle text-success border border-success border-opacity-10 py-1 px-3 rounded-pill small fw-bold">
+                    <i class="bi bi-card-checklist me-1"></i> Leave / Halfday
+                </span>
+                <span class="legend-item bg-warning-subtle text-warning border border-warning border-opacity-10 py-1 px-3 rounded-pill small fw-bold">
+                    <i class="bi bi-clock-history me-1"></i> Time Update / On Duty
+                </span>
             </div>
-        </div>
 
-        <div class="container-fluid mb-3 text-center">
-            <span class="bg-danger-subtle p-2 fs-6 d-inline-block rounded me-2">Weekoff / Holiday</span>
-            <span class="bg-secondary-subtle p-2 fs-6 d-inline-block rounded me-2">Absent</span>
-            <span class="bg-success-subtle p-2 fs-6 d-inline-block rounded me-2">Leave / Halfday / Short Leave</span>
-            <span class="bg-warning-subtle p-2 fs-6 d-inline-block rounded me-2">Time Update / On Duty</span>
-        </div>
-
-        <!-- Data Grid -->
-        <div class="">
-            <div>
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr class="table-dark">
-                                <th class="text-nowrap">Employee</th>
-                                <th class="text-nowrap">Code</th>
-                                <th class="text-nowrap">Shift</th>
-                                <th class="text-nowrap">Status</th>
-                                <th class="text-nowrap">LOP</th>
-                                <th class="text-nowrap">Late</th>
-                                <th class="text-nowrap">Early</th>
-                                <th v-if="employeeFilter.report_type == 'Daily'" class="text-nowrap">Punch Time</th>
-            
-                                <template v-if="employeeFilter.report_type == 'Monthly'">
-                                    <th class="text-nowrap" v-for="dd,ind in day_count[months.indexOf(employeeFilter.current_month)]" :key="ind">
-                                        <!-- {{employeeFilter.current_year}}-{{ employeeFilter.current_month }}- -->{{ (dd*1 < 10 ? "0"+dd : dd) }}
-                                    </th>
-                                </template>
-            
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template v-for="emp in employees" :key="emp.id">
-                                <template v-if="emp.employee_shifts">
-                                    <template v-if="emp.employee_shifts.length > 0">
-                                        <template v-if="employeeFilter.report_type == 'Daily'">
-                                            <tr
-                                            :class="[
-                                                (emp.employee_shifts[0].status) == 'Absent' ? 'text-light table-secondary' : '',
-                                                (emp.employee_shifts[0].status) == 'On Duty' || (emp.employee_shifts[0].status) == 'Time Update' ? 'text-light table-warning' : '',
-                                                (emp.employee_shifts[0].status) == 'Weekoff' || (emp.employee_shifts[0].status) == 'Holiday' ? 'text-light table-danger' : '',
-                                                (emp.employee_shifts[0].status) == 'Leave' || (emp.employee_shifts[0].status) == 'Short Leave' || (emp.employee_shifts[0].status) == 'Halfday Leave' ? 'text-light table-success' : '',
-                                                ]">
-                                                <td class="text-nowrap">{{ emp.first_name }} {{ emp.middle_name }} {{ emp.last_name }}</td>
-                                                <td class="text-nowrap">{{ emp.employee_code }}</td>
-    
-                                                <td class="text-nowrap">{{ emp.employee_shifts[0].working_shift.name }} {{ emp.employee_shifts[0].working_shift.in }} - {{ emp.employee_shifts[0].working_shift.out }}</td>
-                                                <td class="text-nowrap">{{ emp.employee_shifts[0].status }}</td>
-                                                <td class="text-nowrap">{{ emp.employee_shifts[0].lop }}</td>
-                                                <td class="text-nowrap">{{ emp.employee_shifts[0].late }} min</td>
-                                                <td class="text-nowrap">{{ emp.employee_shifts[0].early }} min</td>
-                                                <td class="text-nowrap">
-                                                    <span class="" v-for="att,iii in emp.employee_shifts[0].employee_attendance" :key="att.id">
-                                                        {{ att.tm }} {{ emp.employee_shifts[0].employee_attendance.length == (iii + 1) ? '' : ' - ' }}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        </template>
-                                    </template>
-                                </template>
-                            </template>
-                        </tbody>
-                        <!-- <tbody>
-                            <template v-for="emp in employees" :key="emp.id">
+            <!-- Attendance Roster -->
+            <div class="card border-0 shadow-premium overflow-hidden mb-4">
+                <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <h5 class="fw-bold m-0"><i class="bi bi-people-fill text-primary me-2"></i> Attendance Log</h5>
+                        <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3">{{ filteredEmployees.length }} Records</span>
+                    </div>
+                    <div class="search-container position-relative" style="min-width: 300px;">
+                        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                        <input type="text" v-model="searchQuery" class="form-control rounded-pill ps-5 border-light-subtle shadow-sm" placeholder="Search by name or employee code...">
+                        <button v-if="searchQuery" @click="searchQuery = ''" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 text-muted p-0"><i class="bi bi-x-circle-fill"></i></button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive custom-scrollbar">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light sticky-top">
                                 <tr>
-                                    <td class="text-nowrap">{{ emp.first_name }} {{ emp.middle_name }} {{ emp.last_name }}</td>
-                                    <td class="text-nowrap">{{ emp.employee_code }}</td>
-                                    
-                                    <td class="text-nowrap fs-6" v-if="employeeFilter.report_type == 'Daily'">
-                                        <template v-if="emp.employee_shifts">
-                                            <template v-if="emp.employee_shifts.length > 0">
-                                                {{ emp.employee_shifts[0].working_shift.name }} 
-                                                <div class="small" v-for="att in emp.employee_shifts[0].employee_attendance" :key="att.id">
-                                                    {{ att.tm }}
-                                                </div>
-                                            </template>
-                                        </template>
-                                    </td>
-    
-                                    <template v-if="employeeFilter.report_type == 'Monthly'">
-                                        <td class="text-wrap" v-for="dd,ind in day_count[months.indexOf(employeeFilter.current_month)]" :key="ind">
-                                            <template v-if="emp.employee_shifts">
-                                                <template v-if="emp.employee_shifts.length > 0" >
-    
-                                                    <div :set="sss = demo((employeeFilter.current_year + '-' + employeeFilter.current_month + '-' + (dd*1 < 10 ? '0'+dd : dd)), emp.employee_shifts)" >
-                                                        <div v-if="sss != null">
-                                                            <span class="fs-10">{{ sss.status }}</span>
-                                                            <span class="text-nowrap d-block">{{ sss.working_shift.name }}</span>
-                                                            <span class="d-block" v-for="att in sss.employee_attendance" :key="att.id">
-                                                                {{ att.tm }}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </template>
-                                            </template>
-                                        </td>
-                                    </template>
-    
+                                    <th class="ps-4 border-0">Employee</th>
+                                    <th class="border-0">Code</th>
+                                    <th class="border-0">Shift Information</th>
+                                    <th class="border-0 text-center">Status</th>
+                                    <th class="border-0 text-center">Stats (LOP/Late/Early)</th>
+                                    <th class="border-0 text-end pe-4">Punch Detail</th>
                                 </tr>
-                            </template>
-                        </tbody> -->
-                    </table>
+                            </thead>
+                            <tbody>
+                                <template v-for="emp in filteredEmployees" :key="emp.id">
+                                    <tr v-if="emp.employee_shifts && emp.employee_shifts.length > 0"
+                                        class="transition-all"
+                                        :class="getStatusRowClass(emp.employee_shifts[0].status)">
+                                        <td class="ps-4">
+                                            <div class="fw-bold text-dark">{{ emp.first_name }} {{ emp.last_name }}</div>
+                                            <div class="text-muted small">{{ emp.middle_name }}</div>
+                                        </td>
+                                        <td><span class="badge bg-light text-dark font-monospace">{{ emp.employee_code }}</span></td>
+                                        <td>
+                                            <div class="fw-500">{{ emp.employee_shifts[0].working_shift.name }}</div>
+                                            <div class="small text-muted">
+                                                <i class="bi bi-clock me-1"></i>
+                                                {{ emp.employee_shifts[0].working_shift.in }} - {{ emp.employee_shifts[0].working_shift.out }}
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge px-3 py-2 fw-bold d-inline-flex align-items-center" :class="getStatusBadgeClass(emp.employee_shifts[0].status)">
+                                                <i :class="getStatusIcon(emp.employee_shifts[0].status)" class="me-1"></i>
+                                                {{ emp.employee_shifts[0].status }}
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="stats-grid">
+                                                <span class="stat-bubble" title="LOP">L: {{ emp.employee_shifts[0].lop }}</span>
+                                                <span class="stat-bubble ms-1" :class="{'text-danger': emp.employee_shifts[0].late > 0}" title="Late">↑ {{ emp.employee_shifts[0].late }}m</span>
+                                                <span class="stat-bubble ms-1 text-primary-soft" title="Early">↓ {{ emp.employee_shifts[0].early }}m</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <div class="d-flex flex-wrap justify-content-end gap-1 align-items-center">
+                                                <template v-if="emp.employee_shifts[0].employee_attendance.length > 0">
+                                                    <button v-for="att in emp.employee_shifts[0].employee_attendance" :key="att.id"
+                                                          @click="openEditModal(emp.employee_shifts[0], emp.first_name + ' ' + emp.last_name)"
+                                                          class="btn btn-xs btn-light text-primary border border-primary border-opacity-10 hover-lift shadow-xs fw-bold rounded-pill px-2 py-0"
+                                                          style="font-size: 0.7rem; line-height: 1.4;">
+                                                        {{ att.tm }}
+                                                    </button>
+                                                </template>
+                                                <button v-else @click="openEditModal(emp.employee_shifts[0], emp.first_name + ' ' + emp.last_name)"
+                                                        class="btn btn-sm btn-outline-primary rounded-circle border-dashed p-0 hover-lift d-flex align-items-center justify-content-center"
+                                                        style="width: 24px; height: 24px;"
+                                                        title="Add Attendance">
+                                                    <i class="bi bi-plus-lg" style="font-size: 0.75rem;"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Evaluation Footer -->
+            <div class="card border-0 shadow-premium bg-white mt-4 border-top border-primary border-3">
+                <div class="card-body p-4 text-center">
+                    <div class="d-flex align-items-center justify-content-center flex-column flex-md-row gap-3">
+                        <div class="text-md-start">
+                            <h6 class="fw-bold mb-1 text-dark">Process Attendance Data</h6>
+                            <p class="text-muted mb-0 small">Finalize LOP and late calculations for the selected date.</p>
+                        </div>
+                        <div class="d-flex gap-3">
+                            <button class="btn btn-white border-primary border-2 text-primary btn-lg px-4 fw-bold shadow-sm hover-lift" @click="autoUpdateTimeAll()" :disabled="loading">
+                                <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
+                                <i v-else class="bi bi-magic me-2"></i>
+                                Auto-Fill Missing Times
+                            </button>
+                            <button class="btn btn-primary btn-lg px-5 fw-bold shadow-lg hover-lift" @click="evaluteLOP()" :disabled="loading">
+                                <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
+                                <i v-else class="bi bi-lightning-charge-fill me-2"></i>
+                                Evaluate LOP Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Move Modal OUTSIDE the animated div to fix stacking context (Behind Backdrop Issue) -->
+        <div class="modal fade" id="editAttendanceModal" tabindex="-1" aria-hidden="true" ref="editModal">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                    <div class="modal-header bg-primary bg-opacity-5 border-0 py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary bg-opacity-10 p-2 rounded-3 me-3 text-primary">
+                                <i class="bi bi-clock-history fs-5"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold m-0 text-dark">Adjust Time Entry</h5>
+                                <p class="text-muted small mb-0">{{ editForm.employee_name }}</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="alert alert-info border-0 bg-info bg-opacity-10 small mb-4">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            Modifying times will automatically re-evaluate LOP and Status for this record.
+                        </div>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-900 text-uppercase tracking-wider text-muted mb-2">Punch IN Time</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0 text-success"><i class="bi bi-login"></i></span>
+                                    <input type="time" class="form-control border-start-0 ps-0" v-model="editForm.in_time">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-900 text-uppercase tracking-wider text-muted mb-2">Punch OUT Time</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0 text-danger"><i class="bi bi-logout"></i></span>
+                                    <input type="time" class="form-control border-start-0 ps-0" v-model="editForm.out_time">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-0 py-3 px-4 justify-content-between">
+                        <button type="button" class="btn btn-outline-danger border-0 fw-bold px-3" @click="deleteTimes()" :disabled="deleting">
+                            <span v-if="deleting" class="spinner-border spinner-border-sm me-1"></span>
+                            <i v-else class="bi bi-trash3 me-1"></i>
+                            Delete Record
+                        </button>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-link text-muted fw-bold text-decoration-none" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold" @click="saveTimes()" :disabled="saving">
+                                <span v-show="saving" class="spinner-border spinner-border-sm me-2"></span>
+                                Update Record
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <!-- Evalute Button -->
-        <div class="container-fluid text-center">
-            <button class="btn btn-primary" @click="evaluteLOP()">Evalute LOP</button>
-        </div>
-
     </div>
 </template>
 
 <script>
 import axios from 'axios';
+import * as bootstrap from 'bootstrap';
+
 export default {
-
-    props: [
-        'locations',
-        'departments',
-        'today',
-        'month',
-    ],
-
+    props: ['locations', 'departments', 'today', 'month'],
     data(){
         return {
-
             loading: false,
             work_locations: [],
             location_departments: [],
             months: ["01","02","03","04","05","06","07","08","09","10","11","12"],
             month_name: ["January","February","March","April","May","June","July","August","Septmber","October","November","December"],
             day_count: [31,28,31,30,31,30,31,31,30,31,30,31],
-
             employeeFilter: {
                 work_location_id: 0,
                 department_id: 0,
@@ -184,133 +269,274 @@ export default {
                 current_year: null,
                 current_month_name: null
             },
-
             employees: [],
-
+            saving: false,
+            deleting: false,
+            editModal: null,
+            editForm: {
+                employee_shift_id: null,
+                employee_name: '',
+                in_time: null,
+                out_time: null
+            },
+            searchQuery: ''
         };
     },
-
+    computed: {
+        filteredEmployees() {
+            if (!this.searchQuery) return this.employees;
+            const query = this.searchQuery.toLowerCase();
+            return this.employees.filter(emp => {
+                const fullName = `${emp.first_name} ${emp.middle_name || ''} ${emp.last_name}`.toLowerCase();
+                const code = (emp.employee_code || '').toLowerCase();
+                return fullName.includes(query) || code.includes(query);
+            });
+        }
+    },
     methods: {
+        deleteTimes() {
+            if (confirm('Are you sure you want to delete all punch records for this shift?')) {
+                this.deleting = true;
+                axios.post('/attendance/delete_times', {
+                    employee_shift_id: this.editForm.employee_shift_id
+                })
+                .then(res => {
+                    this.deleting = false;
+                    this.editModal.hide();
+                    this.fetch();
+                })
+                .catch(err => {
+                    this.deleting = false;
+                    alert('Error deleting records.');
+                });
+            }
+        },
+        parseTime(ts) {
+            if (!ts) return 0;
+            let h = 0, m = 0, s = 0;
+            const cleanTs = ts.trim();
+            if (/am|pm/i.test(cleanTs)) {
+                const match = cleanTs.match(/(\d+):(\d+)(?::(\d+))?\s*(am|pm)/i);
+                if (match) {
+                    h = parseInt(match[1]);
+                    m = parseInt(match[2]);
+                    s = parseInt(match[3] || 0);
+                    const ampm = match[4].toLowerCase();
+                    if (ampm === 'pm' && h < 12) h += 12;
+                    if (ampm === 'am' && h === 12) h = 0;
+                }
+            } else {
+                const parts = cleanTs.split(':');
+                h = parseInt(parts[0]);
+                m = parseInt(parts[1] || 0);
+                s = parseInt(parts[2] || 0);
+            }
+            return h * 3600 + m * 60 + s;
+        },
+        openEditModal(shift, name) {
+            this.editForm.employee_shift_id = shift.id;
+            this.editForm.employee_name = name;
+            
+            const attendance = shift.employee_attendance;
+            const shiftIn = shift.working_shift.in;
+            const shiftOut = shift.working_shift.out;
 
+            if (attendance.length === 0) {
+                // Both punches missed - use standard shift times
+                this.editForm.in_time = shiftIn;
+                this.editForm.out_time = shiftOut;
+            } else if (attendance.length === 1) {
+                // One punch record - decide if it's In or Out based on proximity to shift times
+                const singlePunch = attendance[0].tm;
+                const punchSec = this.parseTime(singlePunch);
+                const inSec = this.parseTime(shiftIn);
+                const outSec = this.parseTime(shiftOut);
+
+                // Calculate distances
+                let distToIn = Math.abs(punchSec - inSec);
+                let distToOut = Math.abs(punchSec - outSec);
+
+                // Handle night shifts (Out < In)
+                if (outSec < inSec) {
+                    // For night shifts, if punch is in early morning, it's closer to Out of previous day
+                    // If punch is late evening, it's closer to In
+                    if (punchSec < 12 * 3600) { // Morning (e.g. 05:00)
+                        distToIn = Math.abs((punchSec + 24 * 3600) - inSec); // Distance to 21:00 is (05:00+24) - 21:00 = 8h
+                        distToOut = Math.abs(punchSec - outSec); // Distance to 06:00 is 1h
+                    } else { // Evening (e.g. 21:30)
+                        distToIn = Math.abs(punchSec - inSec); // Distance to 21:00 is 0.5h
+                        distToOut = Math.abs(punchSec - (outSec + 24 * 3600)); // Distance to 06:00(next day) is (06:00+24) - 21:30 = 8.5h
+                    }
+                }
+
+                if (distToIn <= distToOut) {
+                    // Closer to In punch, so we set it as In and assume standard Out
+                    this.editForm.in_time = singlePunch;
+                    this.editForm.out_time = shiftOut;
+                } else {
+                    // Closer to Out punch, so we set it as Out and assume standard In
+                    this.editForm.in_time = shiftIn;
+                    this.editForm.out_time = singlePunch;
+                }
+            } else {
+                // Multiple punches - set first as In and last as Out
+                this.editForm.in_time = attendance[0].tm;
+                this.editForm.out_time = attendance[attendance.length - 1].tm;
+            }
+
+            if (!this.editModal) {
+                this.editModal = new bootstrap.Modal(document.getElementById('editAttendanceModal'));
+            }
+            this.editModal.show();
+        },
+        saveTimes() {
+            this.saving = true;
+            axios.post('/attendance/update_times', this.editForm)
+            .then(res => {
+                this.saving = false;
+                this.editModal.hide();
+                this.fetch();
+            })
+            .catch(err => {
+                this.saving = false;
+                alert('Error updating times. Please try again.');
+            });
+        },
+        autoUpdateTimeAll() {
+            if (confirm('This will fill missing punch data for all employees based on their standard shifts for today. Continue?')) {
+                this.loading = true;
+                axios.post('/attendance/auto_update_all', {
+                    on_date: this.employeeFilter.current_date
+                })
+                .then(res => {
+                    this.loading = false;
+                    this.fetch();
+                })
+                .catch(err => {
+                    this.loading = false;
+                    alert('Error auto-updating times.');
+                });
+            }
+        },
         evaluteLOP(){
-            this.employees.forEach(employee => {
-                axios.post('/attendance/evalute', {
+            this.loading = true;
+            const promises = this.employees.map(employee => {
+                return axios.post('/attendance/evalute', {
                     on_date: this.employeeFilter.current_date,
                     employee_id: employee.id,
-                }).then(res=> {
-                    this.fetch();
                 });
             });
-        },
 
-        demo(dt, shifts){
-            let a = shifts.filter( function (shift){
-                let dd = new Date(shift.dt);
-                dd = dd.getTime();
-                let ddd = new Date(dt)
-                ddd = ddd.getTime();
-                return dd == ddd;
+            Promise.all(promises).then(() => {
+                this.loading = false;
+                this.fetch();
             });
-            return a.length > 0 ? a[0] : null;
-            //return a.length > 0 ? a[0].working_shift.name + "" + working_shift.employee_attendance: "None";
         },
-
+        triggerDatePicker() {
+            this.$refs.datePicker.showPicker();
+        },
         setCurrentDate(dt){
             let d = new Date(dt);
             this.employeeFilter.current_date = `${d.getFullYear()}-${this.months[d.getMonth()]}-${d.getDate()}`;
             this.employeeFilter.current_month = this.months[d.getMonth()];
             this.employeeFilter.current_year = d.getFullYear();
-            let ind = this.months.indexOf(this.employeeFilter.current_month);
-            this.employeeFilter.current_month_name = this.month_name[ind];
-            let mod = this.employeeFilter.current_year % 4;
-            this.day_count[1] = mod == 0 ? 29 : 28;
-
-            // console.log(this.employeeFilter.current_date);
-            // console.log(this.employeeFilter.current_month);
-            // console.log(this.employeeFilter.current_year);
-            // console.log(this.employeeFilter.current_month_name);
-
+            this.employeeFilter.current_month_name = this.month_name[d.getMonth()];
+            this.day_count[1] = (this.employeeFilter.current_year % 4 === 0) ? 29 : 28;
         },
-
-        changeReportType(){
-            this.setCurrentDate(this.today);
-            this.fetch();
+        formatDisplayDate(dateString) {
+            if (!dateString) return '';
+            const d = new Date(dateString);
+            return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
         },
-
-        nextMonth(){
-            let ind = this.months.indexOf(this.employeeFilter.current_month);
-            let newDate = new Date(this.employeeFilter.current_year, ind + 1);
-            this.setCurrentDate(newDate.toString());
-            this.fetch();
-        },
-
-        prevMonth(){
-            let ind = this.months.indexOf(this.employeeFilter.current_month);
-            let newDate = new Date(this.employeeFilter.current_year, ind - 1);
-            this.setCurrentDate(newDate.toString());
-            this.fetch();
-        },
-
         nextDay(){
-            let cd = this.employeeFilter.current_date;
-            let d = new Date(cd);
+            let d = new Date(this.employeeFilter.current_date);
             d.setDate(d.getDate() + 1);
-            let dt = `${d.getFullYear()}-${this.months[d.getMonth()]}-${d.getDate()}`;
-            this.employeeFilter.current_date = dt;
+            this.setCurrentDate(d);
             this.fetch();
         },
-
         prevDay(){
-            let cd = this.employeeFilter.current_date;
-            let d = new Date(cd);
+            let d = new Date(this.employeeFilter.current_date);
             d.setDate(d.getDate() - 1);
-            let dt = `${d.getFullYear()}-${this.months[d.getMonth()]}-${d.getDate()}`;
-            this.employeeFilter.current_date = dt;
+            this.setCurrentDate(d);
             this.fetch();
         },
-
         fetch(){
-            axios.get('/attendance/fetch', {
-                params: this.employeeFilter
-            })
-            .then(res => {
-                this.employees = res.data;
-            });
+            axios.get('/attendance/fetch', { params: this.employeeFilter })
+            .then(res => this.employees = res.data);
         },
-
         addSelectAllOption(){
-            let option = {
-                val: "0",
-                key: "All"
-            };
-            this.work_locations.push(option);
-            this.location_departments.push(option);
-            this.locations.forEach(loc => {
-                this.work_locations.push(loc);
-            });
-            this.departments.forEach(dept => {
-                this.location_departments.push(dept);
-            });
+            let option = { val: "0", key: "All" };
+            this.work_locations = [option, ...this.locations];
+            this.location_departments = [option, ...this.departments];
         },
-
+        getStatusBadgeClass(status) {
+            switch(status) {
+                case 'Present': return 'bg-success bg-opacity-10 text-success';
+                case 'Absent': return 'bg-secondary bg-opacity-10 text-secondary';
+                case 'Weekoff':
+                case 'Holiday': return 'bg-danger bg-opacity-10 text-danger';
+                case 'On Duty':
+                case 'Time Update': return 'bg-warning bg-opacity-10 text-warning';
+                case 'Leave': 
+                case 'Halfday Leave':
+                case 'Short Leave': return 'bg-info bg-opacity-10 text-info';
+                default: return 'bg-light text-dark';
+            }
+        },
+        getStatusRowClass(status) {
+            if (status === 'Absent') return 'bg-soft-gray bg-opacity-25';
+            if (status === 'Weekoff' || status === 'Holiday') return 'bg-soft-red bg-opacity-25';
+            return '';
+        },
+        getStatusIcon(status) {
+            switch(status) {
+                case 'Present': return 'bi bi-check-circle-fill';
+                case 'Absent': return 'bi bi-x-circle-fill';
+                case 'Weekoff':
+                case 'Holiday': return 'bi bi-calendar-x-fill';
+                case 'On Duty': return 'bi bi-geo-alt-fill';
+                case 'Time Update': return 'bi bi-clock-fill';
+                case 'Leave': return 'bi bi-file-earmark-text-fill';
+                default: return 'bi bi-dot';
+            }
+        }
     },
-
     created(){
-        // this.employeeFilter.current_date = this.today;
-        // this.employeeFilter.current_month = this.month;
-        // let ind = this.months.indexOf(this.employeeFilter.current_month);
-        // this.employeeFilter.current_month_name = this.month_name[ind];
-
         this.setCurrentDate(this.today);
         this.addSelectAllOption();
         this.fetch();
     },
-
 }
 </script>
 
-<style>
-.fs-10{
-    font-size: 10px;
+<style scoped lang="scss">
+.min-width-200 { min-width: 200px; }
+.btn-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+.shadow-premium { box-shadow: 0 10px 40px rgba(0,0,0,0.05) !important; }
+.border-start-lg { border-left: 0; }
+@media (min-width: 992px) { .border-start-lg { border-left: 1px solid #eee; } }
+
+.transition-all { transition: all 0.2s ease; }
+.custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #ddd; border-radius: 10px; }
+
+.stat-bubble {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    font-weight: 600;
 }
+.shadow-xs { box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+
+.bg-soft-gray { background-color: #f8f9fa; }
+.bg-soft-red { background-color: rgba(var(--bs-danger-rgb), 0.02); }
+
+.legend-item {
+    transition: transform 0.2s;
+    cursor: default;
+    &:hover { transform: translateY(-2px); }
+}
+
+.min-width-200 { min-width: 250px; }
 </style>

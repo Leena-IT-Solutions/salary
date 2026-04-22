@@ -1,208 +1,135 @@
 <template>
-    <div class="container-fluid">
-
-        <section-title title="Add Employee Address" class=""></section-title>
-
-        <div  v-if="employee_address" class="row g-4 mb-5">
-
-            <forms-text-field name="address" label="Address" v-model="employee_address.address" error="" classes=""></forms-text-field>
-
-            <forms-text-field name="city" label="City" v-model="employee_address.city" error="" classes="col-12 col-lg-6"></forms-text-field>
-
-            <forms-text-field name="pincode" label="Pincode" v-model="employee_address.pincode" error="" classes="col-12 col-lg-6"></forms-text-field>
-
-            <forms-text-field name="state" label="State" v-model="employee_address.state" error="" classes="col-12 col-lg-6"></forms-text-field>
-
-            <forms-text-field name="country" label="Country" v-model="employee_address.country" error="" classes="col-12 col-lg-6"></forms-text-field>
-
-            <forms-submit-button name="" v-model="loading" label="Save Employee Address" @click="save()" classes="col-6"></forms-submit-button>
-
-            <div class="col-6 text-end">
-                <button v-if="employee_address.id != null && !isDelete" class="btn btn-danger" @click="deleteItem()">Delete Item</button>
-                <button v-if="employee_address.id != null && isDelete" class="btn btn-danger" @click="deleteNow()">Confirm & Delete</button>
+    <div class="residence-suite">
+        <div class="row g-4">
+            <!-- Entry Section -->
+            <div class="col-12 col-xl-5">
+                <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                    <div class="card-header bg-white py-3 px-4 border-0">
+                        <h6 class="fw-bold mb-0 text-dark">Residential Parameters</h6>
+                    </div>
+                    <div class="card-body p-4 bg-light-subtle">
+                        <div class="row g-3">
+                            <forms-text-field name="address" label="Street & Landmark" v-model="employee_address.address" placeholder="B-12, Green View Apts..." classes="col-12"></forms-text-field>
+                            <forms-text-field name="city" label="City" v-model="employee_address.city" placeholder="e.g. Mumbai" classes="col-6"></forms-text-field>
+                            <forms-text-field name="pincode" label="Pincode" v-model="employee_address.pincode" placeholder="000000" classes="col-6"></forms-text-field>
+                            <forms-text-field name="state" label="State/Region" v-model="employee_address.state" placeholder="e.g. Maharashtra" classes="col-6"></forms-text-field>
+                            <forms-text-field name="country" label="Country" v-model="employee_address.country" placeholder="e.g. India" classes="col-6"></forms-text-field>
+                            
+                            <div class="col-12 d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                                <div v-if="employee_address.id">
+                                    <button v-if="!isDelete" class="btn btn-outline-danger btn-sm rounded-pill px-3" @click="isDelete = true">
+                                        Remove Address
+                                    </button>
+                                    <button v-else class="btn btn-danger btn-sm rounded-pill px-3 animate-pulse" @click="deleteNow()">
+                                        Confirm
+                                    </button>
+                                </div>
+                                <div v-else></div>
+                                
+                                <forms-submit-button name="" v-model="loading" :label="employee_address.id ? 'Save Changes' : 'Register Address'" @click="save()" classes="px-4 shadow-sm"></forms-submit-button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-        </div>
+            <!-- History Section -->
+            <div class="col-12 col-xl-7">
+                <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                    <div class="card-header bg-white py-3 px-4 border-0">
+                        <h6 class="fw-bold mb-0 text-dark">Address Repository</h6>
+                    </div>
+                    
+                    <div class="p-4" v-if="employee_addresses.length === 0">
+                        <div class="text-center opacity-25 py-5">
+                            <i class="bi bi-geo-alt display-1"></i>
+                            <p class="mt-2 fw-bold">No residence records registered</p>
+                        </div>
+                    </div>
 
-        <div class="row mb-4">
-            
-            <forms-select-field name="column" label="Column"  placeholder=""
-            v-model="params.key" 
-            error="" 
-            classes="col" 
-            :options="[{key: 'ID', val: 'id'},{key: ' Employee Address', val: 'employee_address'},{key: 'Code', val: 'code'},]"></forms-select-field>
-
-            <forms-text-field name="search" label="Type Search Sring" v-model="params.value" error="" classes="col"></forms-text-field>
-
-            <div class="col-auto">
-                <button class="btn btn-primary h-100" @click="search()">Search</button>
+                    <div class="address-grid p-4" v-else>
+                        <div v-for="address in employee_addresses" :key="address.id" class="address-card border rounded-4 p-3 mb-3 transition-all hover-shadow" @click="edit(address)">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="d-flex gap-3">
+                                    <div class="bg-soft-primary text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; flex-shrink: 0;">
+                                        <i class="bi bi-house-door-fill"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark">{{ address.address }}</div>
+                                        <div class="text-muted small">
+                                            {{ address.city }}, {{ address.state }} {{ address.pincode }}
+                                        </div>
+                                        <div class="badge bg-light text-muted border rounded-pill mt-1">{{ address.country }}</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-link text-primary p-0 shadow-none"><i class="bi bi-pencil-square fs-5"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th @click="orderBy('id')" class="cursor-pointer" style="width: 60px;">ID</th>
-                        <th @click="orderBy('employee_address')" class="cursor-pointer"> Address</th>
-                        <th class="text-end" style="width: 120px;">Action</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    <tr v-for="address in employee_addresses" :key="address.id">
-                        <td>{{ address.id }}</td>
-                        <td>{{ address.address }} {{ address.city }} {{ address.pincode }} {{ address.state }} {{ address.country }}</td>
-                        <td class="text-end">
-                            <button class="btn btn-outline-info btn-sm me-2" @click="edit(address)"><i class="bi bi-pencil"></i></button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <div class="text-center">
-                <button class="btn btn-dark" :disabled="next_page_url == null" @click="fetch()">Load More</button>
-            </div>
-        </div>
-
     </div>
 </template>
 
 <script>
 import axios from "axios";
 export default {
-
     props: ['employee_id'],
-
     data(){
         return {
             loading: false,
             isDelete: false,
             employee_address: {
-                employee_id: null,
-                id: null,
-                address: null,
-                city: null,
-                pincode: null,
-                state: null,
-                country: null,
+                employee_id: null, id: null, address: null, city: null, pincode: null, state: null, country: null,
             },
             employee_addresses: [],
-            next_page_url: null,
-            current_page: 1,
-            params: {
-                key: null,
-                value: null,
-                by: 'id',
-                order: 'desc',
-                rows: 1,
-            }
+            params: { key: null, value: null, by: 'id', order: 'desc', rows: 10 }
         };
     },
-
     methods: {
-
         fetch(){
-
-            let url = '/employee/employee_address/' + this.employee_id + '/fetch';
-            if(this.next_page_url != null){
-                url = this.next_page_url;
-            }
-
-            axios.get(url, {params: this.params}).then(res => {
-                this.next_page_url = res.data.next_page_url;
-                this.current_page = res.data.current_page;
-
-                if(this.next_page_url != null && this.current_page == 1){
-                    this.employee_addresses = res.data.data;
-                } else {
-                    res.data.data.forEach(item => {
-                        this.employee_addresses.push(item);
-                    });
-                }
-
+            axios.get('/employee/employee_address/' + this.employee_id + '/fetch', {params: this.params}).then(res => {
+                this.employee_addresses = res.data.data;
                 this.loading = false;
             });
         },
-
-        search(){
-            this.current_page = 1;
-            this.next_page_url = null;
-            this.employee_addresses = [];
-            this.fetch();
-        },
-
-        orderBy(col){
-            this.params.by = col;
-            this.params.order = this.params.order == 'asc' ? 'desc' : 'asc';
-            this.search();
-        },
-
         save(){
-            if(this.employee_address.id == null){
-                this.add();
-            } else {
-                this.update();
-            }
+            this.loading = true;
+            let url = this.employee_address.id ? '/employee/employee_address/update' : '/employee/employee_address/add';
+            axios.post(url, this.employee_address).then(res => {
+                this.reset();
+                this.fetch();
+            }).finally(() => this.loading = false);
         },
-
         reset(){
-            this.employee_address.id = null;
-            this.employee_address.address = null;
-            this.employee_address.city = null;
-            this.employee_address.pincode = null;
-            this.employee_address.state = null;
-            this.employee_address.country = null;
+            Object.keys(this.employee_address).forEach(key => this.employee_address[key] = (key === 'employee_id' ? this.employee_id : null));
+            this.isDelete = false;
         },
-
-        add(){
-            this.loading = true;
-            axios.post('/employee/employee_address/add', this.employee_address).then(res => {
-                this.reset();
-                this.search();
-            });
-        },
-
-        update(){
-            this.loading = true;
-            axios.post('/employee/employee_address/update', this.employee_address).then(res => {
-                this.reset();
-                this.search();
-            });
-        },
-
-        deleteItem(){
-            this.isDelete = true;
-        },
-
         deleteNow(){
             this.loading = true;
             axios.post('/employee/employee_address/delete', this.employee_address).then(res => {
                 this.reset();
-                this.search();
-            });
+                this.fetch();
+            }).finally(() => this.loading = false);
         },
-
         edit(item){
-            this.employee_address.id = item.id;
-            this.employee_address.address = item.address;
-            this.employee_address.city = item.city;
-            this.employee_address.pincode = item.pincode;
-            this.employee_address.state = item.state;
-            this.employee_address.country = item.country;
+            Object.keys(this.employee_address).forEach(key => this.employee_address[key] = item[key]);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         },
-
     },
-
     created(){
         this.fetch();
         this.employee_address.employee_id = this.employee_id;
     },
-
 }
 </script>
 
-<style>
-.cursor-pointer {
-    cursor: pointer;
-}
+<style scoped>
+.residence-suite { padding: 1rem 0; }
+.address-card { cursor: pointer; border-color: #f1f5f9; transition: all 0.2s ease; }
+.address-card:hover { border-color: #6366f1; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.08); }
+.bg-soft-primary { background-color: #eef2ff; }
+.animate-pulse { animation: pulse 2s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
 </style>

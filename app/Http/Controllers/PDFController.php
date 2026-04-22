@@ -50,7 +50,14 @@ class PDFController extends Controller
             $ddmmyyyys[] = $value->format('d-m-Y');
         }
 
-        $employees = Employee::get();
+        $query = Employee::active();
+        if (request()->has('eids')) {
+            $query->whereIn('id', explode(',', request()->get('eids')));
+        }
+
+        $employees = $query->with(['employee_shifts' => function($q) use($from, $to){
+            $q->whereBetween('dt', [$from, $to])->with('employee_attendance');
+        }])->get();
 
         $path = "attendance_".$from."-" . $to . ".pdf";
         
@@ -58,17 +65,82 @@ class PDFController extends Controller
             "from" => $from,
             "to" => $to,
             "employees" => $employees,
+            "dates" => $dates,
             'dds' => $dds
         ])
         ->setPaper('a3', 'landscape')
         ->stream($path);
     }
 
+    public function individual_attendance($from, $to){
+        $eids = request()->get('eids');
+        $enddate = date('Y-m-d', strtotime('+1 day', strtotime($to)));
+
+        $period = new DatePeriod(
+            new DateTime($from),
+            new DateInterval('P1D'),
+            new DateTime($enddate)
+        );
+
+        $dates = [];
+        $dds = [];
+        $ddmmyyyys = [];
+        foreach ($period as $key => $value) {
+            $dates[] = $value->format('Y-m-d');
+            $dds[] = $value->format('d');
+            $ddmmyyyys[] = $value->format('d-m-Y');
+        }
+
+        $query = Employee::active();
+        if ($eids) {
+            $query->whereIn('id', explode(',', $eids));
+        }
+
+        $employees = $query->with(['employee_shifts' => function($q) use($from, $to){
+            $q->whereBetween('dt', [$from, $to])
+              ->with('working_shift')
+              ->with('leave')
+              ->with('time_update')
+              ->with('short_leave')
+              ->with('on_duty')
+              ->with('overtime')
+              ->with(['employee_attendance' => function($aq){
+                $aq->orderBy('tm', 'asc');
+              }]);
+        }])->get();
+
+        $path = "individual_attendance_".$from."-" . $to . ".pdf";
+        
+        return Pdf::loadView('pdf.individual_attendance', [
+            "from" => $from,
+            "to" => $to,
+            "employees" => $employees,
+            "dates" => $dates,
+            "ddmmyyyys" => $ddmmyyyys
+        ])
+        ->setPaper('a4', 'portrait')
+        ->stream($path);
+    }
+
+
     public function payslip($id){
         $company = CompanyProfile::first();
         $payroll = Payroll::find($id);
         $path = "payroll_".$id.".pdf";
         return Pdf::loadView('pdf.payslip', ['company' => $company, 'payroll' => $payroll])->stream($path);
+    }
+
+    public function single_payslip($id){
+        $company = CompanyProfile::first();
+        $emp = \App\Models\PayrollEmployee::with('payroll', 'payroll_employee_attendances', 'payroll_employee_breakups')->find($id);
+        $payroll = $emp->payroll;
+        $path = "payslip_".$emp->employee->employee_code."_".$id.".pdf";
+        
+        return Pdf::loadView('pdf.single_payslip', [
+            'company' => $company, 
+            'payroll' => $payroll, 
+            'emp' => $emp
+        ])->stream($path);
     }
 
     public function ca_report($id){

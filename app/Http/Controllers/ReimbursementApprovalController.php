@@ -15,43 +15,68 @@ class ReimbursementApprovalController extends Controller
     }
 
     public function fetch(Request $request){
-        $by = 'id';
-        $order = 'desc';
-        $key = null;
-        $value = null;
+        $by = $request->get('by', 'id');
+        $order = $request->get('order', 'desc');
+        $search = $request->get('value');
 
-        $by = isset($request->by) ? $request->by : $by;
-        $order = isset($request->order) ? $request->order : $order;
-        $key = isset($request->key) ? $request->key : $key;
-        $value = isset($request->value) ? $request->value : $value;
+        $query = ReimbursementApproval::with(['employee', 'reimbursement_component'])->orderBy($by, $order);
 
-        $items = ReimbursementApproval::orderBy($by, $order);
-        if($key != null && $value != null){
-            $items = $items->where($key, 'LIKE', '%'.$value.'%');
+        if($search){
+            $query->where(function($q) use ($search) {
+                $q->where('status', 'LIKE', "%$search%")
+                  ->orWhere('app_date', 'LIKE', "%$search%")
+                  ->orWhere('note', 'LIKE', "%$search%")
+                  ->orWhereHas('employee', function($eq) use ($search) {
+                      $eq->where('first_name', 'LIKE', "%$search%")
+                         ->orWhere('last_name', 'LIKE', "%$search%")
+                         ->orWhere('employee_code', 'LIKE', "%$search%")
+                         ->orWhere('email', 'LIKE', "%$search%")
+                         ->orWhere('phone', 'LIKE', "%$search%");
+                  })
+                  ->orWhereHas('reimbursement_component', function($cq) use ($search) {
+                      $cq->where('name', 'LIKE', "%$search%");
+                  });
+            });
         }
-        return $items->with('employee')->with('reimbursement_component')->simplePaginate(25);
+
+        return $query->simplePaginate(25);
     }
 
     public function add(Request $request){
+        $request->validate([
+            'employee_id' => 'required',
+            'reimbursement_component_id' => 'required',
+            'app_date' => 'required|date',
+            'amount' => 'required|numeric|min:1',
+            'status' => 'required',
+        ]);
         return ReimbursementApproval::create($request->all());
     }
 
     public function update(Request $request){
+        $request->validate([
+            'reimbursement_component_id' => 'required',
+            'app_date' => 'required|date',
+            'amount' => 'required|numeric|min:1',
+            'status' => 'required',
+        ]);
         return ReimbursementApproval::find($request->id)->update($request->all());
     }
 
     public function delete(Request $request){
-        return ReimbursementApproval::find($request->id)->delete();
+        ReimbursementApproval::find($request->id)->delete();
+        return response()->json(['message' => 'Reimbursement deleted successfully']);
     }
 
     public function employee($id){
-
-        $response = [
-            "employee" => null,
+        return [
+            "employee" => Employee::where(function($q) use ($id) {
+                $q->where('employee_code', $id)
+                  ->orWhere('phone', 'LIKE', "%$id%")
+                  ->orWhere('email', 'LIKE', "%$id%")
+                  ->orWhere('first_name', 'LIKE', "%$id%")
+                  ->orWhere('last_name', 'LIKE', "%$id%");
+            })->first()
         ];
-        
-        $response["employee"] = Employee::where('employee_code', $id)->first();
-
-        return $response;
     }
 }

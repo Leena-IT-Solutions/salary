@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
 
             $table->date('special_day')->nullable();
-            $table->set('day_type', ['Weekoff', 'Holiday', 'Halfday']);
+            $table->enum('day_type', ['Weekoff', 'Holiday', 'Halfday']);
             $table->string('remark');
 
             $table->timestamps();

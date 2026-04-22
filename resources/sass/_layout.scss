@@ -1,59 +1,41 @@
 .my_layout {
-    height: 100vh;
     display: grid;
     grid-template-columns: 1fr;
-    grid-template-rows: 60px auto;
-    background-color: $light;
+    min-height: 100vh;
+    background-color: #f8fbff;
+
+    @media (min-width: 992px) {
+        grid-template-columns: 280px 1fr;
+    }
 
     &_sidebar {
         background: linear-gradient(135deg, $primary 0%, darken($primary, 15%) 100%);
         color: white;
-        transition: all 0.3s ease;
+        height: 100vh;
+        position: sticky;
+        top: 0;
         z-index: 1000;
+        display: flex;
+        flex-direction: column;
         
-        .nav-item {
-            margin: 0.25rem 0.75rem;
-            .nav-link {
-                border-radius: 0.75rem;
-                padding: 0.75rem 1rem;
-                color: rgba(255, 255, 255, 0.8);
-                transition: all 0.2s ease;
-                
-                &:hover {
-                    color: white;
-                    background: rgba(255, 255, 255, 0.1);
-                    transform: translateX(5px);
-                }
-                
-                &.active {
-                    color: white;
-                    background: rgba(255, 255, 255, 0.2);
-                    font-weight: 500;
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-                }
+        .sidebar-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            
+            &::-webkit-scrollbar {
+                width: 4px;
+            }
+            &::-webkit-scrollbar-thumb {
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 10px;
             }
         }
     }
 
     &_main {
-        overflow-y: auto;
-        padding: 0;
-        background-color: $light;
-    }
-}
-
-// Full Sidebar for desktops
-@media (min-width: 992px) {
-    .my_layout {
-        grid-template-columns: 280px auto;
-        grid-template-rows: auto;
-        
-        &_sidebar {
-            height: 100vh;
-            position: sticky;
-            top: 0;
-            box-shadow: 4px 0 24px rgba($dark, 0.05);
-        }
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
     }
 }
 
@@ -65,3 +47,10 @@
     border-radius: $card-border-radius;
     box-shadow: $card-shadow;
 }
+
+.shadow-premium {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
+}
+
+.letter-spacing-1 { letter-spacing: 1px; }
+.letter-spacing-2 { letter-spacing: 2px; }

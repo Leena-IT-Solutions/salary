@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\EmployeeDocument;
+use Illuminate\Support\Facades\Storage;
 
 class EmployeeDocumentsController extends Controller
 {
@@ -26,10 +27,9 @@ class EmployeeDocumentsController extends Controller
     }
 
     public function add(Request $request){
-
         if($file = $request->file('document')){
             $name = time().'_'.mt_rand(100000,999999).'_'.$file->getClientOriginalName();
-            $file->move('docs', $name);
+            $file->storeAs('docs', $name, 'public');
             $path = "/docs/" . $name;
 
             $data = [
@@ -42,16 +42,14 @@ class EmployeeDocumentsController extends Controller
         }
 
         return null;
-        
     }
 
     public function update(Request $request){
-
         $photo = EmployeeDocument::find($request->id);
 
         if($file = $request->file('document')){
             $name = time().'_'.mt_rand(100000,999999).'_'.$file->getClientOriginalName();
-            $file->move('docs', $name);
+            $file->storeAs('docs', $name, 'public');
             $path = "/docs/" . $name;
 
             $data = [
@@ -63,9 +61,10 @@ class EmployeeDocumentsController extends Controller
             if($photo != null) {
                 $old_document = $photo->document;
 
-                if($old_document != null || $old_document != ""){
-                    if(file_exists(substr($old_document, 1))){
-                        unlink(substr($old_document, 1));
+                if($old_document != null && $old_document != ""){
+                    $old_path = ltrim($old_document, '/');
+                    if(Storage::disk('public')->exists($old_path)){
+                        Storage::disk('public')->delete($old_path);
                     }
                 }
 
@@ -90,19 +89,20 @@ class EmployeeDocumentsController extends Controller
     }
 
     public function delete(Request $request){
-
         $photo = EmployeeDocument::find($request->id);
             
         if($photo != null) {
             $old_document = $photo->document;
 
-            if($old_document != null || $old_document != ""){
-                if(file_exists(substr($old_document, 1))){
-                    unlink(substr($old_document, 1));
+            if($old_document != null && $old_document != ""){
+                $old_path = ltrim($old_document, '/');
+                if(Storage::disk('public')->exists($old_path)){
+                    Storage::disk('public')->delete($old_path);
                 }
             }
+            $photo->delete();
         }
 
-        return EmployeeDocument::find($request->id)->delete();
+        return true;
     }
 }

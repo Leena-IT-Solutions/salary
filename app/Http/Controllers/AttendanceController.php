@@ -46,7 +46,9 @@ class AttendanceController extends Controller
             $employees->with('employee_shifts', function($q) use($request){
                 $q
                 ->with('working_shift')
-                ->with('employee_attendance')
+                ->with(['employee_attendance' => function($aq) {
+                    $aq->orderBy('tm', 'asc');
+                }])
                 ->whereDate('dt', $request->current_date);
             });
         }
@@ -55,19 +57,18 @@ class AttendanceController extends Controller
             $employees->with('employee_shifts', function($q) use($request){
                 $q
                 ->with('working_shift')
-                ->with('employee_attendance')
+                ->with(['employee_attendance' => function($aq) {
+                    $aq->orderBy('tm', 'asc');
+                }])
                 ->whereYear('dt', $request->current_year)
                 ->whereMonth('dt', $request->current_month);
             });
         }
 
         return $employees
+        ->active()
         ->with('employee_work_location.work_location')
         ->with('employee_department.department')
-        ->where(function ($q){
-            $today = date("Y-m-d");
-            $q->where('doe', null)->orWhere('doe', '>=', $today);
-        })
         ->orderBy('first_name', 'asc')
         ->get();
     }
@@ -90,7 +91,9 @@ class AttendanceController extends Controller
         $employees->with('employee_shifts', function($q) use($request){
             $q
             ->with('working_shift')
-            ->with('employee_attendance')
+            ->with(['employee_attendance' => function($aq) {
+                $aq->orderBy('tm', 'asc');
+            }])
             ->where('dt', '>=', $request->from)
             ->where('dt', '<=', $request->to);
         });
@@ -113,11 +116,9 @@ class AttendanceController extends Controller
         }
 
         $employees = $employees
+        ->active()
         ->with('employee_work_location.work_location')
         ->with('employee_department.department')
-        ->where(function ($q) use($request){
-            $q->where('doe', null)->orWhere('doe', '>=', $request->from);
-        })
         ->orderBy('first_name', 'asc')
         ->get();
 
@@ -127,6 +128,91 @@ class AttendanceController extends Controller
             "dds" => $dds,
             "ddmmyyyys" => $ddmmyyyys,
         ];
+    }
+
+    public function update_times(Request $request){
+        if(isset($request->employee_shift_id) && $request->employee_shift_id){
+            $es = \App\Models\EmployeeShift::find($request->employee_shift_id);
+        } else {
+            $es = \App\Models\EmployeeShift::where('employee_id', $request->employee_id)
+                ->where('dt', $request->on_date)
+                ->first();
+            
+            if(!$es){
+                // Create minimal shift if missing (using default working shift or just placeholder)
+                $employee = Employee::find($request->employee_id);
+                $es = new \App\Models\EmployeeShift();
+                $es->employee_id = $request->employee_id;
+                $es->working_shift_id = $employee->working_shift_id ?? 1; // Fallback to 1 if not set
+                $es->dt = $request->on_date;
+                $es->save();
+            }
+        }
+
+        if($es){
+            // Remove existing attendance records for this shift
+            $es->employee_attendance()->delete();
+
+            // Create In record if exists
+            if($request->in_time){
+                $es->employee_attendance()->create(['tm' => $request->in_time]);
+            }
+
+            // Create Out record if exists
+            if($request->out_time){
+                $es->employee_attendance()->create(['tm' => $request->out_time]);
+            }
+
+            // Trigger evalution
+            $amc = new AttendanceMachineController();
+            $req = new Request();
+            $req->employee_id = $es->employee_id;
+            $req->on_date = $es->dt;
+            $amc->evalute($req);
+
+            return ["message" => "Success"];
+        }
+        return response()->json(["message" => "Shift not found"], 404);
+    }
+
+    public function delete_times(Request $request){
+        $es = \App\Models\EmployeeShift::find($request->employee_shift_id);
+        if($es){
+            $es->employee_attendance()->delete();
+
+            // Trigger evalution
+            $amc = new AttendanceMachineController();
+            $req = new Request();
+            $req->employee_id = $es->employee_id;
+            $req->on_date = $es->dt;
+            $amc->evalute($req);
+
+            return ["message" => "Success"];
+        }
+        return response()->json(["message" => "Shift not found"], 404);
+    }
+
+    public function auto_update_all(Request $request){
+        $shifts = \App\Models\EmployeeShift::where('dt', $request->on_date)
+            ->with('working_shift')
+            ->whereDoesntHave('employee_attendance')
+            ->get();
+
+        foreach($shifts as $es){
+            // Create In record
+            $es->employee_attendance()->create(['tm' => $es->working_shift->in]);
+            // Create Out record
+            $es->employee_attendance()->create(['tm' => $es->working_shift->out]);
+
+            // Trigger evalution for this shift
+            $amc = new AttendanceMachineController();
+            $req = new Request();
+            $req->employee_id = $es->employee_id;
+            $req->on_date = $es->dt;
+            $amc->evalute($req);
+        }
+
+        return ["message" => "Success", "processed" => count($shifts)];
     }
 
     public function run_lop(Request $request){

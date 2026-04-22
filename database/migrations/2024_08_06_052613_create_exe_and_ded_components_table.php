@@ -16,7 +16,7 @@ return new class extends Migration
             $table->bigInteger('exe_and_ded_type_id')->index();
             $table->string('name');
             $table->string('name_in_payslip');
-            $table->set('calculation', ['Flat', 'CTC', 'Basic']);
+            $table->enum('calculation', ['Flat', 'CTC', 'Basic']);
             $table->double('value');
             $table->boolean('is_active')->default(false);
             $table->timestamps();

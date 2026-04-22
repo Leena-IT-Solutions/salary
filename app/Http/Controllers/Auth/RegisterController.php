@@ -50,7 +50,21 @@ class RegisterController extends Controller
     {
         return Validator::make($data, [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'email' => [
+                'required', 
+                'string', 
+                'email', 
+                'max:255', 
+                'unique:users',
+                function ($attribute, $value, $fail) {
+                    $employee = \App\Models\Employee::where('email', $value)->first();
+                    if (!$employee) {
+                        $fail('Registration is restricted to employees only. Please use your official email.');
+                    } elseif ($employee->doe) {
+                        $fail('Registration access is revoked for resigned employees.');
+                    }
+                }
+            ],
             'username' => ['required', 'string', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);

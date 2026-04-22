@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('fy_name');
             $table->date('from');
             $table->date('to');
-            $table->set('is_current_year', ['Yes', 'No']);
+            $table->enum('is_current_year', ['Yes', 'No']);
 
             $table->timestamps();
         });

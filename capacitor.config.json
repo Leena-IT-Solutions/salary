@@ -1,0 +1,9 @@
+{
+  "appId": "com.salarymanager.app",
+  "appName": "SalaryManager",
+  "webDir": "public",
+  "server": {
+    "url": "https://payroll.sarvodayavidyalay.com",
+    "cleartext": true
+  }
+}

@@ -9,11 +9,22 @@
 
     @yield('head')
 
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Salary Manager">
+
     <!-- Scripts -->
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
+    <script>
+        window.User = {!! json_encode(Auth::user()) !!};
+    </script>
 </head>
 <body class="bg-light">
     <div id="app">
+        <pwa-install></pwa-install>
 
         <div class="my_layout">
 
@@ -39,7 +50,7 @@
                         </div>
                         <div class="user-info overflow-hidden">
                             <p class="text-white fw-semibold m-0 text-truncate">{{ Auth::user()->name }}</p>
-                            <p class="text-white text-opacity-50 small m-0 text-truncate">Administrator</p>
+                            <p class="text-white text-opacity-50 small m-0 text-truncate">{{ Auth::user()->role }}</p>
                         </div>
                     </div>
                 </div>
@@ -87,5 +98,14 @@
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
     </style>
+
+    <!-- PWA Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js');
+            });
+        }
+    </script>
 </body>
 </html>

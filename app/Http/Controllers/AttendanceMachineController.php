@@ -76,6 +76,70 @@ class AttendanceMachineController extends Controller
         return response()->json($response);
     }
 
+    // Face Reading Route (no RFID verification)
+    // Request Format: employee_code=LITS0001&dt=2024-08-01&tim=09:00
+    // http://localhost:8000/attendance/face_save?employee_code=LITS0001&dt=2024-08-01&tim=09:00
+
+    public function faceSave(Request $request){
+
+        $machineToken = Setting::where('key', 'Attendance Machine API Token')->first()?->value;
+        $requestToken = $request->bearerToken();
+
+        if ($machineToken && $requestToken !== $machineToken) {
+            return response()->json([
+                "message" => "Unauthorized: Invalid API Token"
+            ], 401);
+        }
+
+        $employee_code = $request->employee_code;
+        $punch_date = $request->p_date;
+        $punch_time = $request->p_time;
+        $time_difference = null;
+
+        $attendance_data = [
+            "tm" => $punch_time,
+        ];
+
+        $response = [
+            "employee" => "",
+            "message" => ""
+        ];
+
+        $employee = Employee::where('employee_code', $employee_code)->first();
+
+        if(!$employee){
+            $response["message"] = "Invalid Employee";
+        }
+
+        if($employee){
+            $employee_id = $employee->id;
+            $es = EmployeeShift::where('employee_id', $employee_id)->where('dt', $punch_date);
+            if($es->exists()){
+
+                $response["employee"] = $employee->first_name;
+                $employee_shift = $es->first();
+                $punch_count = $employee_shift->employee_attendance->count();
+
+                if($punch_count > 0){
+                    $tm1 = strtotime($punch_time);
+                    $tm2 = strtotime($employee_shift->employee_attendance()->latest()->first()->tm);
+                    $time_difference = $tm1 - $tm2;
+                    $time_difference = $time_difference == 0 ? 1 : $time_difference;
+                }
+
+                if($time_difference == null || $time_difference > 60){
+                    $response["message"] = "Success";
+                    $employee_shift->employee_attendance()->create($attendance_data);
+                } else {
+                    $response["message"] = "Already Exists";
+                }
+
+            }
+        }
+
+        return response()->json($response);
+    }
+
     public function evalute(Request $request){
 
         $employee_id = $request->employee_id;

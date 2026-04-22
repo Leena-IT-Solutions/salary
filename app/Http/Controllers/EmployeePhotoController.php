@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\EmployeePhoto;
+use Illuminate\Support\Facades\Storage;
 
 class EmployeePhotoController extends Controller
 {
@@ -26,10 +27,9 @@ class EmployeePhotoController extends Controller
     }
 
     public function add(Request $request){
-
         if($file = $request->file('media')){
             $name = time().'_'.mt_rand(100000,999999).'_'.$file->getClientOriginalName();
-            $file->move('employee', $name);
+            $file->storeAs('employee', $name, 'public');
             $path = "/employee/" . $name;
 
             $data = [
@@ -41,14 +41,12 @@ class EmployeePhotoController extends Controller
         }
 
         return null;
-        
     }
 
     public function update(Request $request){
-
         if($file = $request->file('media')){
             $name = time().'_'.mt_rand(100000,999999).'_'.$file->getClientOriginalName();
-            $file->move('employee', $name);
+            $file->storeAs('employee', $name, 'public');
             $path = "/employee/" . $name;
 
             $data = [
@@ -61,9 +59,10 @@ class EmployeePhotoController extends Controller
             if($photo != null) {
                 $old_media = $photo->media;
 
-                if($old_media != null || $old_media != ""){
-                    if(file_exists(substr($old_media, 1))){
-                        unlink(substr($old_media, 1));
+                if($old_media != null && $old_media != ""){
+                    $old_path = ltrim($old_media, '/');
+                    if(Storage::disk('public')->exists($old_path)){
+                        Storage::disk('public')->delete($old_path);
                     }
                 }
 
@@ -77,19 +76,20 @@ class EmployeePhotoController extends Controller
     }
 
     public function delete(Request $request){
-
         $photo = EmployeePhoto::find($request->id);
             
         if($photo != null) {
             $old_media = $photo->media;
 
-            if($old_media != null || $old_media != ""){
-                if(file_exists(substr($old_media, 1))){
-                    unlink(substr($old_media, 1));
+            if($old_media != null && $old_media != ""){
+                $old_path = ltrim($old_media, '/');
+                if(Storage::disk('public')->exists($old_path)){
+                    Storage::disk('public')->delete($old_path);
                 }
             }
+            $photo->delete();
         }
 
-        return EmployeePhoto::find($request->id)->delete();
+        return true;
     }
 }

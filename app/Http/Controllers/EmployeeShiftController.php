@@ -15,11 +15,17 @@ use DateInterval;
 class EmployeeShiftController extends Controller
 {
     public function employee_shift(){
-        $shifts = WorkingShift::get(['id as val', 'name as key']);
+        $shifts = WorkingShift::all()->map(function($shift){
+            return [
+                'val' => $shift->id,
+                'key' => $shift->name . " (" . $shift->in . " - " . $shift->out . ")"
+            ];
+        });
         $locations = WorkLocation::get(['id as val', 'location_name as key']);
         $departments = Department::get(['id as val', 'department as key']);
         return view("employee_shift", compact('shifts', 'locations', 'departments'));
     }
+
 
     public function fetch(Request $request){
         $employees = Employee::query();
@@ -39,14 +45,12 @@ class EmployeeShiftController extends Controller
         }
         
         return $employees
+        ->active()
         ->with('employee_work_location.work_location')
         ->with('employee_department.department')
         ->with('employee_shift.working_shift')
-        ->where(function ($q){
-            $today = date("Y-m-d");
-            $q->where('doe', null)->orWhere('doe', '>=', $today);
-        })
         ->get();
+
     }
 
     public function save(Request $request){

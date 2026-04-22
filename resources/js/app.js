@@ -17,6 +17,7 @@ import '@fortawesome/fontawesome-free/js/all.js';
 const app = createApp({});
 
 import AppNavigation from './components/AppNavigation.vue';
+import PwaInstall from './components/PwaInstall.vue';
 import PageHeader from './components/elements/PageHeader.vue';
 import SectionTitle from './components/elements/SectionTitle.vue';
 
@@ -25,6 +26,7 @@ import Calender from './components/elements/calender/Calender.vue';
 import YearForm from './components/elements/calender/YearForm.vue';
 import RunPayroll from './components/elements/overview/RunPayroll.vue';
 import AttendanceEvalutionReport from './components/elements/overview/AttendanceEvalutionReport.vue';
+import PayrollDetails from './components/elements/overview/PayrollDetails.vue';
 
 /* Employee Shift Manager */
 import EmployeeShiftManager from './components/elements/employee_shift/EmployeeShiftManager.vue';
@@ -80,6 +82,8 @@ import EmployeeLeaveGroup from './components/elements/employee/EmployeeLeaveGrou
 import EmployeeSalary from './components/elements/employee/EmployeeSalary.vue';
 import EmployeeBank from './components/elements/employee/EmployeeBank.vue';
 import EmployeeServices from './components/elements/employee/EmployeeServices.vue';
+import EmployeePayslipHistory from './components/elements/employee/EmployeePayslipHistory.vue';
+import EmployeeDashboard from './components/elements/employee/EmployeeDashboard.vue';
 
 /* Approvals Import */
 import LeaveApproval from './components/elements/approvals/LeaveApproval.vue';
@@ -92,6 +96,7 @@ import ExemptionAndDeductionApproval from './components/elements/approvals/Exemp
 import ShortLeaveApproval from './components/elements/approvals/ShortLeaveApproval.vue';
 import FineApproval from './components/elements/approvals/FineApproval.vue';
 import VariablePayApproval from './components/elements/approvals/VariablePayApproval.vue';
+import PendingApprovals from './components/elements/approvals/PendingApprovals.vue';
 
 /* Application Settings Import */
 import FinancialYear from './components/elements/application_settings/FinancialYear.vue';
@@ -100,6 +105,7 @@ import Preferences from './components/elements/application_settings/Preferences.
 
 
 app.component('app-navigation', AppNavigation);
+app.component('pwa-install', PwaInstall);
 app.component('page-header', PageHeader);
 app.component('section-title', SectionTitle);
 
@@ -110,6 +116,7 @@ app.component('employee-shift-manager', EmployeeShiftManager);
 app.component('employee-attendance', EmployeeAttendance);
 app.component('run-payroll', RunPayroll);
 app.component('attendance-evalution-report', AttendanceEvalutionReport);
+app.component('payroll-details', PayrollDetails);
 
 
 
@@ -162,6 +169,8 @@ app.component('employee-leave-group', EmployeeLeaveGroup);
 app.component('employee-salary', EmployeeSalary);
 app.component('employee-bank', EmployeeBank);
 app.component('employee-services', EmployeeServices);
+app.component('employee-payslip-history', EmployeePayslipHistory);
+app.component('employee-dashboard', EmployeeDashboard);
 
 /* Approvals Components */
 app.component('leave-approval', LeaveApproval);
@@ -173,6 +182,7 @@ app.component('reimbursement-approval', ReimbursementApproval);
 app.component('exemption-and-deduction-approval', ExemptionAndDeductionApproval);
 app.component('fine-approval', FineApproval);
 app.component('variable-pay-approval', VariablePayApproval);
+app.component('pending-approvals', PendingApprovals);
 
 /* Application Settings Components */
 app.component('financial-year', FinancialYear);
@@ -203,9 +213,12 @@ app.component('short-leave', ShortLeaveApproval);
 
 app.mount('#app');
 
-import AOS from 'aos';
-import 'aos/dist/aos.css';
-
-AOS.init({
-    duration: 2000,
-});
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(registration => {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        }).catch(error => {
+            console.log('ServiceWorker registration failed: ', error);
+        });
+    });
+}

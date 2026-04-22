@@ -16,6 +16,7 @@ class TimeUpdate extends Model
         'in_time',
         'out_time',
         'reason',
+        'status',
     ];
 
     public function employee(){

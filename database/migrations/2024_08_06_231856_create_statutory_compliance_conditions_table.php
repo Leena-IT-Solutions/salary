@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
 
             $table->bigInteger('statutory_compliance_id')->index();
-            $table->set('gender', ['All', 'Male', 'Female', 'Other']);
-            $table->set('salary_type', ['Basic Pay', 'Gross Pay', 'CTC', 'None']);
-            $table->set('calculation', ['Flat', 'Percentage', 'CSV']);
+            $table->enum('gender', ['All', 'Male', 'Female', 'Other']);
+            $table->enum('salary_type', ['Basic Pay', 'Gross Pay', 'CTC', 'None']);
+            $table->enum('calculation', ['Flat', 'Percentage', 'CSV']);
             $table->double('min_salary')->nullable();
             $table->double('max_salary')->nullable();
             $table->double('restrict_salary_for_calculation')->nullable();
@@ -26,7 +26,7 @@ return new class extends Migration
             $table->text('employer_contribution')->nullable();
             $table->text('max_employer_contribution')->nullable();
             $table->boolean('is_active')->default(false);
-            $table->set('state',[
+            $table->enum('state',[
                 'All',
                 'Andhra Pradesh',
                 'Arunachal Pradesh',

@@ -22,9 +22,9 @@ return new class extends Migration
             $table->integer('emi_amount');
             $table->double('rate_of_interest');
             $table->integer('tenure');
-            $table->set('status', ['Approved', 'Rejected']);
+            $table->enum('status', ['Approved', 'Rejected']);
             $table->string('reason')->nullable();
-            $table->set('is_pause', ['Yes', 'No']);
+            $table->enum('is_pause', ['Yes', 'No']);
             
 
             $table->timestamps();

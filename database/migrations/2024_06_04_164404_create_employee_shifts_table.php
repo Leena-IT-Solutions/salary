@@ -20,7 +20,7 @@ return new class extends Migration
             $table->integer('late')->default(0);
             $table->integer('early')->default(0);
             $table->double('lop')->default(1);
-            $table->set('status', [
+            $table->enum('status', [
                 'Present',
                 'Working',
                 'Halfday Working',

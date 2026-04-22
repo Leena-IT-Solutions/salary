@@ -19,8 +19,8 @@ return new class extends Migration
             $table->date('on_date');
             $table->time('in_time')->format('H:i')->nullable();
             $table->time('out_time')->format('H:i')->nullable();
-            $table->set('status', ['Approved', 'Rejected']);
-            $table->set('is_lop', ['Yes', 'No']);
+            $table->enum('status', ['Pending', 'Approved', 'Rejected'])->default('Pending');
+            $table->enum('is_lop', ['Yes', 'No']);
             $table->string('reason')->nullable();
 
             $table->timestamps();

@@ -24,6 +24,10 @@ class PayrollEmployee extends Model
         'net_payable_amount',
     ];
 
+    public function payroll(){
+        return $this->belongsTo(Payroll::class);
+    }
+
     public function employee(){
         return $this->belongsTo(Employee::class);
     }
