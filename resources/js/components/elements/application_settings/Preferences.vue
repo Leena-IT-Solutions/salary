@@ -116,6 +116,59 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- API Documentation Details -->
+                        <div class="p-4 bg-light-subtle border-top">
+                            <h6 class="fw-bold text-dark small text-uppercase opacity-75 mb-3">Endpoint Reference</h6>
+                            
+                            <!-- API Endpoint 1: RFID Punch -->
+                            <div class="mb-4 bg-white p-3 rounded-4 shadow-sm border border-light">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="badge bg-primary px-3 py-1 rounded-pill font-monospace small">GET</span>
+                                    <span class="text-muted small fw-medium">RFID Biometric Punch</span>
+                                </div>
+                                <div class="bg-light p-2 rounded-3 mb-3 d-flex align-items-center justify-content-between">
+                                    <code class="text-primary small text-break">{{ apiSaveUrl }}</code>
+                                    <button @click="copyText(apiSaveUrl)" class="btn btn-link btn-sm text-muted p-0 ms-2" title="Copy URL">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
+                                </div>
+                                <div class="small">
+                                    <div class="fw-bold text-muted small mb-2" style="font-size: 0.8rem;">Query Parameters:</div>
+                                    <ul class="list-unstyled mb-0 gap-1 d-flex flex-column text-muted" style="font-size: 0.8rem;">
+                                        <li><code>tagms</code> <span class="text-dark">— Corporate Employee Code (Staff Code)</span></li>
+                                        <li><code>tagid</code> <span class="text-dark">— Biometric Tag/RFID ID</span></li>
+                                        <li><code>dt</code> <span class="text-dark">— Punch Date (YYYY-MM-DD)</span></li>
+                                        <li><code>tim</code> <span class="text-dark">— Punch Time (HH:MM)</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- API Endpoint 2: Face Punch -->
+                            <div class="bg-white p-3 rounded-4 shadow-sm border border-light">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="badge bg-success px-3 py-1 rounded-pill font-monospace small">POST</span>
+                                    <span class="text-muted small fw-medium">Face Recognition Punch</span>
+                                </div>
+                                <div class="bg-light p-2 rounded-3 mb-3 d-flex align-items-center justify-content-between">
+                                    <code class="text-success small text-break">{{ apiFaceSaveUrl }}</code>
+                                    <button @click="copyText(apiFaceSaveUrl)" class="btn btn-link btn-sm text-muted p-0 ms-2" title="Copy URL">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
+                                </div>
+                                <div class="small">
+                                    <div class="fw-bold text-muted small mb-2" style="font-size: 0.8rem;">Request Body (JSON) & Headers:</div>
+                                    <div class="mb-2" style="font-size: 0.8rem;">
+                                        <span class="text-muted">Header:</span> <code>Authorization: Bearer &lt;Token&gt;</code>
+                                    </div>
+                                    <ul class="list-unstyled mb-0 gap-1 d-flex flex-column text-muted" style="font-size: 0.8rem;">
+                                        <li><code>employee_code</code> <span class="text-dark">— Corporate Employee Code (Staff Code)</span></li>
+                                        <li><code>p_date</code> <span class="text-dark">— Punch Date (YYYY-MM-DD)</span></li>
+                                        <li><code>p_time</code> <span class="text-dark">— Punch Time (HH:MM)</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -164,6 +217,12 @@ export default {
         },
         integrationSettings() {
             return this.settings.slice(13);
+        },
+        apiSaveUrl() {
+            return `${window.location.origin}/attendance/save`;
+        },
+        apiFaceSaveUrl() {
+            return `${window.location.origin}/attendance/face_save`;
         }
     },
 
@@ -198,6 +257,11 @@ export default {
         copyToken(val) {
             navigator.clipboard.writeText(val);
             alert('Token copied to clipboard');
+        },
+
+        copyText(val) {
+            navigator.clipboard.writeText(val);
+            alert('Copied to clipboard');
         },
 
         async fetch(){
