@@ -37,7 +37,7 @@
             <aside class="my_layout_sidebar d-none d-lg-flex flex-column shadow-premium">
                 <div class="sidebar-header border-bottom border-white border-opacity-10 py-4 px-4 mb-2">
                     <div class="d-flex align-items-center gap-3">
-                        <div class="logo-box bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm overflow-hidden" style="width: 40px; height: 40px; overflow: hidden;">
+                        <div class="logo-box bg-transparent rounded-circle d-flex align-items-center justify-content-center shadow-sm overflow-hidden" style="width: 40px; height: 40px; overflow: hidden;">
                             <img src="/logo192.png" alt="Salary Manager Logo" style="width: 100%; height: 100%; object-fit: cover;">
                         </div>
                         <h4 class="text-white fw-bold m-0 letter-spacing-1">PAYROLL</h4>
@@ -72,7 +72,7 @@
                 <nav class="navbar d-lg-none bg-primary shadow-sm px-3">
                     <div class="container-fluid">
                         <span class="navbar-brand text-white fw-bold d-flex align-items-center gap-2">
-                            <div class="bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm overflow-hidden" style="width: 32px; height: 32px; overflow: hidden;">
+                            <div class="bg-transparent rounded-circle d-flex align-items-center justify-content-center shadow-sm overflow-hidden" style="width: 32px; height: 32px; overflow: hidden;">
                                 <img src="/logo192.png" alt="Salary Manager Logo" style="width: 100%; height: 100%; object-fit: cover;">
                             </div>
                             PAYROLL
@@ -94,7 +94,7 @@
         <div class="offcanvas offcanvas-start bg-primary" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
             <div class="offcanvas-header border-bottom border-white border-opacity-10 py-4">
                 <h5 class="offcanvas-title text-white fw-bold d-flex align-items-center gap-2" id="offcanvasExampleLabel text-uppercase">
-                    <div class="bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm overflow-hidden" style="width: 32px; height: 32px; overflow: hidden;">
+                    <div class="bg-transparent rounded-circle d-flex align-items-center justify-content-center shadow-sm overflow-hidden" style="width: 32px; height: 32px; overflow: hidden;">
                         <img src="/logo192.png" alt="Salary Manager Logo" style="width: 100%; height: 100%; object-fit: cover;">
                     </div>
                     PAYROLL

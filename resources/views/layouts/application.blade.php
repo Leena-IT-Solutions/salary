@@ -37,7 +37,7 @@
                         <div class="row align-items-center h-100 px-3">
 
                             <div class="col d-flex align-items-center gap-2">
-                                <div class="bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm overflow-hidden" style="width: 32px; height: 32px; overflow: hidden;">
+                                <div class="bg-transparent rounded-circle d-flex align-items-center justify-content-center shadow-sm overflow-hidden" style="width: 32px; height: 32px; overflow: hidden;">
                                     <img src="/logo192.png" alt="Salary Manager Logo" style="width: 100%; height: 100%; object-fit: cover;">
                                 </div>
                                 <h3 class="text-light p-0 m-0 text-uppercase">Payroll</h3>
@@ -63,7 +63,7 @@
                             <div class="row align-items-top">
                                 <div class="col-12 pt-3 pb-2 border-bottom">
                                     <div class="d-flex align-items-center gap-2">
-                                        <div class="bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm overflow-hidden" style="width: 40px; height: 40px; overflow: hidden;">
+                                        <div class="bg-transparent rounded-circle d-flex align-items-center justify-content-center shadow-sm overflow-hidden" style="width: 40px; height: 40px; overflow: hidden;">
                                             <img src="/logo192.png" alt="Salary Manager Logo" style="width: 100%; height: 100%; object-fit: cover;">
                                         </div>
                                         <h3 class="text-light p-0 m-0 text-uppercase">Payroll</h3>
@@ -94,7 +94,7 @@
                         <div class="card-header">
                             <div class="row align-items-top h-100">
                                 <div class="col d-flex align-items-center gap-2 py-3">
-                                    <div class="bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm overflow-hidden" style="width: 32px; height: 32px; overflow: hidden;">
+                                    <div class="bg-transparent rounded-circle d-flex align-items-center justify-content-center shadow-sm overflow-hidden" style="width: 32px; height: 32px; overflow: hidden;">
                                         <img src="/logo192.png" alt="Salary Manager Logo" style="width: 100%; height: 100%; object-fit: cover;">
                                     </div>
                                     <h5 class="text-light p-0 m-0 text-uppercase">Payroll</h5>

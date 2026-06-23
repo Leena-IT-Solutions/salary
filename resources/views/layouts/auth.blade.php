@@ -34,7 +34,7 @@
                 <div class="col-11 col-md-8 col-lg-6 col-xl-5 col-xxl-4">
 
                     <div class="text-center mb-5" data-aos="zoom-in">
-                        <div class="logo-box bg-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow-premium overflow-hidden" style="width: 80px; height: 80px; overflow: hidden;">
+                        <div class="logo-box bg-transparent rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow-premium overflow-hidden" style="width: 80px; height: 80px; overflow: hidden;">
                             <img src="/logo192.png" alt="Salary Manager Logo" style="width: 100%; height: 100%; object-fit: cover;">
                         </div>
                         <h1 class="fw-bold text-uppercase letter-spacing-2 m-0">{{ config('app.name', 'PAYROLL') }}</h1>
