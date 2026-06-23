@@ -57,11 +57,86 @@ class EmployeeController extends Controller
     }
 
     public function add(Request $request){
-        return Employee::create($request->all());
+        $data = $request->all();
+        if (!isset($data['nationality']) || $data['nationality'] === null || $data['nationality'] === '') {
+            $data['nationality'] = 'Indian';
+        }
+        if (!isset($data['religion']) || $data['religion'] === null || $data['religion'] === '') {
+            $data['religion'] = 'Other';
+        }
+
+        $validated = validator($data, [
+            'first_name' => 'required|string|max:65',
+            'middle_name' => 'nullable|string|max:65',
+            'last_name' => 'required|string|max:65',
+            'employee_code' => 'required|string|max:65|unique:employees,employee_code',
+            'tagid' => 'nullable|string|max:65',
+            'email' => 'required|email|max:100',
+            'phone' => 'required|string|max:12',
+            'doj' => 'nullable|date',
+            'doe' => 'nullable|date',
+            'dob' => 'required|date',
+            'gender' => 'required|in:Male,Female,Other',
+            'blood_group' => 'required|in:O +ve,O -ve,A +ve,A -ve,B +ve,B -ve,AB +ve,AB -ve,HH,Other',
+            'religion' => 'required|in:Hindu,Muslim,Christian,Sikh,Buddhist,Jain,Atheist,Other',
+            'cast' => 'nullable|string|max:100',
+            'subcast' => 'nullable|string|max:100',
+            'mothertongue' => 'required|string|max:100',
+            'nationality' => 'required|string|max:100',
+            'marital_status' => 'required|in:Married,Widowed,Separated,Divorced,Single,Other',
+            'qualification' => 'nullable|in:Primary School,Secondary School,High School,Undergraduate,Graduate,Diploma,Masters,Doctorate,Other',
+            'degree' => 'nullable|string|max:100',
+            'aadhar' => 'nullable|string|max:16',
+            'pan' => 'nullable|string|max:16',
+            'pf' => 'nullable|string|max:100',
+            'uan' => 'nullable|string|max:100',
+            'esic' => 'nullable|string|max:100',
+        ])->validate();
+
+        return Employee::create($validated);
     }
 
     public function update(Request $request){
-        return Employee::find($request->id)->update($request->all());
+        $data = $request->all();
+        if (!isset($data['nationality']) || $data['nationality'] === null || $data['nationality'] === '') {
+            $data['nationality'] = 'Indian';
+        }
+        if (!isset($data['religion']) || $data['religion'] === null || $data['religion'] === '') {
+            $data['religion'] = 'Other';
+        }
+
+        $validated = validator($data, [
+            'id' => 'required|exists:employees,id',
+            'first_name' => 'required|string|max:65',
+            'middle_name' => 'nullable|string|max:65',
+            'last_name' => 'required|string|max:65',
+            'employee_code' => 'required|string|max:65|unique:employees,employee_code,' . $request->id,
+            'tagid' => 'nullable|string|max:65',
+            'email' => 'required|email|max:100',
+            'phone' => 'required|string|max:12',
+            'doj' => 'nullable|date',
+            'doe' => 'nullable|date',
+            'dob' => 'required|date',
+            'gender' => 'required|in:Male,Female,Other',
+            'blood_group' => 'required|in:O +ve,O -ve,A +ve,A -ve,B +ve,B -ve,AB +ve,AB -ve,HH,Other',
+            'religion' => 'required|in:Hindu,Muslim,Christian,Sikh,Buddhist,Jain,Atheist,Other',
+            'cast' => 'nullable|string|max:100',
+            'subcast' => 'nullable|string|max:100',
+            'mothertongue' => 'required|string|max:100',
+            'nationality' => 'required|string|max:100',
+            'marital_status' => 'required|in:Married,Widowed,Separated,Divorced,Single,Other',
+            'qualification' => 'nullable|in:Primary School,Secondary School,High School,Undergraduate,Graduate,Diploma,Masters,Doctorate,Other',
+            'degree' => 'nullable|string|max:100',
+            'aadhar' => 'nullable|string|max:16',
+            'pan' => 'nullable|string|max:16',
+            'pf' => 'nullable|string|max:100',
+            'uan' => 'nullable|string|max:100',
+            'esic' => 'nullable|string|max:100',
+        ])->validate();
+
+        $employee = Employee::find($request->id);
+        $employee->update($validated);
+        return $employee;
     }
 
     public function delete(Request $request){

@@ -1,10 +1,9 @@
 <template>
-    <div :class="item_classes">
-        <input type="submit" class="btn btn-primary"
-        :disabled="proxyChecked"
-        :value="proxyChecked ? 'Saving...' : item_label"
-        @click="$emit('update:modelValue', $event.target.value)">
-    </div>
+    <button type="submit" :class="['btn btn-primary', button_classes]"
+    :disabled="proxyChecked"
+    @click="$emit('update:modelValue', $event.target.value)">
+        {{ proxyChecked ? 'Saving...' : item_label }}
+    </button>
 </template>
 
 <script>
@@ -15,13 +14,14 @@ export default {
     data(){
         return {
             item_label: "Save",
+            button_classes: "",
         };
     },
 
     methods: {
         init(){
             this.item_label = this.label ? this.label : this.item_label;
-            this.item_classes = this.classes ? this.classes : this.item_classes;
+            this.button_classes = this.classes ? this.classes : "";
         },
     },
 

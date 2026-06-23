@@ -28,6 +28,15 @@
                 </div>
                 
                 <div class="card-body p-4 bg-light-subtle">
+                    <!-- General Error Alert -->
+                    <div v-if="Object.keys(errors).length > 0" class="alert alert-danger rounded-4 mb-4 border-0 shadow-sm d-flex align-items-center gap-3">
+                        <i class="bi bi-exclamation-triangle-fill fs-4 text-danger"></i>
+                        <div>
+                            <div class="fw-bold text-danger">Validation Failed</div>
+                            <div class="small text-danger opacity-75">Please correct the errors in the highlighted fields below.</div>
+                        </div>
+                    </div>
+
                     <div class="row g-4">
                         <!-- Left Column: Primary & Personal -->
                         <div class="col-12 col-xl-8">
@@ -35,46 +44,12 @@
                             <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
                                 <h6 class="text-uppercase small fw-bold text-muted mb-4 border-bottom pb-2"><i class="bi bi-person me-2"></i>Basic Identity</h6>
                                 <div class="row g-3">
-                                    <forms-text-field name="first_name" label="First Name" v-model="employee.first_name" placeholder="Legal first name" classes="col-md-4"></forms-text-field>
-                                    <forms-text-field name="middle_name" label="Middle Name" v-model="employee.middle_name" placeholder="Optional" classes="col-md-4"></forms-text-field>
-                                    <forms-text-field name="last_name" label="Last Name" v-model="employee.last_name" placeholder="Legal last name" classes="col-md-4"></forms-text-field>
+                                    <forms-text-field name="first_name" label="First Name" v-model="employee.first_name" :error="errors.first_name ? errors.first_name[0] : ''" placeholder="Legal first name" classes="col-md-4"></forms-text-field>
+                                    <forms-text-field name="middle_name" label="Middle Name" v-model="employee.middle_name" :error="errors.middle_name ? errors.middle_name[0] : ''" placeholder="Optional" classes="col-md-4"></forms-text-field>
+                                    <forms-text-field name="last_name" label="Last Name" v-model="employee.last_name" :error="errors.last_name ? errors.last_name[0] : ''" placeholder="Legal last name" classes="col-md-4"></forms-text-field>
                                     
-                                    <forms-text-field name="employee_code" label="Corporate ID / Staff Code" v-model="employee.employee_code" placeholder="EMP-001" classes="col-md-6"></forms-text-field>
-                                    <forms-text-field name="tagid" label="RFID / Biometric Tag ID" v-model="employee.tagid" placeholder="8-digit hex code" classes="col-md-6"></forms-text-field>
-                                </div>
-                            </div>
-
-                            <!-- Contact & Communication -->
-                            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
-                                <h6 class="text-uppercase small fw-bold text-muted mb-4 border-bottom pb-2"><i class="bi bi-envelope me-2"></i>Communication Channel</h6>
-                                <div class="row g-3">
-                                    <forms-text-field name="email" label="Professional Email" v-model="employee.email" placeholder="work@company.com" classes="col-md-6"></forms-text-field>
-                                    <forms-text-field name="phone" label="Primary Phone" v-model="employee.phone" placeholder="+1 (000) 000-0000" classes="col-md-6"></forms-text-field>
-                                </div>
-                            </div>
-
-                            <!-- Statutory & Documents -->
-                            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
-                                <h6 class="text-uppercase small fw-bold text-muted mb-4 border-bottom pb-2"><i class="bi bi-file-earmark-lock me-2"></i>Statutory IDs & Banking</h6>
-                                <div class="row g-3">
-                                    <forms-text-field name="aadhar" label="National Identification (Aadhar)" v-model="employee.aadhar" placeholder="12-digit number" classes="col-md-6"></forms-text-field>
-                                    <forms-text-field name="pan" label="Tax ID (PAN)" v-model="employee.pan" placeholder="Alpha-numeric PAN" classes="col-md-6"></forms-text-field>
-                                    <forms-text-field name="pf" label="PF Registration Number" v-model="employee.pf" classes="col-md-4"></forms-text-field>
-                                    <forms-text-field name="uan" label="Universal Account (UAN)" v-model="employee.uan" classes="col-md-4"></forms-text-field>
-                                    <forms-text-field name="esic" label="ESIC Number" v-model="employee.esic" classes="col-md-4"></forms-text-field>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Right Column: Timeline & Attributes -->
-                        <div class="col-12 col-xl-4">
-                            <!-- Key Timelines -->
-                            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
-                                <h6 class="text-uppercase small fw-bold text-muted mb-4 border-bottom pb-2"><i class="bi bi-calendar-event me-2"></i>Critical Timelines</h6>
-                                <div class="row g-3">
-                                    <forms-date-field name="doj" label="Joining Date" v-model="employee.doj" classes="col-12"></forms-date-field>
-                                    <forms-date-field name="dob" label="Date of Birth" v-model="employee.dob" classes="col-12"></forms-date-field>
-                                    <forms-date-field name="doe" label="Resignation / Exit Date" v-model="employee.doe" classes="col-12"></forms-date-field>
+                                    <forms-text-field name="employee_code" label="Corporate ID / Staff Code" v-model="employee.employee_code" :error="errors.employee_code ? errors.employee_code[0] : ''" placeholder="EMP-001" classes="col-md-6"></forms-text-field>
+                                    <forms-text-field name="tagid" label="RFID / Biometric Tag ID" v-model="employee.tagid" :error="errors.tagid ? errors.tagid[0] : ''" placeholder="8-digit hex code" classes="col-md-6"></forms-text-field>
                                 </div>
                             </div>
 
@@ -82,25 +57,66 @@
                             <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
                                 <h6 class="text-uppercase small fw-bold text-muted mb-4 border-bottom pb-2"><i class="bi bi-info-circle me-2"></i>Demographics</h6>
                                 <div class="row g-3">
-                                    <forms-select-field name="gender" label="Gender Identity" v-model="employee.gender" :options="[{key: 'Male', val: 'Male'}, {key: 'Female', val: 'Female'}, {key: 'Other', val: 'Other'}]" classes="col-12"></forms-select-field>
-                                    <forms-select-field name="marital_status" label="Marital Status" v-model="employee.marital_status" :options="[{key: 'Married', val: 'Married'}, {key: 'Widowed', val: 'Widowed'}, {key: 'Separated', val: 'Separated'}, {key: 'Divorced', val: 'Divorced'}, {key: 'Single', val: 'Single'}]" classes="col-12"></forms-select-field>
-                                    <forms-select-field name="blood_group" label="Blood Group" v-model="employee.blood_group" :options="[{key: 'O +ve', val: 'O +ve'}, {key: 'O -ve', val: 'O -ve'}, {key: 'A +ve', val: 'A +ve'}, {key: 'B +ve', val: 'B +ve'}, {key: 'AB +ve', val: 'AB +ve'}]" classes="col-12"></forms-select-field>
+                                    <forms-select-field name="gender" label="Gender Identity" v-model="employee.gender" :error="errors.gender ? errors.gender[0] : ''" :options="[{key: 'Male', val: 'Male'}, {key: 'Female', val: 'Female'}, {key: 'Other', val: 'Other'}]" classes="col-md-4"></forms-select-field>
+                                    <forms-select-field name="marital_status" label="Marital Status" v-model="employee.marital_status" :error="errors.marital_status ? errors.marital_status[0] : ''" :options="[{key: 'Married', val: 'Married'}, {key: 'Widowed', val: 'Widowed'}, {key: 'Separated', val: 'Separated'}, {key: 'Divorced', val: 'Divorced'}, {key: 'Single', val: 'Single'}]" classes="col-md-4"></forms-select-field>
+                                    <forms-select-field name="blood_group" label="Blood Group" v-model="employee.blood_group" :error="errors.blood_group ? errors.blood_group[0] : ''" :options="[{key: 'O +ve', val: 'O +ve'}, {key: 'O -ve', val: 'O -ve'}, {key: 'A +ve', val: 'A +ve'}, {key: 'B +ve', val: 'B +ve'}, {key: 'AB +ve', val: 'AB +ve'}]" classes="col-md-4"></forms-select-field>
+                                    <forms-text-field name="nationality" label="Nationality" v-model="employee.nationality" :error="errors.nationality ? errors.nationality[0] : ''" placeholder="e.g. Indian" classes="col-md-6"></forms-text-field>
+                                    <forms-select-field name="religion" label="Religion" v-model="employee.religion" :error="errors.religion ? errors.religion[0] : ''" :options="[{key: 'Hindu', val: 'Hindu'}, {key: 'Muslim', val: 'Muslim'}, {key: 'Christian', val: 'Christian'}, {key: 'Sikh', val: 'Sikh'}, {key: 'Buddhist', val: 'Buddhist'}, {key: 'Jain', val: 'Jain'}, {key: 'Atheist', val: 'Atheist'}, {key: 'Other', val: 'Other'}]" classes="col-md-6"></forms-select-field>
+                                    <forms-text-field name="cast" label="Caste" v-model="employee.cast" :error="errors.cast ? errors.cast[0] : ''" placeholder="Caste" classes="col-md-6"></forms-text-field>
+                                    <forms-text-field name="subcast" label="Sub-caste" v-model="employee.subcast" :error="errors.subcast ? errors.subcast[0] : ''" placeholder="Sub-caste" classes="col-md-6"></forms-text-field>
                                 </div>
                             </div>
 
+                            <!-- Statutory & Documents -->
+                            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                                <h6 class="text-uppercase small fw-bold text-muted mb-4 border-bottom pb-2"><i class="bi bi-file-earmark-lock me-2"></i>Statutory IDs & Banking</h6>
+                                <div class="row g-3">
+                                    <forms-text-field name="aadhar" label="National Identification (Aadhar)" v-model="employee.aadhar" :error="errors.aadhar ? errors.aadhar[0] : ''" placeholder="12-digit number" classes="col-md-6"></forms-text-field>
+                                    <forms-text-field name="pan" label="Tax ID (PAN)" v-model="employee.pan" :error="errors.pan ? errors.pan[0] : ''" placeholder="Alpha-numeric PAN" classes="col-md-6"></forms-text-field>
+                                    <forms-text-field name="pf" label="PF Registration Number" v-model="employee.pf" :error="errors.pf ? errors.pf[0] : ''" classes="col-md-4"></forms-text-field>
+                                    <forms-text-field name="uan" label="Universal Account (UAN)" v-model="employee.uan" :error="errors.uan ? errors.uan[0] : ''" classes="col-md-4"></forms-text-field>
+                                    <forms-text-field name="esic" label="ESIC Number" v-model="employee.esic" :error="errors.esic ? errors.esic[0] : ''" classes="col-md-4"></forms-text-field>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Timeline & Attributes -->
+                        <div class="col-12 col-xl-4">
+                            <!-- Contact & Communication -->
+                            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                                <h6 class="text-uppercase small fw-bold text-muted mb-4 border-bottom pb-2"><i class="bi bi-envelope me-2"></i>Communication Channel</h6>
+                                <div class="row g-3">
+                                    <forms-text-field name="email" label="Professional Email" v-model="employee.email" :error="errors.email ? errors.email[0] : ''" placeholder="work@company.com" classes="col-12"></forms-text-field>
+                                    <forms-text-field name="phone" label="Primary Phone" v-model="employee.phone" :error="errors.phone ? errors.phone[0] : ''" placeholder="+1 (000) 000-0000" classes="col-12"></forms-text-field>
+                                </div>
+                            </div>
+
+                            <!-- Key Timelines -->
+                            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+                                <h6 class="text-uppercase small fw-bold text-muted mb-4 border-bottom pb-2"><i class="bi bi-calendar-event me-2"></i>Critical Timelines</h6>
+                                <div class="row g-3">
+                                    <forms-date-field name="doj" label="Joining Date" v-model="employee.doj" :error="errors.doj ? errors.doj[0] : ''" classes="col-12"></forms-date-field>
+                                    <forms-date-field name="dob" label="Date of Birth" v-model="employee.dob" :error="errors.dob ? errors.dob[0] : ''" classes="col-12"></forms-date-field>
+                                    <forms-date-field name="doe" label="Resignation / Exit Date" v-model="employee.doe" :error="errors.doe ? errors.doe[0] : ''" classes="col-12"></forms-date-field>
+                                </div>
+                            </div>
+
+
+
                             <!-- Professional & Cultural -->
                             <div class="card border-0 shadow-sm rounded-4 p-4">
-                                <h6 class="text-uppercase small fw-bold text-muted mb-4 border-bottom pb-2"><i class="bi bi-translate me-2"></i>Cultural Details</h6>
+                                <h6 class="text-uppercase small fw-bold text-muted mb-4 border-bottom pb-2"><i class="bi bi-translate me-2"></i>Cultural & Professional</h6>
                                 <div class="row g-3">
-                                    <forms-text-field name="mothertongue" label="Native Language" v-model="employee.mothertongue" classes="col-12"></forms-text-field>
-                                    <forms-select-field name="qualification" label="Top Qualification" v-model="employee.qualification" :options="[{key: 'Undergraduate', val: 'Undergraduate'}, {key: 'Graduate', val: 'Graduate'}, {key: 'Masters', val: 'Masters'}, {key: 'Doctorate', val: 'Doctorate'}]" classes="col-12"></forms-select-field>
+                                    <forms-text-field name="mothertongue" label="Native Language" v-model="employee.mothertongue" :error="errors.mothertongue ? errors.mothertongue[0] : ''" classes="col-12"></forms-text-field>
+                                    <forms-select-field name="qualification" label="Top Qualification" v-model="employee.qualification" :error="errors.qualification ? errors.qualification[0] : ''" :options="[{key: 'Undergraduate', val: 'Undergraduate'}, {key: 'Graduate', val: 'Graduate'}, {key: 'Masters', val: 'Masters'}, {key: 'Doctorate', val: 'Doctorate'}]" classes="col-12"></forms-select-field>
+                                    <forms-text-field name="degree" label="Highest Educational Degree" v-model="employee.degree" :error="errors.degree ? errors.degree[0] : ''" placeholder="e.g. B.Tech, MBA" classes="col-12"></forms-text-field>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Form Action Bar -->
-                        <div class="col-12 d-flex justify-content-between align-items-center mt-4 border-top pt-4">
-                            <div v-if="employee.id">
+                        <div class="col-12 d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-3 mt-4 border-top pt-4">
+                            <div v-if="employee.id" class="d-grid d-md-block">
                                 <button v-if="!isDelete" class="btn btn-outline-danger btn-lg px-4 rounded-pill transition-all" @click="deleteItem()">
                                     <i class="bi bi-person-dash me-2"></i> Terminate Account
                                 </button>
@@ -108,11 +124,11 @@
                                     Confirm Removal
                                 </button>
                             </div>
-                            <div v-else></div>
+                            <div v-else class="d-none d-md-block"></div>
 
-                            <div class="d-flex gap-2">
+                            <div class="d-flex flex-column flex-sm-row gap-2 justify-content-end">
                                 <button class="btn btn-light btn-lg px-4 rounded-pill shadow-none" @click="toggleForm">Discard Changes</button>
-                                <forms-submit-button name="" v-model="loading" :label="employee.id ? 'Save Personnel Data' : 'Submit Enrollment'" @click="save()" classes="btn-lg px-5 shadow-sm"></forms-submit-button>
+                                <forms-submit-button name="" v-model="loading" :label="employee.id ? 'Save Personnel Data' : 'Submit Enrollment'" @click="save()" classes="btn-lg px-5 shadow-sm rounded-pill"></forms-submit-button>
                             </div>
                         </div>
                     </div>
@@ -242,7 +258,7 @@ export default {
                 cast: null,
                 subcast: null,
                 mothertongue: null,
-                nationality: null,
+                nationality: 'Indian',
                 marital_status: null,
                 qualification: null,
                 degree: null,
@@ -252,6 +268,7 @@ export default {
                 uan: null,
                 esic: null,
             },
+            errors: {},
             employees: [],
             next_page_url: null,
             current_page: 1,
@@ -329,15 +346,22 @@ export default {
 
         reset(){
             Object.keys(this.employee).forEach(key => this.employee[key] = null);
+            this.employee.nationality = 'Indian';
+            this.errors = {};
             this.isDelete = false;
         },
 
         add(){
             this.loading = true;
+            this.errors = {};
             axios.post('/employee/employee_manager/add', this.employee).then(res => {
                 this.reset();
                 this.search();
                 this.isForm = false;
+            }).catch(err => {
+                if (err.response && err.response.status === 422) {
+                    this.errors = err.response.data.errors;
+                }
             }).finally(() => {
                 this.loading = false;
             });
@@ -345,10 +369,15 @@ export default {
 
         update(){
             this.loading = true;
+            this.errors = {};
             axios.post('/employee/employee_manager/update', this.employee).then(res => {
                 this.reset();
                 this.search();
                 this.isForm = false;
+            }).catch(err => {
+                if (err.response && err.response.status === 422) {
+                    this.errors = err.response.data.errors;
+                }
             }).finally(() => {
                 this.loading = false;
             });
@@ -360,6 +389,7 @@ export default {
 
         deleteNow(){
             this.loading = true;
+            this.errors = {};
             axios.post('/employee/employee_manager/delete', this.employee).then(res => {
                 this.reset();
                 this.search();
@@ -370,6 +400,7 @@ export default {
         },
 
         edit(item){
+            this.reset();
             this.isForm = true;
             Object.keys(this.employee).forEach(key => {
                 this.employee[key] = item[key];
