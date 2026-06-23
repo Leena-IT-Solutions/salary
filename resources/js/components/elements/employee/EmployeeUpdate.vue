@@ -12,7 +12,7 @@
                     <i :class="['bi', tab.icon, 'me-2']"></i>
                     {{ tab.name }}
                 </button>
-                <button v-if="what != null" @click="what = null" class="btn btn-sm btn-soft-danger rounded-pill px-3 ms-auto">
+                <button v-if="what != null" @click="what = null" class="btn btn-sm btn-soft-danger rounded-pill px-3 ms-auto text-nowrap d-inline-flex align-items-center">
                     <i class="bi bi-x-lg me-1"></i> Reset View
                 </button>
             </div>
@@ -33,8 +33,8 @@
 
                 <!-- Component Views -->
                 <div v-else class="p-4 pt-2">
-                    <employee-photo :employee_id="employee.id" v-if="what=='Photo'"></employee-photo>
                     <employee-documents :employee_id="employee.id" v-if="what=='Documents'"></employee-documents>
+                    <employee-education :employee_id="employee.id" v-if="what=='Education'"></employee-education>
                     <employee-address :employee_id="employee.id" v-if="what=='Address'"></employee-address>
                     <employee-work-location :locations="locations" :employee_id="employee.id" v-if="what=='Work Location'"></employee-work-location>
                     <employee-designation :designations="designations" :employee_id="employee.id" v-if="what=='Designation'"></employee-designation>
@@ -58,8 +58,8 @@ export default {
             what: null,
             locations : [],
             availableTabs: [
-                { id: 'Photo', name: 'Identity Photo', icon: 'bi-person-badge' },
                 { id: 'Documents', name: 'Document Vault', icon: 'bi-folder2-open' },
+                { id: 'Education', name: 'Education Docs', icon: 'bi-mortarboard' },
                 { id: 'Address', name: 'Residence', icon: 'bi-geo' },
                 { id: 'Work Location', name: 'Work Location', icon: 'bi-building-up' },
                 { id: 'Department', name: 'Department', icon: 'bi-grid-1x2' },

@@ -65,20 +65,27 @@
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="avatar-circle me-3 bg-primary bg-opacity-10 text-primary">
-                                                    {{ emp.first_name.charAt(0) }}{{ emp.last_name.charAt(0) }}
+                                                    {{ (emp.first_name && emp.first_name.length > 0) ? emp.first_name.charAt(0).toUpperCase() : '?' }}{{ (emp.last_name && emp.last_name.length > 0) ? emp.last_name.charAt(0).toUpperCase() : '' }}
                                                 </div>
                                                 <div>
                                                     <p class="mb-0 fw-bold text-dark">{{ emp.first_name }} {{ emp.last_name }}</p>
-                                                    <p class="mb-0 text-muted small">{{ emp.middle_name }}</p>
+                                                    <p class="mb-0 text-muted small">{{ emp.middle_name || '' }}</p>
                                                 </div>
                                             </div>
                                         </td>
                                         <td class="text-center">
-                                            <span class="badge bg-light text-dark fw-normal mb-1 d-block">{{ emp.employee_department.department.department }}</span>
-                                            <span class="text-muted small d-block">{{ emp.employee_work_location.work_location.location_name }}</span>
+                                            <span v-if="emp.employee_department && emp.employee_department.department" class="badge bg-light text-dark fw-normal mb-1 d-block">
+                                                {{ emp.employee_department.department.department }}
+                                            </span>
+                                            <span v-else class="text-muted small d-block mb-1 opacity-50">No Department</span>
+
+                                            <span v-if="emp.employee_work_location && emp.employee_work_location.work_location" class="text-muted small d-block">
+                                                {{ emp.employee_work_location.work_location.location_name }}
+                                            </span>
+                                            <span v-else class="text-muted small d-block opacity-50">No Location</span>
                                         </td>
                                         <td class="text-center pe-4">
-                                            <template v-if="emp.employee_shift">
+                                            <template v-if="emp.employee_shift && emp.employee_shift.working_shift">
                                                 <div class="d-flex flex-column align-items-center">
                                                     <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 mb-1">
                                                         <i class="bi bi-clock-history me-1"></i>

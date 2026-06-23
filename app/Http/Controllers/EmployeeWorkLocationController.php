@@ -26,11 +26,25 @@ class EmployeeWorkLocationController extends Controller
     }
 
     public function add(Request $request){
-        return EmployeeWorkLocation::create($request->all());
+        $validated = $request->validate([
+            'employee_id' => 'required|integer',
+            'work_location_id' => 'required|integer|exists:work_locations,id',
+            'from' => 'required|date',
+            'to' => 'nullable|date|after_or_equal:from',
+        ]);
+        return EmployeeWorkLocation::create($validated);
     }
 
     public function update(Request $request){
-        return EmployeeWorkLocation::find($request->id)->update($request->all());
+        $validated = $request->validate([
+            'id' => 'required|exists:employee_work_locations,id',
+            'employee_id' => 'required|integer',
+            'work_location_id' => 'required|integer|exists:work_locations,id',
+            'from' => 'required|date',
+            'to' => 'nullable|date|after_or_equal:from',
+        ]);
+        EmployeeWorkLocation::find($request->id)->update($validated);
+        return response()->json(['success' => true]);
     }
 
     public function delete(Request $request){

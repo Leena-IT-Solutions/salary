@@ -27,11 +27,30 @@ class EmployeeAddressController extends Controller
     }
 
     public function add(Request $request){
-        return EmployeeAddress::create($request->all());
+        $validated = $request->validate([
+            'employee_id' => 'required|integer',
+            'address' => 'required|string|max:255',
+            'city' => 'required|string|max:100',
+            'pincode' => 'required|string|max:10',
+            'state' => 'required|string|max:100',
+            'country' => 'required|string|max:100',
+        ]);
+        return EmployeeAddress::create($validated);
     }
 
     public function update(Request $request){
-        return EmployeeAddress::find($request->id)->update($request->all());
+        $validated = $request->validate([
+            'id' => 'required|exists:employee_addresses,id',
+            'employee_id' => 'required|integer',
+            'address' => 'required|string|max:255',
+            'city' => 'required|string|max:100',
+            'pincode' => 'required|string|max:10',
+            'state' => 'required|string|max:100',
+            'country' => 'required|string|max:100',
+        ]);
+        $address = EmployeeAddress::find($request->id);
+        $address->update($validated);
+        return $address;
     }
 
     public function delete(Request $request){

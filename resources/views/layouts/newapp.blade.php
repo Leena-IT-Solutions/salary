@@ -7,6 +7,11 @@
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" href="/logo192.png">
+
     @yield('head')
 
     <!-- PWA -->
@@ -32,8 +37,8 @@
             <aside class="my_layout_sidebar d-none d-lg-flex flex-column shadow-premium">
                 <div class="sidebar-header border-bottom border-white border-opacity-10 py-4 px-4 mb-2">
                     <div class="d-flex align-items-center gap-3">
-                        <div class="logo-box bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;">
-                            <i class="bi bi-cash-stack text-primary fs-5"></i>
+                        <div class="logo-box bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm overflow-hidden" style="width: 40px; height: 40px; overflow: hidden;">
+                            <img src="/logo192.png" alt="Salary Manager Logo" style="width: 100%; height: 100%; object-fit: cover;">
                         </div>
                         <h4 class="text-white fw-bold m-0 letter-spacing-1">PAYROLL</h4>
                     </div>
@@ -66,7 +71,12 @@
                 <!-- Top Navbar for Mobile -->
                 <nav class="navbar d-lg-none bg-primary shadow-sm px-3">
                     <div class="container-fluid">
-                        <span class="navbar-brand text-white fw-bold">PAYROLL</span>
+                        <span class="navbar-brand text-white fw-bold d-flex align-items-center gap-2">
+                            <div class="bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm overflow-hidden" style="width: 32px; height: 32px; overflow: hidden;">
+                                <img src="/logo192.png" alt="Salary Manager Logo" style="width: 100%; height: 100%; object-fit: cover;">
+                            </div>
+                            PAYROLL
+                        </span>
                         <button class="btn btn-link text-white p-0 border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample">
                             <i class="bi bi-list fs-1"></i>
                         </button>
@@ -83,7 +93,12 @@
         <!-- Mobile Sidebar (Offcanvas) -->
         <div class="offcanvas offcanvas-start bg-primary" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
             <div class="offcanvas-header border-bottom border-white border-opacity-10 py-4">
-                <h5 class="offcanvas-title text-white fw-bold" id="offcanvasExampleLabel text-uppercase">PAYROLL</h5>
+                <h5 class="offcanvas-title text-white fw-bold d-flex align-items-center gap-2" id="offcanvasExampleLabel text-uppercase">
+                    <div class="bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm overflow-hidden" style="width: 32px; height: 32px; overflow: hidden;">
+                        <img src="/logo192.png" alt="Salary Manager Logo" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    PAYROLL
+                </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
             </div>
             <div class="offcanvas-body p-0">

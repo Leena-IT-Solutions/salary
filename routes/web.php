@@ -62,6 +62,8 @@ Route::middleware(['auth', 'role'])->group(function () {
     Route::get('/excel/ca_report/{id}', [App\Http\Controllers\PDFController::class, 'excel_ca_report']);
     Route::get('/pdf/attendance/{from}/{to}', [App\Http\Controllers\PDFController::class, 'attendance']);
     Route::get('/pdf/individual_attendance/{from}/{to}', [App\Http\Controllers\PDFController::class, 'individual_attendance']);
+    Route::get('/pdf/employee_profile/{id}', [App\Http\Controllers\PDFController::class, 'employeeProfile'])->name('employee.profile.pdf');
+    Route::get('/pdf/employee_profile/{id}/open', [App\Http\Controllers\PDFController::class, 'openProfilePdf'])->name('employee.profile.pdf.open');
 
     Route::group(['prefix' => 'employee'], function () {
         Route::get('/dashboard', [App\Http\Controllers\Employee\EmployeeDashboardController::class, 'index']);
@@ -86,6 +88,8 @@ Route::middleware(['auth', 'role'])->group(function () {
     Route::post('/employee/employee_manager/update', [App\Http\Controllers\EmployeeController::class, 'update']);
     Route::post('/employee/employee_manager/delete', [App\Http\Controllers\EmployeeController::class, 'delete']);
     Route::get('/employee/api/search', [App\Http\Controllers\EmployeeController::class, 'search']);
+    Route::post('/employee/employee_manager/export/excel', [App\Http\Controllers\EmployeeController::class, 'exportExcel'])->name('employee.export.excel');
+    Route::post('/employee/employee_manager/export/pdf', [App\Http\Controllers\EmployeeController::class, 'exportPdf'])->name('employee.export.pdf');
 
     /* Employee Address */
     Route::get('/employee/employee_address/{id}/fetch', [App\Http\Controllers\EmployeeAddressController::class, 'fetch']);
@@ -122,6 +126,12 @@ Route::middleware(['auth', 'role'])->group(function () {
     Route::post('/employee/employee_document/add', [App\Http\Controllers\EmployeeDocumentsController::class, 'add']);
     Route::post('/employee/employee_document/update', [App\Http\Controllers\EmployeeDocumentsController::class, 'update']);
     Route::post('/employee/employee_document/delete', [App\Http\Controllers\EmployeeDocumentsController::class, 'delete']);
+
+    /* Employee Education */
+    Route::get('/employee/employee_education/{id}/fetch', [App\Http\Controllers\EmployeeEducationController::class, 'fetch']);
+    Route::post('/employee/employee_education/add', [App\Http\Controllers\EmployeeEducationController::class, 'add']);
+    Route::post('/employee/employee_education/update', [App\Http\Controllers\EmployeeEducationController::class, 'update']);
+    Route::post('/employee/employee_education/delete', [App\Http\Controllers\EmployeeEducationController::class, 'delete']);
 
     /* Employee Document */
     Route::get('/employee/employee_leave_group/{id}/fetch', [App\Http\Controllers\EmployeeLeaveGroupController::class, 'fetch']);

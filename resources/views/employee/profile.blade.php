@@ -143,9 +143,10 @@
                 </div>
             </div>
             <div class="col-12 col-xl-auto text-center mt-3 mt-xl-0">
-                <div class="btn-group shadow-sm rounded-pill overflow-hidden w-100 w-md-auto">
-                    <a href="tel:{{ $employee->phone }}" class="btn btn-primary px-4 py-2 fw-bold small"><i class="bi bi-telephone-fill me-2"></i>Call</a>
+                <div class="btn-group shadow-sm w-100 w-md-auto" style="border-radius: 50rem;">
+                    <a href="tel:{{ $employee->phone }}" class="btn btn-primary px-4 py-2 fw-bold small" style="border-top-left-radius: 50rem; border-bottom-left-radius: 50rem;"><i class="bi bi-telephone-fill me-2"></i>Call</a>
                     <a href="mailto:{{ $employee->email }}" class="btn btn-outline-primary px-4 py-2 fw-bold small">Email</a>
+                    <a href="{{ route('employee.profile.pdf.open', $employee->id) }}" onclick="if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) { event.preventDefault(); window.open(this.href, '_blank'); }" target="_blank" rel="noopener noreferrer" class="btn btn-outline-success px-4 py-2 fw-bold small" style="border-top-right-radius: 50rem; border-bottom-right-radius: 50rem;"><i class="bi bi-file-earmark-pdf-fill me-1"></i>PDF</a>
                 </div>
             </div>
         </div>
@@ -299,8 +300,11 @@
         </div>
     </div>
 
+    <!-- Payout History & Document Dispatch -->
+    <employee-payslip-history :employee_id="{{ $employee->id }}"></employee-payslip-history>
+
     <!-- Administrative Control Workspace -->
-    <div class="workspace-vault">
+    <div class="workspace-vault mt-5">
         <div class="workspace-nav-header bg-light-subtle">
             <div class="row align-items-center text-center text-md-start g-2">
                 <div class="col-12 col-md">
@@ -320,9 +324,6 @@
                 :services="{{ $services }}"></employee-update>
         </div>
     </div>
-
-    <!-- Payout History & Document Dispatch -->
-    <employee-payslip-history :employee_id="{{ $employee->id }}"></employee-payslip-history>
 </div>
 
 @endsection

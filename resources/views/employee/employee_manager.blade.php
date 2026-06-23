@@ -10,7 +10,7 @@
 
 <div class="container-fluid px-4 py-5 m-0">
 
-    <employee-manager></employee-manager>
+    <employee-manager :departments="{{ json_encode($departments) }}" :designations="{{ json_encode($designations) }}"></employee-manager>
 
 </div>
 

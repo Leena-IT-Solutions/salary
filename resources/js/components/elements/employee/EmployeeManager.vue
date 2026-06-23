@@ -68,7 +68,7 @@
                             </div>
 
                             <!-- Statutory & Documents -->
-                            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                            <div class="card border-0 shadow-sm rounded-4 p-4">
                                 <h6 class="text-uppercase small fw-bold text-muted mb-4 border-bottom pb-2"><i class="bi bi-file-earmark-lock me-2"></i>Statutory IDs & Banking</h6>
                                 <div class="row g-3">
                                     <forms-text-field name="aadhar" label="National Identification (Aadhar)" v-model="employee.aadhar" :error="errors.aadhar ? errors.aadhar[0] : ''" placeholder="12-digit number" classes="col-md-6"></forms-text-field>
@@ -76,6 +76,9 @@
                                     <forms-text-field name="pf" label="PF Registration Number" v-model="employee.pf" :error="errors.pf ? errors.pf[0] : ''" classes="col-md-4"></forms-text-field>
                                     <forms-text-field name="uan" label="Universal Account (UAN)" v-model="employee.uan" :error="errors.uan ? errors.uan[0] : ''" classes="col-md-4"></forms-text-field>
                                     <forms-text-field name="esic" label="ESIC Number" v-model="employee.esic" :error="errors.esic ? errors.esic[0] : ''" classes="col-md-4"></forms-text-field>
+                                    <forms-text-field name="old_pf" label="Old PF Registration Number" v-model="employee.old_pf" :error="errors.old_pf ? errors.old_pf[0] : ''" classes="col-md-4"></forms-text-field>
+                                    <forms-text-field name="old_uan" label="Old Universal Account (UAN)" v-model="employee.old_uan" :error="errors.old_uan ? errors.old_uan[0] : ''" classes="col-md-4"></forms-text-field>
+                                    <forms-text-field name="old_esic" label="Old ESIC Number" v-model="employee.old_esic" :error="errors.old_esic ? errors.old_esic[0] : ''" classes="col-md-4"></forms-text-field>
                                 </div>
                             </div>
                         </div>
@@ -108,29 +111,30 @@
                                 <h6 class="text-uppercase small fw-bold text-muted mb-4 border-bottom pb-2"><i class="bi bi-translate me-2"></i>Cultural & Professional</h6>
                                 <div class="row g-3">
                                     <forms-text-field name="mothertongue" label="Native Language" v-model="employee.mothertongue" :error="errors.mothertongue ? errors.mothertongue[0] : ''" classes="col-12"></forms-text-field>
-                                    <forms-select-field name="qualification" label="Top Qualification" v-model="employee.qualification" :error="errors.qualification ? errors.qualification[0] : ''" :options="[{key: 'Undergraduate', val: 'Undergraduate'}, {key: 'Graduate', val: 'Graduate'}, {key: 'Masters', val: 'Masters'}, {key: 'Doctorate', val: 'Doctorate'}]" classes="col-12"></forms-select-field>
+                                    <forms-select-field name="qualification" label="Top Qualification" v-model="employee.qualification" :error="errors.qualification ? errors.qualification[0] : ''" :options="[{key: 'No School', val: 'No School'}, {key: 'Primary', val: 'Primary'}, {key: 'Secondary', val: 'Secondary'}, {key: 'Higher secondary', val: 'Higher secondary'}, {key: 'Undergraduate', val: 'Undergraduate'}, {key: 'Graduate', val: 'Graduate'}, {key: 'Masters', val: 'Masters'}, {key: 'Doctorate', val: 'Doctorate'}, {key: 'Other', val: 'Other'}]" classes="col-12"></forms-select-field>
                                     <forms-text-field name="degree" label="Highest Educational Degree" v-model="employee.degree" :error="errors.degree ? errors.degree[0] : ''" placeholder="e.g. B.Tech, MBA" classes="col-12"></forms-text-field>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Form Action Bar -->
-                        <div class="col-12 d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-3 mt-4 border-top pt-4">
-                            <div v-if="employee.id" class="d-grid d-md-block">
-                                <button v-if="!isDelete" class="btn btn-outline-danger btn-lg px-4 rounded-pill transition-all" @click="deleteItem()">
-                                    <i class="bi bi-person-dash me-2"></i> Terminate Account
-                                </button>
-                                <button v-else class="btn btn-danger btn-lg px-4 rounded-pill animate__animated animate__shakeX" @click="deleteNow()">
-                                    Confirm Removal
-                                </button>
-                            </div>
-                            <div v-else class="d-none d-md-block"></div>
+                    </div>
+                </div>
 
-                            <div class="d-flex flex-column flex-sm-row gap-2 justify-content-end">
-                                <button class="btn btn-light btn-lg px-4 rounded-pill shadow-none" @click="toggleForm">Discard Changes</button>
-                                <forms-submit-button name="" v-model="loading" :label="employee.id ? 'Save Personnel Data' : 'Submit Enrollment'" @click="save()" classes="btn-lg px-5 shadow-sm rounded-pill"></forms-submit-button>
-                            </div>
-                        </div>
+                <!-- Form Action Bar (Full-Width Card Footer) -->
+                <div class="card-footer bg-white py-3 px-4 border-top d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-3">
+                    <div v-if="employee.id" class="d-grid d-md-block">
+                        <button v-if="!isDelete" class="btn btn-outline-danger btn-lg px-4 rounded-pill transition-all" @click="deleteItem()">
+                            <i class="bi bi-person-dash me-2"></i> Terminate Account
+                        </button>
+                        <button v-else class="btn btn-danger btn-lg px-4 rounded-pill animate__animated animate__shakeX" @click="deleteNow()">
+                            Confirm Removal
+                        </button>
+                    </div>
+                    <div v-else class="d-none d-md-block"></div>
+
+                    <div class="d-flex flex-column flex-sm-row gap-2 justify-content-end">
+                        <button class="btn btn-light btn-lg px-4 rounded-pill shadow-none" @click="toggleForm">Discard Changes</button>
+                        <forms-submit-button name="" v-model="loading" :label="employee.id ? 'Save Personnel Data' : 'Submit Enrollment'" @click="save()" classes="btn-lg px-5 shadow-sm rounded-pill"></forms-submit-button>
                     </div>
                 </div>
             </div>
@@ -138,19 +142,74 @@
 
         <!-- Search & Staff Library -->
         <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
-            <div class="card-header bg-white p-4 border-0">
-                <div class="row g-3 align-items-center">
-                    <div class="col">
+            <div class="card-header bg-white p-4 border-0 pb-2">
+                <div class="row g-3 align-items-center mb-3">
+                    <div class="col-12 col-md">
                         <h5 class="fw-bold mb-0 text-dark d-flex align-items-center">
-                            <i class="bi bi-person-lines-fill text-primary me-2 f-5"></i>
+                            <i class="bi bi-person-lines-fill text-primary me-2 fs-5"></i>
                             Staff Inventory
                         </h5>
                     </div>
-                    <div class="col-md-5">
+                    <div class="col-12 col-md-5">
                         <div class="search-container position-relative">
                             <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-                            <input type="text" class="form-control rounded-pill ps-5 py-3 border-0 bg-light shadow-none" v-model="params.value" placeholder="Search by name, email, or employee code..." @keyup.enter="search()">
+                            <input type="text" class="form-control rounded-pill ps-5 py-2.5 border-0 bg-light shadow-none small" v-model="params.value" placeholder="Search by name, email, or employee code..." @keyup.enter="search()">
                         </div>
+                    </div>
+                </div>
+                
+                <!-- Advanced Filters Panel -->
+                <div class="row g-3 pt-3 border-top border-light-subtle align-items-end">
+                    <!-- Status Filter -->
+                    <div class="col-12 col-sm-4 col-md-3">
+                        <label class="form-label small fw-bold text-muted mb-1.5 d-flex align-items-center">
+                            <i class="bi bi-person-check-fill text-primary me-1.5"></i>Status
+                        </label>
+                        <select class="form-select rounded-pill border-0 bg-light py-2 px-3 shadow-none small fw-medium" v-model="params.status" @change="search()">
+                            <option value="">All Statuses</option>
+                            <option value="current">Current Employees</option>
+                            <option value="exited">Exited Staff</option>
+                        </select>
+                    </div>
+                    <!-- Department Filter -->
+                    <div class="col-12 col-sm-4 col-md-4">
+                        <label class="form-label small fw-bold text-muted mb-1.5 d-flex align-items-center">
+                            <i class="bi bi-building-fill text-primary me-1.5"></i>Department
+                        </label>
+                        <select class="form-select rounded-pill border-0 bg-light py-2 px-3 shadow-none small fw-medium" v-model="params.department_id" @change="search()">
+                            <option value="">All Departments</option>
+                            <option v-for="dept in departments" :key="dept.id" :value="dept.id">{{ dept.department }}</option>
+                        </select>
+                    </div>
+                    <!-- Designation Filter -->
+                    <div class="col-12 col-sm-4 col-md-4">
+                        <label class="form-label small fw-bold text-muted mb-1.5 d-flex align-items-center">
+                            <i class="bi bi-briefcase-fill text-primary me-1.5"></i>Designation
+                        </label>
+                        <select class="form-select rounded-pill border-0 bg-light py-2 px-3 shadow-none small fw-medium" v-model="params.designation_id" @change="search()">
+                            <option value="">All Designations</option>
+                            <option v-for="desg in designations" :key="desg.id" :value="desg.id">{{ desg.designation }}</option>
+                        </select>
+                    </div>
+                    <!-- Action Column (Download & Clear) -->
+                    <div class="col-12 col-md-1 text-md-end text-start d-flex align-items-center justify-content-md-end justify-content-start gap-2">
+                        <button 
+                            type="button"
+                            class="btn btn-outline-primary border-0 rounded-circle p-2 shadow-none hover-scale animate__animated animate__fadeIn" 
+                            @click="openDownloadModal()" 
+                            title="Export Staff Records"
+                            style="width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; background-color: #f0f4ff;">
+                            <i class="bi bi-cloud-arrow-down-fill text-primary fs-5"></i>
+                        </button>
+                        <button 
+                            v-if="hasActiveFilters" 
+                            type="button"
+                            class="btn btn-outline-danger border-0 rounded-circle p-2 shadow-none hover-scale animate__animated animate__zoomIn" 
+                            @click="clearFilters()" 
+                            title="Clear All Filters"
+                            style="width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; background-color: #fef2f2;">
+                            <i class="bi bi-x-lg text-danger fw-bold"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -168,18 +227,24 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="emp in employees" :key="emp.id" class="cursor-pointer transition-all hover-glow border-bottom border-light" @click="edit(emp)">
+                        <tr v-for="emp in employees" :key="emp.id" 
+                            class="cursor-pointer transition-all hover-glow border-bottom border-light" 
+                            :class="{ 'tr-exited': emp.doe }"
+                            @click="edit(emp)">
                             <td class="ps-4">
                                 <span class="badge bg-white text-muted border fw-mono">#{{ emp.id }}</span>
                             </td>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <div class="emp-avatar me-3 bg-gradient-staff">
+                                    <div class="emp-avatar me-3" :class="[emp.doe ? 'bg-gradient-staff-exited text-white-50' : 'bg-gradient-staff']">
                                         {{ (emp.first_name && emp.first_name.length > 0) ? emp.first_name.charAt(0).toUpperCase() : '?' }}
                                     </div>
                                     <div>
-                                        <div class="fw-bold text-dark fs-6">{{ emp.first_name }} {{ emp.last_name }}</div>
-                                        <div class="text-primary small fw-semibold">{{ (emp.employee_designation && emp.employee_designation.designation) ? emp.employee_designation.designation.designation : 'Draft Profile' }}</div>
+                                        <div class="fw-bold text-dark fs-6">
+                                            {{ emp.first_name }} {{ emp.last_name }}
+                                            <span v-if="emp.doe" class="badge bg-danger-subtle text-danger border border-danger border-opacity-10 rounded-pill px-2 py-0.5 ms-2 align-middle fw-semibold" style="font-size: 0.7rem;">Exited</span>
+                                        </div>
+                                        <div class="small fw-semibold" :class="[emp.doe ? 'text-muted' : 'text-primary']">{{ (emp.employee_designation && emp.employee_designation.designation) ? emp.employee_designation.designation.designation : 'Draft Profile' }}</div>
                                     </div>
                                 </div>
                             </td>
@@ -229,11 +294,92 @@
             </div>
         </div>
     </div>
+
+    <!-- Export Fields Custom Modal -->
+    <transition name="fade-blur">
+        <div v-if="isExportModal" class="custom-modal-overlay d-flex align-items-center justify-content-center" @click.self="closeDownloadModal">
+            <div class="custom-modal-card card border-0 shadow-2xl rounded-4 overflow-hidden animate__animated animate__zoomIn">
+                <div class="card-header bg-white py-3 px-4 border-bottom-0 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold mb-0 text-primary"><i class="bi bi-cloud-arrow-down-fill me-2"></i>Export Staff Records</h5>
+                        <p class="text-muted small mb-0 mt-0.5">Select the data fields to include in the exported report.</p>
+                    </div>
+                    <button class="btn-close border-0 bg-transparent shadow-none" @click="closeDownloadModal"></button>
+                </div>
+                
+                <div class="card-body p-4 overflow-y-auto" style="max-height: 60vh;">
+                    <!-- Select All / Clear Row -->
+                    <div class="d-flex justify-content-between align-items-center mb-3 bg-light p-3 rounded-3">
+                        <span class="small fw-bold text-dark">{{ selectedFields.length }} of {{ fieldOptions.length }} fields selected</span>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-white border px-3 rounded-pill fw-semibold text-primary" @click="selectAllFields">Select All</button>
+                            <button class="btn btn-sm btn-white border px-3 rounded-pill fw-semibold text-muted" @click="selectNoneFields">Clear All</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Categorized Field Options -->
+                    <div class="row g-4">
+                        <div v-for="(options, category) in groupedFieldOptions" :key="category" class="col-12">
+                            <h6 class="text-uppercase small fw-extrabold text-primary border-bottom pb-2 mb-2.5 d-flex align-items-center">
+                                <i :class="getCategoryIcon(category)" class="me-2 text-primary opacity-75"></i>{{ category }}
+                            </h6>
+                            <div class="row g-2">
+                                <div v-for="option in options" :key="option.key" class="col-6 col-sm-4">
+                                    <div 
+                                        class="field-pill-checkbox transition-all" 
+                                        :class="{ 'active': selectedFields.includes(option.key) }"
+                                        @click="toggleField(option.key)">
+                                        <i :class="[selectedFields.includes(option.key) ? 'bi bi-check-circle-fill text-success' : 'bi bi-circle text-muted']" class="me-2 fs-6"></i>
+                                        <span class="fw-medium small text-dark">{{ option.label }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Modal Footer Actions -->
+                <div class="card-footer bg-white py-3 px-4 border-top d-flex gap-3 justify-content-end">
+                    <button 
+                        class="btn btn-light btn-lg px-4 rounded-pill fw-semibold small shadow-none" 
+                        @click="closeDownloadModal">
+                        Cancel
+                    </button>
+                    <button 
+                        class="btn btn-success btn-lg px-4 rounded-pill fw-bold small d-inline-flex align-items-center gap-2 shadow-sm border-0"
+                        :disabled="selectedFields.length === 0 || exportLoading"
+                        @click="triggerExport('excel')">
+                        <i v-if="exportLoading && exportType === 'excel'" class="spinner-border spinner-border-sm"></i>
+                        <i v-else class="bi bi-file-earmark-excel-fill"></i>
+                        Export Excel
+                    </button>
+                    <button 
+                        class="btn btn-danger btn-lg px-4 rounded-pill fw-bold small d-inline-flex align-items-center gap-2 shadow-sm border-0"
+                        :disabled="selectedFields.length === 0 || exportLoading"
+                        @click="triggerExport('pdf')">
+                        <i v-if="exportLoading && exportType === 'pdf'" class="spinner-border spinner-border-sm"></i>
+                        <i v-else class="bi bi-file-earmark-pdf-fill"></i>
+                        Export PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </transition>
 </template>
 
 <script>
 import axios from 'axios'
 export default {
+    props: {
+        departments: {
+            type: Array,
+            default: () => []
+        },
+        designations: {
+            type: Array,
+            default: () => []
+        }
+    },
 
     data(){
         return {
@@ -265,22 +411,82 @@ export default {
                 aadhar: null,
                 pan: null,
                 pf: null,
+                old_pf: null,
                 uan: null,
+                old_uan: null,
                 esic: null,
+                old_esic: null,
             },
             errors: {},
             employees: [],
             next_page_url: null,
             current_page: 1,
+            isExportModal: false,
+            exportLoading: false,
+            exportType: null,
+            selectedFields: ['id', 'first_name', 'last_name', 'employee_code', 'email', 'phone', 'department', 'designation'],
+            fieldOptions: [
+                { key: 'id', label: 'Staff ID', category: 'Personal' },
+                { key: 'first_name', label: 'First Name', category: 'Personal' },
+                { key: 'middle_name', label: 'Middle Name', category: 'Personal' },
+                { key: 'last_name', label: 'Last Name', category: 'Personal' },
+                { key: 'gender', label: 'Gender', category: 'Personal' },
+                { key: 'dob', label: 'Date of Birth', category: 'Personal' },
+                { key: 'blood_group', label: 'Blood Group', category: 'Personal' },
+                { key: 'marital_status', label: 'Marital Status', category: 'Personal' },
+                { key: 'nationality', label: 'Nationality', category: 'Personal' },
+                { key: 'religion', label: 'Religion', category: 'Personal' },
+                
+                { key: 'email', label: 'Email', category: 'Contact' },
+                { key: 'phone', label: 'Phone', category: 'Contact' },
+                
+                { key: 'employee_code', label: 'Employee Code', category: 'Company' },
+                { key: 'doj', label: 'Joining Date', category: 'Company' },
+                { key: 'doe', label: 'Exit Date', category: 'Company' },
+                { key: 'department', label: 'Department', category: 'Company' },
+                { key: 'designation', label: 'Designation', category: 'Company' },
+                { key: 'work_location', label: 'Work Location', category: 'Company' },
+                
+                { key: 'qualification', label: 'Qualification', category: 'Education' },
+                { key: 'degree', label: 'Degree', category: 'Education' },
+                
+                { key: 'aadhar', label: 'Aadhar Card', category: 'Statutory' },
+                { key: 'pan', label: 'PAN Card', category: 'Statutory' },
+                { key: 'pf', label: 'PF Registration', category: 'Statutory' },
+                { key: 'uan', label: 'UAN Account', category: 'Statutory' },
+                { key: 'esic', label: 'ESIC Number', category: 'Statutory' }
+            ],
             params: {
                 key: null,
                 value: null,
                 by: 'id',
                 order: 'desc',
                 rows: 10,
+                status: '',
+                department_id: '',
+                designation_id: '',
             },
             searchTimer: null
         };
+    },
+
+    computed: {
+        hasActiveFilters() {
+            return this.params.status !== '' || 
+                   this.params.department_id !== '' || 
+                   this.params.designation_id !== '' || 
+                   (this.params.value && this.params.value.trim() !== '');
+        },
+        groupedFieldOptions() {
+            const groups = {};
+            this.fieldOptions.forEach(opt => {
+                if (!groups[opt.category]) {
+                    groups[opt.category] = [];
+                }
+                groups[opt.category].push(opt);
+            });
+            return groups;
+        }
     },
 
     watch: {
@@ -328,6 +534,98 @@ export default {
             this.next_page_url = null;
             this.employees = [];
             this.fetch();
+        },
+
+        clearFilters() {
+            this.params.value = '';
+            this.params.status = '';
+            this.params.department_id = '';
+            this.params.designation_id = '';
+            this.search();
+        },
+
+        openDownloadModal() {
+            this.isExportModal = true;
+        },
+        closeDownloadModal() {
+            this.isExportModal = false;
+            this.exportLoading = false;
+            this.exportType = null;
+        },
+        toggleField(key) {
+            const idx = this.selectedFields.indexOf(key);
+            if (idx > -1) {
+                this.selectedFields.splice(idx, 1);
+            } else {
+                this.selectedFields.push(key);
+            }
+        },
+        selectAllFields() {
+            this.selectedFields = this.fieldOptions.map(opt => opt.key);
+        },
+        selectNoneFields() {
+            this.selectedFields = [];
+        },
+        getCategoryIcon(cat) {
+            switch(cat) {
+                case 'Personal': return 'bi-person-fill';
+                case 'Contact': return 'bi-chat-left-text-fill';
+                case 'Company': return 'bi-briefcase-fill';
+                case 'Education': return 'bi-mortarboard-fill';
+                case 'Statutory': return 'bi-shield-lock-fill';
+                default: return 'bi-collection-fill';
+            }
+        },
+        triggerExport(type) {
+            this.exportLoading = true;
+            this.exportType = type;
+            
+            // Map selected fields to headings
+            const headings = [];
+            const fields = [];
+            this.fieldOptions.forEach(opt => {
+                if (this.selectedFields.includes(opt.key)) {
+                    fields.push(opt.key);
+                    headings.push(opt.label);
+                }
+            });
+            
+            const payload = {
+                ...this.params,
+                fields: fields,
+                headings: headings
+            };
+            
+            const url = type === 'excel' 
+                ? '/employee/employee_manager/export/excel' 
+                : '/employee/employee_manager/export/pdf';
+                
+            axios.post(url, payload, { responseType: 'blob' }).then(response => {
+                const blob = new Blob([response.data], { type: response.headers['content-type'] });
+                const link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                
+                let filename = type === 'excel' ? 'employees_export.xlsx' : 'employees_export.pdf';
+                const disposition = response.headers['content-disposition'];
+                if (disposition && disposition.indexOf('attachment') !== -1) {
+                    const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                    const matches = filenameRegex.exec(disposition);
+                    if (matches != null && matches[1]) { 
+                        filename = matches[1].replace(/['"]/g, '');
+                    }
+                }
+                
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }).catch(err => {
+                console.error('Export failed:', err);
+            }).finally(() => {
+                this.exportLoading = false;
+                this.exportType = null;
+                this.isExportModal = false;
+            });
         },
 
         orderBy(col){
@@ -446,6 +744,10 @@ export default {
     background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
 }
 
+.bg-gradient-staff-exited {
+    background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%) !important;
+}
+
 .border-top-primary {
     border-top: 4px solid #6366f1 !important;
 }
@@ -474,4 +776,83 @@ export default {
 .animate__shakeX { animation-name: shakeX; animation-duration: 0.5s; }
 
 .bg-light-subtle { background-color: #f8fafc !important; }
+
+.tr-exited {
+    opacity: 0.55;
+}
+
+.tr-exited td {
+    background-color: #f8fafc !important;
+    color: #94a3b8 !important;
+}
+
+.tr-exited .text-dark,
+.tr-exited .text-primary,
+.tr-exited .fw-bold {
+    color: #64748b !important;
+}
+
+.hover-scale {
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+.hover-scale:hover {
+    transform: scale(1.1);
+}
+
+/* Custom Modal Overlay */
+.custom-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(15, 23, 42, 0.35);
+    backdrop-filter: blur(8px);
+    z-index: 1050;
+}
+
+/* Custom Modal Card */
+.custom-modal-card {
+    width: 90%;
+    max-width: 720px;
+    background: white;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+/* Field Pill Checkbox */
+.field-pill-checkbox {
+    display: flex;
+    align-items: center;
+    padding: 0.55rem 0.8rem;
+    background-color: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 50rem;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+}
+.field-pill-checkbox:hover {
+    background-color: #f1f5f9;
+    border-color: #cbd5e1;
+}
+.field-pill-checkbox.active {
+    background-color: #ecfdf5;
+    border-color: #10b981;
+    color: #065f46;
+}
+
+/* Category Fonts */
+.fw-extrabold {
+    font-weight: 800;
+}
+
+/* Animation for Blur Transition */
+.fade-blur-enter-active, .fade-blur-leave-active {
+    transition: opacity 0.25s ease, backdrop-filter 0.25s ease;
+}
+.fade-blur-enter-from, .fade-blur-leave-to {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+}
 </style>

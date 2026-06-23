@@ -11,10 +11,16 @@ use App\Models\LeaveGroup;
 use App\Models\SalaryGroup;
 use App\Models\ServicesComponent;
 
+use App\Exports\EmployeeExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
+
 class EmployeeController extends Controller
 {
     public function employee_manager(){
-        return view('employee.employee_manager');
+        $departments = Department::orderBy('department', 'asc')->get(['id', 'department']);
+        $designations = Designation::orderBy('designation', 'asc')->get(['id', 'designation']);
+        return view('employee.employee_manager', compact('departments', 'designations'));
     }
 
     public function profile($id){
@@ -28,14 +34,15 @@ class EmployeeController extends Controller
         return view('employee.profile', compact('employee', 'work_locations', 'designations', 'departments', 'leave_groups', 'salary_groups', 'services'));
     }
 
-    public function fetch(Request $request){
+    protected function getFilteredEmployeesQuery(Request $request){
         $by = $request->get('by', 'id');
         $order = $request->get('order', 'desc');
         $key = $request->get('key');
         $value = $request->get('value');
 
-        $employees = Employee::active()->orderBy($by, $order);
+        $employees = Employee::orderBy($by, $order);
 
+        // Search text filter
         if($value != null){
             if($key != null && $key != 'all'){
                 $employees = $employees->where($key, 'LIKE', '%'.$value.'%');
@@ -51,6 +58,34 @@ class EmployeeController extends Controller
             }
         }
 
+        // Status filter (Current/Exited)
+        if ($request->filled('status')) {
+            if ($request->get('status') === 'current') {
+                $employees->whereNull('doe');
+            } elseif ($request->get('status') === 'exited') {
+                $employees->whereNotNull('doe');
+            }
+        }
+
+        // Department filter
+        if ($request->filled('department_id')) {
+            $employees->whereHas('employee_department', function ($q) use ($request) {
+                $q->where('department_id', $request->get('department_id'))->whereNull('to');
+            });
+        }
+
+        // Designation filter
+        if ($request->filled('designation_id')) {
+            $employees->whereHas('employee_designation', function ($q) use ($request) {
+                $q->where('designation_id', $request->get('designation_id'))->whereNull('to');
+            });
+        }
+
+        return $employees;
+    }
+
+    public function fetch(Request $request){
+        $employees = $this->getFilteredEmployeesQuery($request);
         return $employees->with('employee_department.department')
                          ->with('employee_designation.designation')
                          ->simplePaginate(25);
@@ -84,13 +119,16 @@ class EmployeeController extends Controller
             'mothertongue' => 'required|string|max:100',
             'nationality' => 'required|string|max:100',
             'marital_status' => 'required|in:Married,Widowed,Separated,Divorced,Single,Other',
-            'qualification' => 'nullable|in:Primary School,Secondary School,High School,Undergraduate,Graduate,Diploma,Masters,Doctorate,Other',
+            'qualification' => 'nullable|in:No School,Primary,Secondary,Higher secondary,Primary School,Secondary School,High School,Undergraduate,Graduate,Diploma,Masters,Doctorate,Other',
             'degree' => 'nullable|string|max:100',
             'aadhar' => 'nullable|string|max:16',
             'pan' => 'nullable|string|max:16',
             'pf' => 'nullable|string|max:100',
+            'old_pf' => 'nullable|string|max:100',
             'uan' => 'nullable|string|max:100',
+            'old_uan' => 'nullable|string|max:100',
             'esic' => 'nullable|string|max:100',
+            'old_esic' => 'nullable|string|max:100',
         ])->validate();
 
         return Employee::create($validated);
@@ -125,13 +163,16 @@ class EmployeeController extends Controller
             'mothertongue' => 'required|string|max:100',
             'nationality' => 'required|string|max:100',
             'marital_status' => 'required|in:Married,Widowed,Separated,Divorced,Single,Other',
-            'qualification' => 'nullable|in:Primary School,Secondary School,High School,Undergraduate,Graduate,Diploma,Masters,Doctorate,Other',
+            'qualification' => 'nullable|in:No School,Primary,Secondary,Higher secondary,Primary School,Secondary School,High School,Undergraduate,Graduate,Diploma,Masters,Doctorate,Other',
             'degree' => 'nullable|string|max:100',
             'aadhar' => 'nullable|string|max:16',
             'pan' => 'nullable|string|max:16',
             'pf' => 'nullable|string|max:100',
+            'old_pf' => 'nullable|string|max:100',
             'uan' => 'nullable|string|max:100',
+            'old_uan' => 'nullable|string|max:100',
             'esic' => 'nullable|string|max:100',
+            'old_esic' => 'nullable|string|max:100',
         ])->validate();
 
         $employee = Employee::find($request->id);
@@ -154,5 +195,60 @@ class EmployeeController extends Controller
             ->orWhere('last_name', 'LIKE', "%$q%")
             ->take(10)
             ->get(['id', 'employee_code', 'first_name', 'last_name', 'phone', 'email']);
+    }
+
+    public function exportExcel(Request $request){
+        $fields = $request->get('fields', ['id', 'first_name', 'last_name', 'employee_code', 'email', 'phone']);
+        $headings = $request->get('headings', ['Staff ID', 'First Name', 'Last Name', 'Code', 'Email', 'Phone']);
+
+        $employees = $this->getFilteredEmployeesQuery($request)
+            ->with([
+                'employee_department.department',
+                'employee_designation.designation',
+                'employee_work_location.work_location'
+            ])
+            ->get();
+
+        $data = [];
+        foreach ($employees as $employee) {
+            $row = [];
+            foreach ($fields as $field) {
+                switch ($field) {
+                    case 'department':
+                        $row[] = optional($employee->employee_department)->department ? $employee->employee_department->department->department : '—';
+                        break;
+                    case 'designation':
+                        $row[] = optional($employee->employee_designation)->designation ? $employee->employee_designation->designation->designation : '—';
+                        break;
+                    case 'work_location':
+                        $row[] = optional($employee->employee_work_location)->work_location ? $employee->employee_work_location->work_location->location_name : '—';
+                        break;
+                    default:
+                        $row[] = $employee->$field ?? '—';
+                        break;
+                }
+            }
+            $data[] = $row;
+        }
+
+        return Excel::download(new EmployeeExport($data, $headings), 'employees_export.xlsx');
+    }
+
+    public function exportPdf(Request $request){
+        $fields = $request->get('fields', ['id', 'first_name', 'last_name', 'employee_code', 'email', 'phone']);
+        $headings = $request->get('headings', ['Staff ID', 'First Name', 'Last Name', 'Code', 'Email', 'Phone']);
+
+        $employees = $this->getFilteredEmployeesQuery($request)
+            ->with([
+                'employee_department.department',
+                'employee_designation.designation',
+                'employee_work_location.work_location'
+            ])
+            ->get();
+
+        $pdf = Pdf::loadView('pdf.employee_list', compact('employees', 'fields', 'headings'))
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->download('employees_export.pdf');
     }
 }

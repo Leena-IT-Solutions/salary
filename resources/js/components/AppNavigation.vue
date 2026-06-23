@@ -171,6 +171,25 @@
                     </a>
                 </div>
             </div>
+
+            <!-- System Section (Only visible in Administrator Hub) -->
+            <div class="nav-section mb-4">
+                <h6 class="nav-section-title">System</h6>
+                <div class="nav-items">
+                    <a href="/application_settings/financial_year" class="nav-item-link" :class="{ 'active': cpath == '/application_settings/financial_year' }">
+                        <i class="bi bi-calendar-range" style="color: #fbbf24;"></i>
+                        <span>Financial Year</span>
+                    </a>
+                    <a href="/application_settings/user_and_roles" class="nav-item-link" :class="{ 'active': cpath == '/application_settings/user_and_roles' }">
+                        <i class="bi bi-person-badge" style="color: #818cf8;"></i>
+                        <span>User & Roles</span>
+                    </a>
+                    <a href="/application_settings/preference" class="nav-item-link" :class="{ 'active': cpath == '/application_settings/preference' }">
+                        <i class="bi bi-sliders" style="color: #22d3ee;"></i>
+                        <span>Preference</span>
+                    </a>
+                </div>
+            </div>
         </div>
 
         <!-- Time Office Hub -->
@@ -265,20 +284,7 @@
 
         <!-- Common Sections -->
         <div class="nav-section mb-4">
-            <h6 class="nav-section-title">System</h6>
             <div class="nav-items">
-                <a v-if="role == 'Administrator'" href="/application_settings/financial_year" class="nav-item-link" :class="{ 'active': cpath == '/application_settings/financial_year' }">
-                    <i class="bi bi-calendar-range" style="color: #fbbf24;"></i>
-                    <span>Financial Year</span>
-                </a>
-                <a v-if="role == 'Administrator'" href="/application_settings/user_and_roles" class="nav-item-link" :class="{ 'active': cpath == '/application_settings/user_and_roles' }">
-                    <i class="bi bi-person-badge" style="color: #818cf8;"></i>
-                    <span>User & Roles</span>
-                </a>
-                <a label v-if="role == 'Administrator'" href="/application_settings/preference" class="nav-item-link" :class="{ 'active': cpath == '/application_settings/preference' }">
-                    <i class="bi bi-sliders" style="color: #22d3ee;"></i>
-                    <span>Preference</span>
-                </a>
                 <a class="nav-item-link text-danger" href="/logout" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                     <i class="bi bi-box-arrow-right" style="color: #f87171;"></i>
                     <span>Logout</span>

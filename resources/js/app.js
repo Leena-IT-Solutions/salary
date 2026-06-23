@@ -74,6 +74,7 @@ import EmployeeManager from './components/elements/employee/EmployeeManager.vue'
 import EmployeeUpdate from './components/elements/employee/EmployeeUpdate.vue';
 import EmployeePhoto from './components/elements/employee/EmployeePhoto.vue';
 import EmployeeDocuments from './components/elements/employee/EmployeeDocuments.vue';
+import EmployeeEducation from './components/elements/employee/EmployeeEducation.vue';
 import EmployeeAddress from './components/elements/employee/EmployeeAddress.vue';
 import EmployeeWorkLocation from './components/elements/employee/EmployeeWorkLocation.vue';
 import EmployeeDesignation from './components/elements/employee/EmployeeDesignation.vue';
@@ -161,6 +162,7 @@ app.component('employee-manager', EmployeeManager);
 app.component('employee-update', EmployeeUpdate);
 app.component('employee-photo', EmployeePhoto);
 app.component('employee-documents', EmployeeDocuments);
+app.component('employee-education', EmployeeEducation);
 app.component('employee-address', EmployeeAddress);
 app.component('employee-work-location', EmployeeWorkLocation);
 app.component('employee-designation', EmployeeDesignation);

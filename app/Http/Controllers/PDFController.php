@@ -168,6 +168,50 @@ class PDFController extends Controller
         ->stream($path);
     }
 
+    public function employeeProfile($id){
+        $employee = Employee::with([
+            'employee_photo',
+        ])->findOrFail($id);
+
+        $addresses = \App\Models\EmployeeAddress::where('employee_id', $id)->get();
+        $work_locations = \App\Models\EmployeeWorkLocation::where('employee_id', $id)->with('work_location')->get();
+        $departments = \App\Models\EmployeeDepartment::where('employee_id', $id)->with('department')->get();
+        $designations = \App\Models\EmployeeDesignation::where('employee_id', $id)->with('designation')->get();
+        $leave_groups = \App\Models\EmployeeLeaveGroup::where('employee_id', $id)->with('leave_group')->get();
+        $banks = \App\Models\EmployeeBank::where('employee_id', $id)->get();
+        $salaries = \App\Models\EmployeeSalary::where('employee_id', $id)->with('salary_group')->get();
+        $services = \App\Models\EmployeeService::where('employee_id', $id)->with('services_component')->get();
+        $documents = \App\Models\EmployeeDocument::where('employee_id', $id)->get();
+        $educations = \App\Models\EmployeeEducation::where('employee_id', $id)->get();
+
+        $path = "employee_profile_" . $employee->employee_code . ".pdf";
+
+        return Pdf::loadView('pdf.employee_profile', compact(
+            'employee',
+            'addresses',
+            'work_locations',
+            'departments',
+            'designations',
+            'leave_groups',
+            'banks',
+            'salaries',
+            'services',
+            'documents',
+            'educations'
+        ))->stream($path);
+    }
+
+    public function openProfilePdf($id){
+        $url = route('employee.profile.pdf', $id);
+        
+        if (class_exists(\Native\Desktop\Facades\Shell::class)) {
+            \Native\Desktop\Facades\Shell::openExternal($url);
+            return back();
+        }
+        
+        return redirect($url);
+    }
+
     public function excel_ca_report($id){
         return Excel::download(new CAExport($id), 'ca_report.xlsx');
     }

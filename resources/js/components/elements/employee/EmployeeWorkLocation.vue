@@ -8,13 +8,22 @@
                         <h6 class="fw-bold mb-0 text-dark">Site Assignment</h6>
                     </div>
                     <div class="card-body p-4 bg-light-subtle">
+                        <!-- General Error Alert -->
+                        <div v-if="Object.keys(errors).length > 0" class="alert alert-danger rounded-4 mb-4 border-0 shadow-sm d-flex align-items-center gap-3">
+                            <i class="bi bi-exclamation-triangle-fill fs-4 text-danger"></i>
+                            <div>
+                                <div class="fw-bold text-danger">Validation Failed</div>
+                                <div class="small text-danger opacity-75">Please correct the errors in the highlighted fields below.</div>
+                            </div>
+                        </div>
+
                         <div class="row g-3">
-                            <forms-select-field name="work_location_id" label="Designated Site" v-model="employee_work_location.work_location_id" :options="locations" classes="col-12"></forms-select-field>
+                            <forms-select-field name="work_location_id" label="Designated Site" v-model="employee_work_location.work_location_id" :error="errors.work_location_id ? errors.work_location_id[0] : ''" :options="locations" classes="col-12"></forms-select-field>
                             
                             <div class="col-12">
                                 <div class="row g-3">
-                                    <forms-date-field name="from" label="Assignment Start" v-model="employee_work_location.from" classes="col-6"></forms-date-field>
-                                    <forms-date-field name="to" label="Anticipated End" v-model="employee_work_location.to" classes="col-6"></forms-date-field>
+                                    <forms-date-field name="from" label="Assignment Start" v-model="employee_work_location.from" :error="errors.from ? errors.from[0] : ''" classes="col-6"></forms-date-field>
+                                    <forms-date-field name="to" label="Anticipated End" v-model="employee_work_location.to" :error="errors.to ? errors.to[0] : ''" classes="col-6"></forms-date-field>
                                 </div>
                             </div>
 
@@ -29,7 +38,10 @@
                                 </div>
                                 <div v-else></div>
                                 
-                                <forms-submit-button v-model="loading" :label="employee_work_location.id ? 'Update Placement' : 'Assign Site'" @click="save()" classes="px-4 shadow-sm"></forms-submit-button>
+                                <div class="d-flex gap-2">
+                                    <button v-if="employee_work_location.id" class="btn btn-light btn-sm rounded-pill px-3" @click="reset()">Cancel</button>
+                                    <forms-submit-button v-model="loading" :label="employee_work_location.id ? 'Update Placement' : 'Assign Site'" @click="save()" classes="px-4 shadow-sm"></forms-submit-button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -103,6 +115,7 @@ export default {
             employee_work_location: {
                 employee_id: null, id: null, work_location_id: null, from: null, to: null,
             },
+            errors: {},
             employee_work_locations: [],
             params: { key: null, value: null, by: 'id', order: 'desc', rows: 10 }
         };
@@ -116,14 +129,20 @@ export default {
         },
         save(){
             this.loading = true;
+            this.errors = {};
             let url = this.employee_work_location.id ? '/employee/employee_work_location/update' : '/employee/employee_work_location/add';
             axios.post(url, this.employee_work_location).then(res => {
                 this.reset();
                 this.fetch();
+            }).catch(err => {
+                if (err.response && err.response.status === 422) {
+                    this.errors = err.response.data.errors;
+                }
             }).finally(() => this.loading = false);
         },
         reset(){
             Object.keys(this.employee_work_location).forEach(key => this.employee_work_location[key] = (key === 'employee_id' ? this.employee_id : null));
+            this.errors = {};
             this.isDelete = false;
         },
         deleteNow(){
@@ -134,8 +153,8 @@ export default {
             }).finally(() => this.loading = false);
         },
         edit(item){
+            this.errors = {};
             Object.keys(this.employee_work_location).forEach(key => this.employee_work_location[key] = item[key]);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         },
         getWL(id){
             let loc = this.locations.find(l => l.val == id);

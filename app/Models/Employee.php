@@ -33,8 +33,11 @@ class Employee extends Model
         'aadhar',
         'pan',
         'pf',
+        'old_pf',
         'uan',
+        'old_uan',
         'esic',
+        'old_esic',
     ];
 
     public function employee_photo()
