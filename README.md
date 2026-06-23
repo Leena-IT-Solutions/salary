@@ -1,67 +1,166 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# SalaryManager 💼
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+SalaryManager is an enterprise-grade HR & Payroll Management System built on Laravel and Vue 3. It is designed to work seamlessly across multiple platforms, offering a **Web App**, a **Desktop Client** (via NativePHP), and a **Mobile Application** (via Capacitor).
 
-## About Laravel
+The system automates the lifecycle of HR operations, including employee profile onboarding, shift planning, raw biometric attendance parsing, Loss of Pay (LOP) calculations, variable pay adjustments, loans/advances tracking, and fully detailed monthly payroll generation with PDF outputs.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🚀 Key Features
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+*   **Multi-Platform Access:**
+    *   **Web App:** Responsive, modern design using Bootstrap 5 and custom SCSS patterns.
+    *   **Desktop App:** Electron-wrapped native desktop client utilizing NativePHP.
+    *   **Mobile App:** WebView integration using Capacitor (iOS & Android).
+*   **Biometric & Face Punch Integrations:**
+    *   `GET` endpoint for RFID card punch scanners.
+    *   Bearer Token-secured `POST` API for facial recognition terminals.
+*   **Automated LOP & Penalty Calculations:**
+    *   Detects half-days, early departures, and late arrivals.
+    *   Implements the **Sandwich Rule** (e.g. weekoff/holiday marked as LOP if sandwiched between LOP days).
+    *   Calculates customizable pro-rata deductions or fixed penalty days.
+*   **Comprehensive Financial Workflow:**
+    *   **Earnings:** Standardized base earnings (Basic, HRA, etc.) computed as flat amounts or percentages of Basic/CTC.
+    *   **Variable Pay & Approvals:** Handles Variable Pay, Reimbursements, Fines, and Loans with automated EMI deductions.
+    *   **Statutory Compliance:** Dynamic deduction mapping for PF, ESIC, Professional Tax, etc.
+*   **Roles & Portals:**
+    *   **Admin Hub:** Setup settings, run monthly payroll, approve overrides, manage employees.
+    *   **Time Office Hub:** Oversee shifts, review attendance calendar, and approve time updates.
+    *   **Employee Portal:** Self-service dashboard for attendance tracking, holiday schedule, payslip downloads, and request approvals.
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🛠️ Tech Stack
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+*   **Backend:** PHP 8.1+ & [Laravel 10.x](https://laravel.com)
+*   **Frontend:** [Vue 3.x](https://vuejs.org) (integrated as SPA component views), Sass/SCSS, and Bootstrap 5
+*   **Bundler:** [Vite](https://vitejs.dev)
+*   **Desktop:** [NativePHP Electron](https://nativephp.com)
+*   **Mobile:** [Capacitor CLI 8.x](https://capacitorjs.com)
+*   **PDF Generation:** `barryvdh/laravel-dompdf`
+*   **Excel Imports/Exports:** `maatwebsite/excel`
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## 📁 Repository Structure
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+*   [`app/Models/`](file:///Users/sandeep/Projects/SalaryManager/salary/app/Models) - Contains 50+ Eloquent models mapping HR and Payroll entities (Employee, Leave, Shift, Earning, Loan, Payroll, Statutory, etc.).
+*   [`app/Http/Controllers/`](file:///Users/sandeep/Projects/SalaryManager/salary/app/Http/Controllers) - Houses business controllers:
+    *   [`RunPayrollController.php`](file:///Users/sandeep/Projects/SalaryManager/salary/app/Http/Controllers/RunPayrollController.php): Processes complex payroll formulas and monthly runs.
+    *   [`AttendanceMachineController.php`](file:///Users/sandeep/Projects/SalaryManager/salary/app/Http/Controllers/AttendanceMachineController.php): Punch logging and daily LOP evaluation.
+    *   [`PDFController.php`](file:///Users/sandeep/Projects/SalaryManager/salary/app/Http/Controllers/PDFController.php): Formats PDFs for payslips, CA reports, and bank letters.
+*   [`resources/js/components/`](file:///Users/sandeep/Projects/SalaryManager/salary/resources/js/components) - Interactive Vue 3 components grouped by domain (Overview, Employee Manager, Approvals, Forms).
+*   [`database/migrations/`](file:///Users/sandeep/Projects/SalaryManager/salary/database/migrations) - Database schema defining tables for tracking logs, loans, statutory compliances, and shifts.
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+## 💻 Installation & Setup
 
-## Contributing
+### Prerequisites
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+*   PHP 8.1 or higher
+*   Node.js (v16+ recommended)
+*   Composer
+*   MySQL/MariaDB
 
-## Code of Conduct
+### Steps
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+1.  **Clone and Navigate to the Repository:**
+    ```bash
+    git clone <repository-url> salary
+    cd salary
+    ```
 
-## Security Vulnerabilities
+2.  **Install Composer Dependencies:**
+    ```bash
+    composer install
+    ```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+3.  **Install NPM Packages:**
+    ```bash
+    npm install
+    ```
 
-## License
+4.  **Environment Setup:**
+    ```bash
+    cp .env.example .env
+    ```
+    *Open the `.env` file and configure your database settings (`DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`).*
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-"# salary" 
+5.  **Generate Application Key & Run Migrations:**
+    ```bash
+    php artisan key:generate
+    php artisan migrate --seed
+    ```
+
+6.  **Compile Assets & Start Development Server:**
+    *   **Vite Assets Compiler (watches for Vue changes):**
+        ```bash
+        npm run dev
+        ```
+    *   **Laravel Local Host Server:**
+        ```bash
+        php artisan serve
+        ```
+
+---
+
+## 📲 API Punch Machine Integration
+
+The application has endpoints designed to integrate directly with RFID card readers and Facial Recognition terminals:
+
+### 1. RFID Card Punches (`GET`)
+Used by hardware card scanners to record card tap logs:
+- **Endpoint:** `/attendance/save`
+- **Method:** `GET`
+- **Query Parameters:**
+  - `tagid`: The unique RFID Card ID.
+  - `tagms`: The registered Employee Code.
+  - `dt`: The punch date (`YYYY-MM-DD`).
+  - `tim`: The punch time (`HH:MM`).
+- **Example:**
+  ```http
+  GET /attendance/save?tagid=1234&tagms=LITS0001&dt=2026-06-23&tim=09:00
+  ```
+
+### 2. Face Recognition Terminal (`POST`)
+Used by facial scanners. Requests are secured with an API token:
+- **Endpoint:** `/attendance/face_save`
+- **Method:** `POST`
+- **Headers:**
+  - `Authorization: Bearer <Attendance_Machine_API_Token>`
+- **Request Parameters:**
+  - `employee_code`: The registered Employee Code.
+  - `p_date`: The punch date (`YYYY-MM-DD`).
+  - `p_time`: The punch time (`HH:MM`).
+
+---
+
+## 🖥️ Platform Builds
+
+### Desktop App (NativePHP)
+Start the NativePHP Electron shell during development:
+```bash
+composer native:dev
+```
+This runs `concurrently` to serve Vite assets and launch Electron (`php artisan native:serve`).
+
+### Mobile App (Capacitor)
+Sync web assets and build native wrappers:
+```bash
+# Compile Vue/Laravel assets
+npm run build
+
+# Copy resources to native platforms
+npx cap sync
+
+# Open the IDE to run/build packages
+npx cap open android
+npx cap open ios
+```
+*Note: Make sure your target server URL is configured in `capacitor.config.json`.*
+
+---
+
+## 📄 License
+This project is open-sourced software licensed under the [MIT license](LICENSE).
