@@ -44,7 +44,7 @@
                                             {{ request.employee.charAt(0) }}
                                         </div>
                                         <div>
-                                            <div class="fw-bold text-white">{{ request.employee }}</div>
+                                            <div class="fw-bold text-dark">{{ request.employee }}</div>
                                             <small class="text-muted">{{ request.employee_code }}</small>
                                         </div>
                                     </div>
@@ -90,10 +90,10 @@
             <div class="card-footer d-flex justify-content-between align-items-center py-3">
                 <small class="text-muted">Showing {{ requests.length }} entries</small>
                 <div class="pagination-controls">
-                    <button class="btn btn-sm btn-outline-light me-2" disabled>
+                    <button class="btn btn-sm btn-outline-primary me-2" disabled>
                         <i class="bi bi-chevron-left"></i> Previous
                     </button>
-                    <button class="btn btn-sm btn-outline-light" disabled>
+                    <button class="btn btn-sm btn-outline-primary" disabled>
                         Next <i class="bi bi-chevron-right"></i>
                     </button>
                 </div>
@@ -122,7 +122,7 @@
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Specifics</span>
-                        <span class="detail-value text-white">{{ selectedRequest.details }}</span>
+                        <span class="detail-value text-dark">{{ selectedRequest.details }}</span>
                     </div>
                     <hr class="modal-divider">
                     <div class="reason-section">
@@ -243,32 +243,33 @@ export default {
 
 <style lang="scss" scoped>
 .pending-approvals-container {
-    color: #f8fafc;
+    color: #334155;
 }
 
 .stat-card {
     cursor: pointer;
-    background: #1e293b; 
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: #ffffff; 
+    border: 1px solid rgba(0, 0, 0, 0.08);
     border-radius: 1.25rem;
     padding: 1.25rem 1rem;
     display: flex;
     align-items: center;
     gap: 1rem;
     transition: all 0.3s ease;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     height: 100%;
 
     &.active {
-        background: #2d3748;
-        border-color: #6366f1;
-        box-shadow: 0 0 0 2px #6366f1;
+        background: #f8fafc;
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
     }
 
     &:hover {
-        transform: translateY(-5px);
-        background: #2d3748;
-        border-color: rgba(255, 255, 255, 0.2);
+        transform: translateY(-4px);
+        background: #f8fafc;
+        border-color: rgba(0, 0, 0, 0.12);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
     }
 
     .stat-icon {
@@ -280,45 +281,53 @@ export default {
         justify-content: center;
         font-size: 1.25rem;
         color: white;
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         flex-shrink: 0;
     }
 
+    .stat-details {
+        min-width: 0;
+    }
+
     .stat-label {
-        font-size: 0.875rem;
-        color: rgba(255, 255, 255, 0.7); /* Brighter for contrast */
+        font-size: 0.75rem;
+        color: #64748b;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         display: block;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .stat-value {
         font-size: 1.5rem;
         font-weight: 700;
         margin-bottom: 0;
-        color: white;
+        color: #0f172a;
     }
 }
 
 .main-card {
-    background: #1e293b; /* Solid dark background */
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: #ffffff; 
+    border: 1px solid rgba(0, 0, 0, 0.08);
     border-radius: 1.5rem;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
 
     .card-header {
-        background: rgba(255, 255, 255, 0.05);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        background: #f8fafc;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
         padding: 1.5rem;
 
         h5 {
-            color: #f8fafc;
+            color: #0f172a;
             font-weight: 600;
         }
     }
 
     .card-body {
-        background: #1e293b; /* Ensure table body is dark */
+        background: #ffffff;
     }
 }
 
@@ -329,73 +338,73 @@ export default {
         left: 1rem;
         top: 50%;
         transform: translateY(-50%);
-        color: rgba(255, 255, 255, 0.6);
+        color: #64748b;
     }
     input {
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: #f1f5f9;
+        border: 1px solid rgba(0, 0, 0, 0.08);
         border-radius: 0.75rem;
         padding: 0.5rem 1rem 0.5rem 2.5rem;
-        color: white;
+        color: #0f172a;
         font-size: 0.9rem;
         width: 300px;
         transition: all 0.2s ease;
 
         &::placeholder {
-            color: rgba(255, 255, 255, 0.4);
+            color: #94a3b8;
         }
 
         &:focus {
             outline: none;
-            background: rgba(255, 255, 255, 0.12);
-            border-color: #6366f1;
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+            background: #ffffff;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
         }
     }
 }
 
 .table {
-    background: #1e293b !important;
+    background: #ffffff !important;
     margin-bottom: 0;
 
     thead th {
-        background: rgba(255, 255, 255, 0.05) !important;
-        color: rgba(255, 255, 255, 0.8) !important;
+        background: #f8fafc !important;
+        color: #475569 !important;
         font-weight: 600;
         text-transform: uppercase;
         font-size: 0.75rem;
         letter-spacing: 0.05em;
         padding: 1.25rem 1.5rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     }
 
     tbody tr {
-        background: #1e293b !important;
+        background: #ffffff !important;
         transition: all 0.2s ease;
     }
 
     tbody td {
         padding: 1.25rem 1.5rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        color: rgba(255, 255, 255, 0.95) !important;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        color: #334155 !important;
         background: transparent !important;
     }
 
     tbody tr:hover {
-        background: rgba(255, 255, 255, 0.05) !important;
+        background: #f8fafc !important;
     }
 }
 
 .avatar {
     width: 40px;
     height: 40px;
-    background: #6366f1;
+    background: #e0e7ff;
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 600;
-    color: white;
+    color: #4f46e5;
 }
 
 .type-badge {
@@ -403,7 +412,7 @@ export default {
     border-radius: 0.5rem;
     font-size: 0.8rem;
     font-weight: 500;
-    color: white;
+    color: #0f172a;
 }
 
 .status-badge {
@@ -413,9 +422,9 @@ export default {
     font-weight: 600;
     text-transform: capitalize;
 
-    &.pending { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
-    &.approved { background: rgba(16, 185, 129, 0.2); color: #34d399; }
-    &.rejected { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+    &.pending { background: #fef3c7; color: #d97706; }
+    &.approved { background: #d1fae5; color: #059669; }
+    &.rejected { background: #fee2e2; color: #dc2626; }
 }
 
 .btn-icon {
@@ -426,12 +435,13 @@ export default {
     align-items: center;
     justify-content: center;
     border-radius: 0.5rem;
-    background: rgba(255, 255, 255, 0.05);
+    background: #f1f5f9;
     margin-left: 0.5rem;
     transition: all 0.2s ease;
+    border: none;
 
     &:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: #e2e8f0;
         transform: scale(1.1);
     }
 }
@@ -440,11 +450,11 @@ export default {
     padding: 3rem 0;
     i {
         font-size: 3rem;
-        color: rgba(255, 255, 255, 0.3);
+        color: #cbd5e1;
         display: block;
     }
     p {
-        color: rgba(255, 255, 255, 0.8);
+        color: #64748b;
         font-size: 1.1rem;
         margin-top: 1rem;
         font-weight: 500;
@@ -453,15 +463,15 @@ export default {
 
 .pagination-controls {
     .btn {
-        border-color: rgba(255, 255, 255, 0.2);
-        color: rgba(255, 255, 255, 0.8) !important;
+        border-color: rgba(0, 0, 0, 0.12);
+        color: #475569 !important;
         &:hover:not(:disabled) {
-            background: rgba(255, 255, 255, 0.1);
-            color: white !important;
+            background: #f1f5f9;
+            color: #0f172a !important;
         }
         &:disabled {
             opacity: 0.4;
-            color: rgba(255, 255, 255, 0.4) !important;
+            color: #94a3b8 !important;
         }
     }
 }
@@ -473,8 +483,8 @@ export default {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(8px);
+    background: rgba(15, 23, 42, 0.3);
+    backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -482,32 +492,32 @@ export default {
 }
 
 .custom-modal {
-    background: #1e293b;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
     border-radius: 1.5rem;
     width: 90%;
     max-width: 500px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .modal-header-custom {
     padding: 1.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     display: flex;
     justify-content: space-between;
     align-items: center;
 
     h5 {
-        color: white;
+        color: #0f172a;
         font-weight: 600;
         margin: 0;
     }
 }
 
 .btn-close-custom {
-    background: rgba(255, 255, 255, 0.1);
+    background: #f1f5f9;
     border: none;
-    color: white;
+    color: #475569;
     width: 32px;
     height: 32px;
     border-radius: 50%;
@@ -518,7 +528,7 @@ export default {
     transition: all 0.2s;
 
     &:hover {
-        background: rgba(255, 255, 255, 0.2);
+        background: #e2e8f0;
     }
 }
 
@@ -534,19 +544,19 @@ export default {
 }
 
 .detail-label {
-    color: rgba(255, 255, 255, 0.7);
+    color: #64748b;
 }
 
 .detail-value {
-    color: #ffffff;
+    color: #0f172a;
 }
 
 .text-indigo {
-    color: #a5b4fc !important;
+    color: #4f46e5 !important;
 }
 
 .modal-divider {
-    border-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(0, 0, 0, 0.08);
     margin: 1.5rem 0;
 }
 
@@ -554,18 +564,18 @@ export default {
     .detail-label {
         display: block;
         margin-bottom: 0.75rem;
-        color: rgba(255, 255, 255, 0.8);
+        color: #334155;
         font-weight: 500;
     }
     
     .reason-text {
-        background: rgba(0, 0, 0, 0.3);
+        background: #f8fafc;
         padding: 1.25rem;
         border-radius: 1rem;
         font-style: italic;
         line-height: 1.6;
-        color: rgba(255, 255, 255, 0.9) !important;
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        color: #334155 !important;
+        border: 1px solid rgba(0, 0, 0, 0.05);
     }
 }
 
@@ -577,9 +587,9 @@ export default {
 }
 
 .card-footer {
-    background: rgba(255, 255, 255, 0.02);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.7) !important;
+    background: #f8fafc;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    color: #64748b !important;
     padding: 1.25rem 1.5rem;
 }
 </style>
