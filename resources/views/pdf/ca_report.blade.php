@@ -71,7 +71,7 @@
         <table class="table-bordered ca-table text-center w-full">
             <thead class="text-uppercase fw-bold">
                 <tr style="background-color: #e2e8f0;">
-                    <th colspan="5" class="border-strong">Employee Details</th>
+                    <th colspan="7" class="border-strong">Employee Details</th>
                     <th colspan="3" class="border-strong">Attendance</th>
                     <th colspan="3" class="border-strong">Allowances</th>
                     <th colspan="2" class="border-strong">Salary Base</th>
@@ -80,11 +80,13 @@
                     <th colspan="{{ sizeof($statutories) }}" class="border-strong">Govt. Contributions (Org)</th>
                     <th class="border-strong">Final</th>
                 </tr>
-                <tr style="background-color: #f8fafc; font-size: 6.5pt;">
+                <tr style="background-color: #f8fafc; font-size: 6pt;">
                     <th>ID</th>
                     <th class="text-start">Name</th>
-                    <th>ESIC</th>
-                    <th>PF/UAN</th>
+                    <th>PAN</th>
+                    <th>UAN</th>
+                    <th>PF</th>
+                    <th>ESI</th>
                     <th>DOJ</th>
                     <th>Ttl</th>
                     <th>LOP</th>
@@ -118,8 +120,10 @@
                     <tr style="{{ $ind % 2 == 0 ? '' : 'background-color: #fcfcfc;' }}">
                         <td>{{ $emp->employee->employee_code }}</td>
                         <td class="text-start fw-bold">{{ $emp->employee->first_name }} {{ $emp->employee->last_name }}</td>
-                        <td>{{ $emp->employee->esic ?? '-' }}</td>
+                        <td>{{ $emp->employee->pan ?? '-' }}</td>
+                        <td>{{ $emp->employee->uan ?? '-' }}</td>
                         <td>{{ $emp->employee->pf ?? '-' }}</td>
+                        <td>{{ $emp->employee->esic ?? '-' }}</td>
                         <td>{{ date('d/m/y', strtotime($emp->employee->doj)) }}</td>
                         <td>{{ $payroll->working_days }}</td>
                         <td class="text-danger">{{ $emp->payroll_employee_attendances->lop }}</td>
@@ -158,7 +162,7 @@
             </tbody>
             <tfoot class="fw-bold" style="background-color: #f1f5f9;">
                 <tr>
-                    <td colspan="13" class="text-end">GRAND TOTALS</td>
+                    <td colspan="15" class="text-end">GRAND TOTALS</td>
                     @foreach($statutories as $statutory)
                         <td>{{ $statu_summary[$statutory->id]['emp'] }}</td>
                     @endforeach

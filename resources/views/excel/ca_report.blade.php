@@ -3,19 +3,19 @@
     <thead>
         <!-- Main Company Header -->
         <tr>
-            <th colspan="{{ 16 + (sizeof($statutories) * 2) }}" style="background-color: #1e293b; color: #ffffff; font-size: 14pt; font-weight: bold; text-align: center; height: 30pt; vertical-align: middle;">
+            <th colspan="{{ 18 + (sizeof($statutories) * 2) }}" style="background-color: #1e293b; color: #ffffff; font-size: 14pt; font-weight: bold; text-align: center; height: 30pt; vertical-align: middle;">
                 {{ $company->company_name }}
             </th>
         </tr>
         <tr>
-            <th colspan="{{ 16 + (sizeof($statutories) * 2) }}" style="background-color: #334155; color: #ffffff; font-size: 11pt; font-weight: bold; text-align: center; height: 20pt; vertical-align: middle;">
+            <th colspan="{{ 18 + (sizeof($statutories) * 2) }}" style="background-color: #334155; color: #ffffff; font-size: 11pt; font-weight: bold; text-align: center; height: 20pt; vertical-align: middle;">
                 Statutory Audit Report - {{ $payroll->payroll_name }}
             </th>
         </tr>
 
         <!-- Category Headers -->
         <tr style="background-color: #e2e8f0;">
-            <th colspan="5" style="border: 1px solid #94a3b8; font-weight: bold; text-align: center;">Employee Details</th>
+            <th colspan="7" style="border: 1px solid #94a3b8; font-weight: bold; text-align: center;">Employee Details</th>
             <th colspan="3" style="border: 1px solid #94a3b8; font-weight: bold; text-align: center;">Attendance</th>
             <th colspan="3" style="border: 1px solid #94a3b8; font-weight: bold; text-align: center;">Allowances</th>
             <th colspan="2" style="border: 1px solid #94a3b8; font-weight: bold; text-align: center;">Salary Base</th>
@@ -29,8 +29,10 @@
         <tr style="background-color: #f1f5f9;">
             <th style="border: 1px solid #94a3b8; font-weight: bold;">Employee ID</th>
             <th style="border: 1px solid #94a3b8; font-weight: bold;">Full Name</th>
-            <th style="border: 1px solid #94a3b8; font-weight: bold;">ESIC No.</th>
+            <th style="border: 1px solid #94a3b8; font-weight: bold;">PAN No.</th>
             <th style="border: 1px solid #94a3b8; font-weight: bold;">UAN No.</th>
+            <th style="border: 1px solid #94a3b8; font-weight: bold;">PF No.</th>
+            <th style="border: 1px solid #94a3b8; font-weight: bold;">ESIC No.</th>
             <th style="border: 1px solid #94a3b8; font-weight: bold;">Date of Joining</th>
             <th style="border: 1px solid #94a3b8; font-weight: bold;">Working Days</th>
             <th style="border: 1px solid #94a3b8; font-weight: bold;">LOP Days</th>
@@ -65,8 +67,10 @@
             <tr style="{{ $ind % 2 == 0 ? '' : 'background-color: #f8fafc;' }}">
                 <td style="border: 1px solid #e2e8f0; text-align: center;">{{ $emp->employee->employee_code }}</td>
                 <td style="border: 1px solid #e2e8f0;">{{ $emp->employee->first_name }} {{ $emp->employee->last_name }}</td>
-                <td style="border: 1px solid #e2e8f0; text-align: center;">{{ $emp->employee->esic ?? '-' }}</td>
+                <td style="border: 1px solid #e2e8f0; text-align: center;">{{ $emp->employee->pan ?? '-' }}</td>
+                <td style="border: 1px solid #e2e8f0; text-align: center;">{{ $emp->employee->uan ?? '-' }}</td>
                 <td style="border: 1px solid #e2e8f0; text-align: center;">{{ $emp->employee->pf ?? '-' }}</td>
+                <td style="border: 1px solid #e2e8f0; text-align: center;">{{ $emp->employee->esic ?? '-' }}</td>
                 <td style="border: 1px solid #e2e8f0; text-align: center;">{{ date('d-m-Y', strtotime($emp->employee->doj)) }}</td>
                 <td style="border: 1px solid #e2e8f0; text-align: center;">{{ $payroll->working_days }}</td>
                 <td style="border: 1px solid #e2e8f0; text-align: center; color: #e11d48;">{{ $emp->payroll_employee_attendances->lop }}</td>
@@ -119,7 +123,7 @@
     </tbody>
     <tfoot style="background-color: #e2e8f0;">
         <tr style="height: 25pt;">
-            <td colspan="12" style="border: 1px solid #94a3b8; font-weight: bold; text-align: right;">GRAND TOTALS</td>
+            <td colspan="14" style="border: 1px solid #94a3b8; font-weight: bold; text-align: right;">GRAND TOTALS</td>
             <td style="border: 1px solid #94a3b8; font-weight: bold; text-align: right;">{{ number_format($payroll->payroll_employees->sum('gross_pay'), 2) }}</td>
             @foreach($statutories as $statutory)
                 <td style="border: 1px solid #94a3b8; font-weight: bold; text-align: right;">{{ number_format($statu_summary[$statutory->id]['emp'], 2) }}</td>
