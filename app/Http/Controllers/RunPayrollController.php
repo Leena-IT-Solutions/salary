@@ -28,13 +28,14 @@ class RunPayrollController extends Controller
 {
     public function run_payroll(){
         $financial_years = FinancialYear::get(['id as val', 'fy_name as key']);
+        $fy = FinancialYear::where('is_current_year', 'Yes')->first() ?? FinancialYear::latest()->first();
         $settings = new SettingsController();
         $today = date('Y-m-d');
         $cycle_day = (strlen($settings->cycle_day) < 2 ? '0' : '').$settings->cycle_day;
         $pay_cycle_from = date('Y-m-'.$cycle_day, strtotime($today));
         $from = $today >= $pay_cycle_from ? date('Y-m-d', strtotime("- 1 month", strtotime($pay_cycle_from))) : date('Y-m-d', strtotime("- 2 month", strtotime($pay_cycle_from)));
         $to = date('Y-m-d', strtotime('+ 1 month - 1 day', strtotime($from)));
-        return view('run_payroll', compact('from', 'to', 'financial_years'));
+        return view('run_payroll', compact('from', 'to', 'financial_years', 'fy'));
     }
 
     public function fetch(Request $request){
