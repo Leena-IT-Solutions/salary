@@ -90,7 +90,7 @@
 
                 @foreach($dates as $date)
                     @php
-                        $es = $employee->employee_shifts->where('dt', $date)->first();
+                        $es = $employee->employee_shifts->get($date);
                     @endphp
                     <td class="date-col @if($es && $es->status == 'Absent') status-absent @endif">
                         @if($es)

@@ -199,7 +199,7 @@
         <tbody>
             @foreach($dates as $date)
                 @php
-                    $es = $employee->employee_shifts->where('dt', $date)->first();
+                    $es = $employee->employee_shifts->get($date);
                 @endphp
                 <tr class="row-hover">
                     <td class="fw-bold">{{ date('d M Y', strtotime($date)) }} <span style="color: #94a3b8; font-weight: normal; font-size: 6.5pt;">({{ date('D', strtotime($date)) }})</span></td>

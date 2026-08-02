@@ -53,31 +53,6 @@ class PDFController extends Controller
             $ddmmyyyys[] = $value->format('d-m-Y');
         }
 
-        $eids = request()->has('eids') ? explode(',', request()->get('eids')) : Employee::active()->pluck('id')->toArray();
-
-        // Run LOP Evaluation
-        $settings = new SettingsController();
-        $amc = new AttendanceMachineController();
-        foreach($eids as $employee_id){
-            $shifts = EmployeeShift::where('employee_id', $employee_id)
-                ->whereBetween('dt', [$from, $to])
-                ->with(['working_shift', 'employee_attendance', 'special_days', 'leave', 'time_update', 'short_leave', 'on_duty'])
-                ->get()
-                ->keyBy('dt');
-
-            foreach($dates as $dd){
-                $employee_shift = $shifts->get($dd);
-                if ($employee_shift) {
-                    $req = new Request();
-                    $req->on_date = $dd;
-                    $req->employee_id = $employee_id;
-                    $req->employee_shift = $employee_shift;
-                    $req->settings = $settings;
-                    $amc->evalute($req);
-                }
-            }
-        }
-
         $query = Employee::active();
         if (request()->has('eids')) {
             $query->whereIn('id', explode(',', request()->get('eids')));
@@ -86,6 +61,10 @@ class PDFController extends Controller
         $employees = $query->with(['employee_shifts' => function($q) use($from, $to){
             $q->whereBetween('dt', [$from, $to])->with('employee_attendance');
         }])->get();
+
+        foreach($employees as $employee) {
+            $employee->setRelation('employee_shifts', $employee->employee_shifts->keyBy('dt'));
+        }
 
         $path = "attendance_".$from."-" . $to . ".pdf";
         
@@ -119,48 +98,31 @@ class PDFController extends Controller
             $ddmmyyyys[] = $value->format('d-m-Y');
         }
 
-        $eidsArray = $eids ? explode(',', $eids) : Employee::active()->pluck('id')->toArray();
-
-        // Run LOP Evaluation
-        $settings = new SettingsController();
-        $amc = new AttendanceMachineController();
-        foreach($eidsArray as $employee_id){
-            $shifts = EmployeeShift::where('employee_id', $employee_id)
-                ->whereBetween('dt', [$from, $to])
-                ->with(['working_shift', 'employee_attendance', 'special_days', 'leave', 'time_update', 'short_leave', 'on_duty'])
-                ->get()
-                ->keyBy('dt');
-
-            foreach($dates as $dd){
-                $employee_shift = $shifts->get($dd);
-                if ($employee_shift) {
-                    $req = new Request();
-                    $req->on_date = $dd;
-                    $req->employee_id = $employee_id;
-                    $req->employee_shift = $employee_shift;
-                    $req->settings = $settings;
-                    $amc->evalute($req);
-                }
-            }
-        }
-
         $query = Employee::active();
         if ($eids) {
             $query->whereIn('id', explode(',', $eids));
         }
 
-        $employees = $query->with(['employee_shifts' => function($q) use($from, $to){
-            $q->whereBetween('dt', [$from, $to])
-              ->with('working_shift')
-              ->with('leave')
-              ->with('time_update')
-              ->with('short_leave')
-              ->with('on_duty')
-              ->with('overtime')
-              ->with(['employee_attendance' => function($aq){
-                $aq->orderBy('tm', 'asc');
-              }]);
-        }])->get();
+        $employees = $query->with([
+            'employee_department',
+            'employee_department.department',
+            'employee_shifts' => function($q) use($from, $to){
+                $q->whereBetween('dt', [$from, $to])
+                  ->with('working_shift')
+                  ->with('leave.leave_master')
+                  ->with('time_update')
+                  ->with('short_leave')
+                  ->with('on_duty')
+                  ->with('overtime')
+                  ->with(['employee_attendance' => function($aq){
+                    $aq->orderBy('tm', 'asc');
+                  }]);
+            }
+        ])->get();
+
+        foreach($employees as $employee) {
+            $employee->setRelation('employee_shifts', $employee->employee_shifts->keyBy('dt'));
+        }
 
         $path = "individual_attendance_".$from."-" . $to . ".pdf";
         
