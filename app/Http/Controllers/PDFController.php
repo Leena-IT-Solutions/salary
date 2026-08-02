@@ -111,6 +111,7 @@ class PDFController extends Controller
         $employees = $query->with([
             'employee_department',
             'employee_department.department',
+            'employee_salary',
             'employee_shifts' => function($q) use($from, $to){
                 $q->whereBetween('dt', [$from, $to])
                   ->with('working_shift')

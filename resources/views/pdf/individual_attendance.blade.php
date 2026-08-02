@@ -56,15 +56,15 @@
             color: #475569; 
             font-weight: bold; 
             text-align: left; 
-            padding: 1.5mm 1mm; 
+            padding: 1mm 1mm; 
             border: 1px solid #e2e8f0; 
             font-size: 7pt; 
             text-transform: uppercase; 
         }
         .attendance-table td { 
-            padding: 1.2mm 1mm; 
+            padding: 0.8mm 1mm; 
             border: 1px solid #e2e8f0; 
-            font-size: 7.5pt; 
+            font-size: 7.2pt; 
             vertical-align: middle; 
         }
         
@@ -158,20 +158,30 @@
     <div class="info-grid">
         <table style="width: 100%;" class="table-borderless">
             <tr>
-                <td style="width: 33%;">
+                <td style="width: 25%;">
                     <div class="info-label">Employee Profile</div>
                     <div class="info-value">{{ $employee->first_name }} {{ $employee->last_name }}</div>
                     <div style="font-size: 7pt; color: #64748b;">#{{ $employee->employee_code }} | {{ $employee->employee_department->department->department ?? 'N/A' }}</div>
                 </td>
-                <td style="width: 33%; text-align: center;">
+                <td style="width: 25%; text-align: center;">
                     <div class="info-label">Reporting Period</div>
                     <div class="info-value">{{ date('01 M Y', strtotime($from)) }} - {{ date('t M Y', strtotime($from)) }}</div>
                     <div style="font-size: 7pt; color: #64748b;">(Generated on: {{ date('d-m-Y H:i') }})</div>
                 </td>
-                <td style="width: 33%; text-align: right;">
+                <td style="width: 25%; text-align: center;">
                     <div class="info-label">Working Shift</div>
                     <div class="info-value">{{ $employee->working_shift->shift_name ?? 'Standard' }}</div>
                     <div style="font-size: 7pt; color: #64748b;">Timing: {{ $employee->working_shift->in ?? '00:00' }} - {{ $employee->working_shift->out ?? '00:00' }}</div>
+                </td>
+                <td style="width: 25%; text-align: right;">
+                    <div class="info-label">Salary Breakup</div>
+                    @if($employee->employee_salary)
+                        <div class="info-value" style="color: #4338ca; font-size: 8.5pt;">CTC: ₹{{ number_format($employee->employee_salary->ctc, 0) }}</div>
+                        <div style="font-size: 7pt; color: #64748b;">Gross: ₹{{ number_format($employee->employee_salary->gross_pay, 0) }} | Net: ₹{{ number_format($employee->employee_salary->net_pay, 0) }}</div>
+                    @else
+                        <div class="info-value text-muted" style="font-size: 8.5pt;">No Active Salary</div>
+                        <div style="font-size: 7pt; color: #94a3b8;">CTC structure not defined</div>
+                    @endif
                 </td>
             </tr>
         </table>
