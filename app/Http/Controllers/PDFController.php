@@ -35,6 +35,8 @@ class PDFController extends Controller
     }
 
     public function attendance($from, $to){
+        ini_set('memory_limit', '512M');
+        set_time_limit(300);
 
         $enddate = date('Y-m-d', strtotime('+1 day', strtotime($to)));
 
@@ -80,6 +82,9 @@ class PDFController extends Controller
     }
 
     public function individual_attendance($from, $to){
+        ini_set('memory_limit', '512M');
+        set_time_limit(300);
+
         $eids = request()->get('eids');
         $enddate = date('Y-m-d', strtotime('+1 day', strtotime($to)));
 
