@@ -199,6 +199,8 @@ class EmployeeController extends Controller
         $employees = $this->getFilteredEmployeesQuery($request);
         return $employees->with('employee_department.department')
                          ->with('employee_designation.designation')
+                         ->with('employee_work_location.work_location')
+                         ->with('employee_salary')
                          ->simplePaginate(25);
     }
 

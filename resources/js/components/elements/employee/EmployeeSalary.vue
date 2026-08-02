@@ -353,7 +353,7 @@ export default {
                 if(row.is_active && row.is_part_of_salary){
                     row.statutory_compliance_conditions.forEach(cond => {
                         if(cond.is_active && (cond.gender == "All" || cond.gender == this.employee.gender) && 
-                           (cond.state == "All" || this.employee.employee_work_location?.work_location?.state) &&
+                           (cond.state == "All" || cond.state == this.employee.employee_work_location?.work_location?.state) &&
                            (cond.employer_contribution != null && cond.employer_contribution != 0) &&
                            cond.salary_type == "Gross Pay" && cond.calculation != "Percentage"){
                             
@@ -403,7 +403,7 @@ export default {
                 if(row.is_active){
                     row.statutory_compliance_conditions.forEach(cond => {
                         if(cond.is_active && (cond.gender == "All" || cond.gender == this.employee.gender) && 
-                           (cond.state == "All" || this.employee.employee_work_location?.work_location?.state) &&
+                           (cond.state == "All" || cond.state == this.employee.employee_work_location?.work_location?.state) &&
                            cond.salary_type == "Gross Pay" && cond.calculation == "Percentage" && row.is){
                             let monthly = this.item.gross_pay * cond.employer_contribution / 100;
                             if(cond.max_employer_contribution && cond.max_employer_contribution < monthly) monthly = cond.max_employer_contribution;
@@ -431,7 +431,7 @@ export default {
                 if(row.is_active && row.is_part_of_salary){
                     row.statutory_compliance_conditions.forEach(cond => {
                         if(cond.is_active && (cond.gender == "All" || cond.gender == this.employee.gender) && 
-                           (cond.state == "All" || this.employee.employee_work_location?.work_location?.state) &&
+                           (cond.state == "All" || cond.state == this.employee.employee_work_location?.work_location?.state) &&
                            (cond.employee_contribution != null && cond.employee_contribution != 0)){
                             
                             let salary_amount = 0;
