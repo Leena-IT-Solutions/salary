@@ -420,16 +420,19 @@ export default {
         },
         evaluteLOP(){
             this.loading = true;
-            const promises = this.employees.map(employee => {
-                return axios.post('/attendance/evalute', {
-                    on_date: this.employeeFilter.current_date,
-                    employee_id: employee.id,
-                });
-            });
+            const employeeIds = this.employees.map(employee => employee.id);
 
-            Promise.all(promises).then(() => {
+            axios.post('/attendance/evalute', {
+                on_date: this.employeeFilter.current_date,
+                employee_ids: employeeIds,
+            })
+            .then(() => {
                 this.loading = false;
                 this.fetch();
+            })
+            .catch(err => {
+                this.loading = false;
+                alert('Error evaluating LOP.');
             });
         },
         triggerDatePicker() {

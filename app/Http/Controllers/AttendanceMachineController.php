@@ -142,8 +142,34 @@ class AttendanceMachineController extends Controller
 
     public function evalute(Request $request){
 
-        $employee_id = $request->employee_id;
+        $employee_ids = $request->employee_ids;
         $on_date = $request->on_date;
+
+        if (is_array($employee_ids)) {
+            $settings = new SettingsController();
+
+            // Fetch all shifts for these employees on this date in one query!
+            $shifts = EmployeeShift::whereIn('employee_id', $employee_ids)
+                ->where('dt', $on_date)
+                ->with(['working_shift', 'employee_attendance', 'special_days', 'leave', 'time_update', 'short_leave', 'on_duty'])
+                ->get()
+                ->keyBy('employee_id');
+
+            foreach($employee_ids as $employee_id){
+                $employee_shift = $shifts->get($employee_id);
+                if ($employee_shift) {
+                    $subReq = new Request();
+                    $subReq->on_date = $on_date;
+                    $subReq->employee_id = $employee_id;
+                    $subReq->employee_shift = $employee_shift;
+                    $subReq->settings = $settings;
+                    $this->evalute($subReq);
+                }
+            }
+            return response()->json(["message" => "Success"]);
+        }
+
+        $employee_id = $request->employee_id;
         
         $employee_shift = $request->employee_shift ?? null;
         
