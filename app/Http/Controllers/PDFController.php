@@ -189,6 +189,15 @@ class PDFController extends Controller
         ->stream($path);
     }
 
+    public function cheque_print($id){
+        $company = CompanyProfile::first();
+        $payroll = Payroll::with(['payroll_employees.employee.employee_bank'])->find($id);
+        $path = "cheque_print_".$id.".pdf";
+        
+        return Pdf::loadView('pdf.cheque_print', ['company' => $company, 'payroll' => $payroll])
+        ->stream($path);
+    }
+
     public function employeeProfile($id){
         $employee = Employee::with([
             'employee_photo',

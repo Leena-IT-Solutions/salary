@@ -29,6 +29,7 @@
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow-premium border-0 rounded-xl mt-2">
                         <li><a class="dropdown-item py-2" :href="'/pdf/bank_letter/'+payroll.id" target="_blank"><i class="bi bi-bank me-2 text-primary"></i>Bank Letter</a></li>
+                        <li><a class="dropdown-item py-2" :href="'/pdf/cheque_print/'+payroll.id" target="_blank"><i class="bi bi-credit-card-2-front me-2 text-info"></i>Cheque Print (PDF)</a></li>
                         <li><a class="dropdown-item py-2" :href="'/pdf/ca_report/'+payroll.id" target="_blank"><i class="bi bi-file-earmark-break me-2 text-danger"></i>CA Report (PDF)</a></li>
                         <li><a class="dropdown-item py-2" :href="'/excel/ca_report/'+payroll.id" target="_blank"><i class="bi bi-file-earmark-excel me-2 text-success"></i>CA Report (Excel)</a></li>
                     </ul>

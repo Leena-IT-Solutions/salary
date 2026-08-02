@@ -59,6 +59,7 @@ Route::middleware(['auth', 'role'])->group(function () {
     Route::get('/pdf/payslip/{id}', [App\Http\Controllers\PDFController::class, 'payslip']);
     Route::get('/pdf/single_payslip/{id}', [App\Http\Controllers\PDFController::class, 'single_payslip']);
     Route::get('/pdf/bank_letter/{id}', [App\Http\Controllers\PDFController::class, 'bank_letter']);
+    Route::get('/pdf/cheque_print/{id}', [App\Http\Controllers\PDFController::class, 'cheque_print']);
     Route::get('/pdf/ca_report/{id}', [App\Http\Controllers\PDFController::class, 'ca_report']);
     Route::get('/excel/ca_report/{id}', [App\Http\Controllers\PDFController::class, 'excel_ca_report']);
     Route::get('/pdf/attendance/{from}/{to}', [App\Http\Controllers\PDFController::class, 'attendance']);
