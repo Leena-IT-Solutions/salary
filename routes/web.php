@@ -37,6 +37,7 @@ Route::middleware(['auth', 'role'])->group(function () {
     Route::get('/attendance_evalution_report', [App\Http\Controllers\AttendanceController::class, 'attendance_evalution_report']);
     Route::get('/attendance_evalution_report/get_data', [App\Http\Controllers\AttendanceController::class, 'get_data']);
     Route::post('/attendance_evalution_report/run_lop', [App\Http\Controllers\AttendanceController::class, 'run_lop']);
+    Route::get('/attendance_evalution_report/progress/{jobId}', [App\Http\Controllers\AttendanceController::class, 'get_progress']);
 
     Route::get('/run_payroll', [App\Http\Controllers\RunPayrollController::class, 'run_payroll']);
     Route::get('/overview/run_payroll/fetch', [App\Http\Controllers\RunPayrollController::class, 'fetch']);

@@ -7,6 +7,11 @@ use App\Models\WorkLocation;
 use App\Models\Department;
 use App\Models\Employee;
 use App\Http\Controllers\AttendanceMachineController;
+use App\Models\EmployeeShift;
+use App\Http\Controllers\SettingsController;
+use App\Jobs\EvaluateAttendanceJob;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 use DatePeriod;
 use DateTime;
@@ -216,27 +221,34 @@ class AttendanceController extends Controller
     }
 
     public function run_lop(Request $request){
-        $period = new DatePeriod(
-            new DateTime($request->from),
-            new DateInterval('P1D'),
-            new DateTime(date('Y-m-d',strtotime('+1 Day', strtotime($request->to))))
-        );
+        $jobId = Str::uuid()->toString();
 
-        $dates = [];
-        foreach ($period as $key => $value) {
-            $dates[] = $value->format('Y-m-d');
+        Cache::put("attendance_job_{$jobId}", [
+            'status' => 'pending',
+            'processed' => 0,
+            'total' => count($request->eids),
+        ], 600);
+
+        dispatch(new EvaluateAttendanceJob(
+            $request->from,
+            $request->to,
+            $request->eids,
+            $jobId
+        ));
+
+        return [
+            "message" => "Success",
+            "jobId" => $jobId
+        ];
+    }
+
+    public function get_progress(string $jobId) {
+        $progress = Cache::get("attendance_job_{$jobId}");
+
+        if (!$progress) {
+            return response()->json(['status' => 'not_found'], 404);
         }
 
-        foreach($request->eids as $employee_id){
-            foreach($dates as $dd){
-                $amc = new AttendanceMachineController();
-                $req = new Request();
-                $req->on_date = $dd;
-                $req->employee_id = $employee_id;
-                $amc->evalute($req);
-            }
-        }
-
-        return ["message" => "Success"];
+        return response()->json($progress);
     }
 }

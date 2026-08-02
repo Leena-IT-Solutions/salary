@@ -35,7 +35,7 @@
                             <button @click="evalutePayCycle()" :disabled="loading || selectedIds.length === 0" class="btn btn-primary px-4 py-2 fw-bold shadow-sm d-flex align-items-center">
                                 <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
                                 <i v-else class="bi bi-lightning-charge-fill me-2"></i>
-                                {{ loading ? 'Processing...' : 'Evaluate Selected' }}
+                                {{ loading ? (progressText || 'Processing...') : 'Evaluate Selected' }}
                             </button>
 
                             <button @click="exportPdf()" :disabled="selectedIds.length === 0" class="btn btn-outline-dark px-4 py-2 fw-bold shadow-sm d-flex align-items-center">
@@ -191,6 +191,7 @@ export default {
     data(){
         return {
             loading: false,
+            progressText: '',
             saving: false,
             deleting: false,
             item: { from: null, to: null },
@@ -273,14 +274,46 @@ export default {
         },
         evalutePayCycle(){
             this.loading = true;
+            this.progressText = 'Starting...';
             let data = {
                 from: this.item.from,
                 to: this.item.to,
                 eids: this.employees.map(emp => emp.id),
             };
-            axios.post('/attendance_evalution_report/run_lop', data).then(() => {
+            axios.post('/attendance_evalution_report/run_lop', data).then((res) => {
+                const jobId = res.data.jobId;
+                this.pollProgress(jobId);
+            }).catch(err => {
                 this.loading = false;
-                this.getData();
+                this.progressText = '';
+                alert('Error starting evaluation.');
+            });
+        },
+        pollProgress(jobId){
+            axios.get(`/attendance_evalution_report/progress/${jobId}`).then(res => {
+                const status = res.data.status;
+                if (status === 'completed') {
+                    this.loading = false;
+                    this.progressText = '';
+                    this.getData();
+                } else if (status === 'failed') {
+                    this.loading = false;
+                    this.progressText = '';
+                    alert('Evaluation failed: ' + (res.data.error || 'Unknown error'));
+                } else {
+                    const processed = res.data.processed;
+                    const total = res.data.total;
+                    this.progressText = `Evaluating: ${processed} / ${total}`;
+                    setTimeout(() => {
+                        this.pollProgress(jobId);
+                    }, 1000);
+                }
+            }).catch(err => {
+                setTimeout(() => {
+                    this.loading = false;
+                    this.progressText = '';
+                    this.getData();
+                }, 5000);
             });
         },
         shift_dates(what){

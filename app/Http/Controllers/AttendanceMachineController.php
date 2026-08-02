@@ -145,199 +145,197 @@ class AttendanceMachineController extends Controller
         $employee_id = $request->employee_id;
         $on_date = $request->on_date;
         
-        /* Get Employee Data */
-        $employee = Employee::find($employee_id);
+        $employee_shift = $request->employee_shift ?? null;
         
-        $es = EmployeeShift::where('employee_id', $employee_id)->where('dt', $on_date);
-        
-        /* If Employee Shift Exists */
-        if($es->exists()){
-
-            $employee_shift_data = [
-                "late" => 0,
-                "early" => 0,
-                "lop" => 1,
-                "status" => "Present",
-            ];
-            
-            /* Employee shift row */
+        if (!$employee_shift) {
+            $es = EmployeeShift::where('employee_id', $employee_id)->where('dt', $on_date);
+            if (!$es->exists()) {
+                return;
+            }
             $employee_shift = $es
-            ->with('leave')
-            ->with('on_duty')
-            ->with('short_leave')
-            ->with('time_update')
-            ->with('special_days')
-            ->first();
-            /* Employee punch records array */
-            $employee_attendance = $employee_shift->employee_attendance;
-            /* Total punch count number */
-            $punch_count = $employee_attendance->count();
+                ->with(['leave', 'on_duty', 'short_leave', 'time_update', 'special_days', 'employee_attendance', 'working_shift'])
+                ->first();
+        }
 
-            /* Get Reference of Shift In and Out time */
-            $halfday = SpecialDays::where('special_day', $on_date)->where('day_type', 'Halfday')->exists();
-            $working_shift = $employee_shift->working_shift;
-            $shift_in = $working_shift->in;
-            $shift_out = $halfday ? $working_shift->halfday : $working_shift->out;
-            $actual_in = null;
-            $actual_out = null;
-            $isCalculate = false;
+        $employee_shift_data = [
+            "late" => 0,
+            "early" => 0,
+            "lop" => 1,
+            "status" => "Present",
+        ];
+        
+        /* Employee punch records array */
+        $employee_attendance = $employee_shift->employee_attendance;
+        /* Total punch count number */
+        $punch_count = $employee_attendance->count();
 
-            $isLeave = $this->checkLeave($employee_shift);
-            $isOnDuty = $this->checkOnDuty($employee_shift);
-            $isTimeUpdate = $this->checkTimeUpdate($employee_shift);
-            $isShortLeave = $this->checkShortLeave($employee_shift);
-            
-            /* Absent */
-            if($punch_count == 0){
-                $employee_shift_data["status"] = "Absent";
-                $employee_shift_data["lop"] = 1;
-            }
+        /* Get Reference of Shift In and Out time */
+        $halfday = $employee_shift->special_days->contains('day_type', 'Halfday');
+        $working_shift = $employee_shift->working_shift;
+        $shift_in = $working_shift->in;
+        $shift_out = $halfday ? $working_shift->halfday : $working_shift->out;
+        $actual_in = null;
+        $actual_out = null;
+        $isCalculate = false;
 
-            /* Present */
-            if($punch_count == 1){
-                $employee_shift_data["status"] = "Present";
-                $employee_shift_data["lop"] = 1;
-                $inPunch = $employee_shift->employee_attendance()->orderBy('tm', 'asc')->first();
-                $actual_in = $inPunch->tm;
-            }
+        $isLeave = $this->checkLeave($employee_shift);
+        $isOnDuty = $this->checkOnDuty($employee_shift);
+        $isTimeUpdate = $this->checkTimeUpdate($employee_shift);
+        $isShortLeave = $this->checkShortLeave($employee_shift);
+        
+        /* Absent */
+        if($punch_count == 0){
+            $employee_shift_data["status"] = "Absent";
+            $employee_shift_data["lop"] = 1;
+        }
 
-            /* Working */
-            if($punch_count > 1){
-                $employee_shift_data["status"] = $halfday ? "Halfday Working" : "Working";
-                $inPunch = $employee_shift->employee_attendance()->orderBy('tm', 'asc')->first();
-                $outPunch = $employee_shift->employee_attendance()->orderBy('tm', 'desc')->first();
-                $actual_in = $inPunch->tm;
-                $actual_out = $outPunch->tm;
-            }
+        $sortedAttendance = $employee_attendance->sortBy('tm');
 
-            /* Check Approvals */
-            if($isLeave == "Not Found"){
-                if($isOnDuty == "Not Found"){
-                    if($isTimeUpdate == "Not Found"){
-                        if($isShortLeave == "Not Found"){
+        /* Present */
+        if($punch_count == 1){
+            $employee_shift_data["status"] = "Present";
+            $employee_shift_data["lop"] = 1;
+            $inPunch = $sortedAttendance->first();
+            $actual_in = $inPunch ? $inPunch->tm : null;
+        }
 
-                            if($actual_in && $actual_out){
-                                $isCalculate = true;
-                            }
-                            
-                        } else {
-                            /* Get In and Out Time */
-                            $employee_shift_data["status"] = "Short Leave";
-                            if($isShortLeave["is_lop"] == "Yes"){
-                                $actual_in = $isShortLeave["in"];
-                                $actual_out = $isShortLeave["out"];
-                                $isCalculate = true;
-                            } else {
-                                $employee_shift_data["lop"] = 0;
-                            }
+        /* Working */
+        if($punch_count > 1){
+            $employee_shift_data["status"] = $halfday ? "Halfday Working" : "Working";
+            $inPunch = $sortedAttendance->first();
+            $outPunch = $sortedAttendance->last();
+            $actual_in = $inPunch ? $inPunch->tm : null;
+            $actual_out = $outPunch ? $outPunch->tm : null;
+        }
+
+        /* Check Approvals */
+        if($isLeave == "Not Found"){
+            if($isOnDuty == "Not Found"){
+                if($isTimeUpdate == "Not Found"){
+                    if($isShortLeave == "Not Found"){
+
+                        if($actual_in && $actual_out){
+                            $isCalculate = true;
                         }
+                        
                     } else {
                         /* Get In and Out Time */
-                        $employee_shift_data["status"] = "Time Update";
-                        $actual_in = $isTimeUpdate["in"];
-                        $actual_out = $isTimeUpdate["out"];
-                        $isCalculate = true;
+                        $employee_shift_data["status"] = "Short Leave";
+                        if($isShortLeave["is_lop"] == "Yes"){
+                            $actual_in = $isShortLeave["in"];
+                            $actual_out = $isShortLeave["out"];
+                            $isCalculate = true;
+                        } else {
+                            $employee_shift_data["lop"] = 0;
+                        }
                     }
                 } else {
-                    $employee_shift_data["status"] = "On Duty";
-                    $employee_shift_data["lop"] = $isOnDuty;
+                    /* Get In and Out Time */
+                    $employee_shift_data["status"] = "Time Update";
+                    $actual_in = $isTimeUpdate["in"];
+                    $actual_out = $isTimeUpdate["out"];
+                    $isCalculate = true;
                 }
             } else {
-                $employee_shift_data["status"] = $isLeave == 0.5 ? "Halfday Leave" : "Leave";
-                $employee_shift_data["lop"] = $isLeave;
+                $employee_shift_data["status"] = "On Duty";
+                $employee_shift_data["lop"] = $isOnDuty;
             }
-
-            /* Calculate Late and Early */
-            if($isCalculate){
-
-                /* Calculated Late in Minutes */
-                $late = 0;
-                if($actual_in > $shift_in){
-                    $late = (strtotime($actual_in) - strtotime($shift_in)) / 60;
-                    $employee_shift_data["late"] = $late;
-                }
-
-                /* Calculated early coming in minutes */
-                $early = 0;
-                if($actual_out < $shift_out){
-                    $early = (strtotime($shift_out) - strtotime($actual_out)) / 60;
-                    $employee_shift_data["early"] = $early;
-                }
-
-                $settings = new SettingsController();
-                $cycle_day = (strlen($settings->cycle_day) < 2 ? '0' : '').$settings->cycle_day;
-                $pay_cycle_from = date('Y-m-'.$cycle_day, strtotime($on_date));
-                $pay_cycle_from = $pay_cycle_from > $on_date ? date('Y-m-d', strtotime("- 1 month", strtotime($pay_cycle_from))) : $pay_cycle_from;
-                $pay_cycle_to = date('Y-m-d', strtotime('+ 1 month', strtotime($pay_cycle_from)));
-
-                $lop_by_late = 0;
-                $actual_late_penalty = 0;
-                $lop_by_early = 0;
-                $actual_early_penalty = 0;
-
-                $actual_late_days = EmployeeShift::where('dt', '>=', $pay_cycle_from)->where('dt', '<', $on_date)->where('late', '>', 0)->count();
-                $actual_late_penalty += $actual_late_days > $settings->late_days || $late > $settings->late_minutes ? $settings->late_penalty : 0;
-
-                if($actual_late_days > $settings->late_days || $late > $settings->late_minutes){
-                    if($settings->late_prorata == 'Yes'){
-                        if($settings->late_hrmin == "Hour"){
-                            $shift_time = ((strtotime($shift_out) - strtotime($shift_in)) / 3600);
-                            $lop_by_late = ceil($late/60)/ $shift_time;
-                        } else {
-                            $shift_time = ((strtotime($shift_out) - strtotime($shift_in)) / 60);
-                            $lop_by_late = $late/ $shift_time;
-                        }
-                    }
-                }
-
-                $actual_early_days = EmployeeShift::where('dt', '>=', $pay_cycle_from)->where('dt', '<', $on_date)->where('early', '>', 0)->count();
-                $actual_early_penalty += $actual_early_days > $settings->early_days || $early > $settings->early_minutes ? $settings->early_penalty : 0;
-
-                if($actual_early_days > $settings->early_days || $early > $settings->early_minutes){
-                    if($settings->early_prorata == 'Yes'){
-                        if($settings->early_hrmin == "Hour"){
-                            $shift_time = ((strtotime($shift_out) - strtotime($shift_in)) / 3600);
-                            $lop_by_early = ceil($early/60)/ $shift_time;
-                        } else {
-                            $shift_time = ((strtotime($shift_out) - strtotime($shift_in)) / 60);
-                            $lop_by_early = $early/ $shift_time;
-                        }
-                    }
-                }
-
-                if($employee_shift->short_leave){
-                    if($employee_shift->short_leave->status == "Approved"){
-                        $actual_late_penalty = 0;
-                        $actual_early_penalty = 0;
-                    }
-                }
-
-                $employee_shift_data["lop"] = round($lop_by_early + $lop_by_late + $actual_early_penalty + $actual_late_penalty, 2);
-            }
-
-            if(sizeof($employee_shift->special_days) > 0){
-
-                $prev_date = EmployeeShift::where('employee_id', $employee_id)->where('dt', date('Y-m-d', strtotime('-1 day', strtotime($on_date))))->first()->lop;
-                $next_date = EmployeeShift::where('employee_id', $employee_id)->where('dt', date('Y-m-d', strtotime('+1 day', strtotime($on_date))))->first()->lop;
-
-                foreach($employee_shift->special_days as $sp_day){
-                    switch($sp_day->day_type){
-                        case "Holiday":
-                        $employee_shift_data["status"] = "Holiday";
-                        $employee_shift_data["lop"] = ($prev_date == 1 && $next_date == 1) ? 1 : 0;
-                        break;
-                        case "Weekoff":
-                        $employee_shift_data["status"] = "Weekoff";
-                        $employee_shift_data["lop"] = ($prev_date == 1 && $next_date == 1) ? 1 : 0;
-                        break;
-                    }
-                }
-            }
-
-            
-
-            $employee_shift->update($employee_shift_data);
+        } else {
+            $employee_shift_data["status"] = $isLeave == 0.5 ? "Halfday Leave" : "Leave";
+            $employee_shift_data["lop"] = $isLeave;
         }
+
+        /* Calculate Late and Early */
+        if($isCalculate){
+
+            /* Calculated Late in Minutes */
+            $late = 0;
+            if($actual_in > $shift_in){
+                $late = (strtotime($actual_in) - strtotime($shift_in)) / 60;
+                $employee_shift_data["late"] = $late;
+            }
+
+            /* Calculated early coming in minutes */
+            $early = 0;
+            if($actual_out < $shift_out){
+                $early = (strtotime($shift_out) - strtotime($actual_out)) / 60;
+                $employee_shift_data["early"] = $early;
+            }
+
+            $settings = $request->settings ?? new SettingsController();
+            $cycle_day = (strlen($settings->cycle_day) < 2 ? '0' : '').$settings->cycle_day;
+            $pay_cycle_from = date('Y-m-'.$cycle_day, strtotime($on_date));
+            $pay_cycle_from = $pay_cycle_from > $on_date ? date('Y-m-d', strtotime("- 1 month", strtotime($pay_cycle_from))) : $pay_cycle_from;
+            $pay_cycle_to = date('Y-m-d', strtotime('+ 1 month', strtotime($pay_cycle_from)));
+
+            $lop_by_late = 0;
+            $actual_late_penalty = 0;
+            $lop_by_early = 0;
+            $actual_early_penalty = 0;
+
+            $actual_late_days = EmployeeShift::where('dt', '>=', $pay_cycle_from)->where('dt', '<', $on_date)->where('late', '>', 0)->count();
+            $actual_late_penalty += $actual_late_days > $settings->late_days || $late > $settings->late_minutes ? $settings->late_penalty : 0;
+
+            if($actual_late_days > $settings->late_days || $late > $settings->late_minutes){
+                if($settings->late_prorata == 'Yes'){
+                    if($settings->late_hrmin == "Hour"){
+                        $shift_time = ((strtotime($shift_out) - strtotime($shift_in)) / 3600);
+                        $lop_by_late = ceil($late/60)/ $shift_time;
+                    } else {
+                        $shift_time = ((strtotime($shift_out) - strtotime($shift_in)) / 60);
+                        $lop_by_late = $late/ $shift_time;
+                    }
+                }
+            }
+
+            $actual_early_days = EmployeeShift::where('dt', '>=', $pay_cycle_from)->where('dt', '<', $on_date)->where('early', '>', 0)->count();
+            $actual_early_penalty += $actual_early_days > $settings->early_days || $early > $settings->early_minutes ? $settings->early_penalty : 0;
+
+            if($actual_early_days > $settings->early_days || $early > $settings->early_minutes){
+                if($settings->early_prorata == 'Yes'){
+                    if($settings->early_hrmin == "Hour"){
+                        $shift_time = ((strtotime($shift_out) - strtotime($shift_in)) / 3600);
+                        $lop_by_early = ceil($early/60)/ $shift_time;
+                    } else {
+                        $shift_time = ((strtotime($shift_out) - strtotime($shift_in)) / 60);
+                        $lop_by_early = $early/ $shift_time;
+                    }
+                }
+            }
+
+            if($employee_shift->short_leave){
+                if($employee_shift->short_leave->status == "Approved"){
+                    $actual_late_penalty = 0;
+                    $actual_early_penalty = 0;
+                }
+            }
+
+            $employee_shift_data["lop"] = round($lop_by_early + $lop_by_late + $actual_early_penalty + $actual_late_penalty, 2);
+        }
+
+        if(sizeof($employee_shift->special_days) > 0){
+
+            $prev_row = EmployeeShift::where('employee_id', $employee_id)->where('dt', date('Y-m-d', strtotime('-1 day', strtotime($on_date))))->first();
+            $next_row = EmployeeShift::where('employee_id', $employee_id)->where('dt', date('Y-m-d', strtotime('+1 day', strtotime($on_date))))->first();
+
+            $prev_date = $prev_row ? $prev_row->lop : 1;
+            $next_date = $next_row ? $next_row->lop : 1;
+
+            foreach($employee_shift->special_days as $sp_day){
+                switch($sp_day->day_type){
+                    case "Holiday":
+                    $employee_shift_data["status"] = "Holiday";
+                    $employee_shift_data["lop"] = ($prev_date == 1 && $next_date == 1) ? 1 : 0;
+                    break;
+                    case "Weekoff":
+                    $employee_shift_data["status"] = "Weekoff";
+                    $employee_shift_data["lop"] = ($prev_date == 1 && $next_date == 1) ? 1 : 0;
+                    break;
+                }
+            }
+        }
+
+        $employee_shift->update($employee_shift_data);
     }
 
     private function checkLeave($employee_shift){

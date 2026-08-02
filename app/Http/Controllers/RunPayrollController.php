@@ -377,13 +377,26 @@ class RunPayrollController extends Controller
             $dates[] = $value->format('Y-m-d');
         }
 
+        $settings = new SettingsController();
+
         foreach($request->eids as $employee_id){
+            $shifts = EmployeeShift::where('employee_id', $employee_id)
+                ->whereBetween('dt', [$request->from, $request->to])
+                ->with(['working_shift', 'employee_attendance', 'special_days', 'leave', 'time_update', 'short_leave', 'on_duty'])
+                ->get()
+                ->keyBy('dt');
+
             foreach($dates as $dd){
-                $amc = new AttendanceMachineController();
-                $req = new Request();
-                $req->on_date = $dd;
-                $req->employee_id = $employee_id;
-                $amc->evalute($req);
+                $employee_shift = $shifts->get($dd);
+                if ($employee_shift) {
+                    $amc = new AttendanceMachineController();
+                    $req = new Request();
+                    $req->on_date = $dd;
+                    $req->employee_id = $employee_id;
+                    $req->employee_shift = $employee_shift;
+                    $req->settings = $settings;
+                    $amc->evalute($req);
+                }
             }
         }
     }
