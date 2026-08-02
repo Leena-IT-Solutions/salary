@@ -48,6 +48,17 @@
                 </div>
             </div>
 
+            <!-- Employee Section -->
+            <div class="nav-section mb-4">
+                <h6 class="nav-section-title">Employees</h6>
+                <div class="nav-items">
+                    <a href="/employee/employee_manager" class="nav-item-link" :class="{ 'active': cpath.startsWith('/employee/') }">
+                        <i class="bi bi-people" style="color: #a78bfa;"></i>
+                        <span>Employee Manager</span>
+                    </a>
+                </div>
+            </div>
+
             <!-- Approvals Section -->
             <div class="nav-section mb-4">
                 <h6 class="nav-section-title">Approvals</h6>
@@ -95,17 +106,6 @@
                     <a href="/approvals/exemption_and_deduction" class="nav-item-link" :class="{ 'active': cpath == '/approvals/exemption_and_deduction' }">
                         <i class="bi bi-calculator" style="color: #a3e635;"></i>
                         <span>Exemption & Ded.</span>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Employee Section -->
-            <div class="nav-section mb-4">
-                <h6 class="nav-section-title">Employees</h6>
-                <div class="nav-items">
-                    <a href="/employee/employee_manager" class="nav-item-link" :class="{ 'active': cpath.startsWith('/employee/') }">
-                        <i class="bi bi-people" style="color: #a78bfa;"></i>
-                        <span>Employee Manager</span>
                     </a>
                 </div>
             </div>
