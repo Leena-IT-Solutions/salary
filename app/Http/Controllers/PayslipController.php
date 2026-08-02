@@ -29,19 +29,41 @@ class PayslipController extends Controller
             $payroll = Payroll::find($employees[0]->payroll_id);
         }
 
+        $sent_count = 0;
+        $errors = [];
+
         foreach($employees as $emp){
-            if($emp->employee->email){
-                $pdf = Pdf::loadView('pdf.single_payslip', [
-                    'company' => $company, 
-                    'payroll' => $payroll, 
-                    'emp' => $emp
-                ]);
-                
-                Mail::to($emp->employee->email)->send(new PayslipEmail($emp, $payroll, $pdf));
+            if($emp->employee && $emp->employee->email){
+                try {
+                    $pdf = Pdf::loadView('pdf.single_payslip', [
+                        'company' => $company, 
+                        'payroll' => $payroll, 
+                        'emp' => $emp
+                    ]);
+                    
+                    Mail::to($emp->employee->email)->send(new PayslipEmail($emp, $payroll, $pdf));
+
+                    $emp->is_email_sent = true;
+                    $emp->email_sent_at = now();
+                    $emp->save();
+                    $sent_count++;
+                } catch (\Exception $e) {
+                    $errors[] = "Failed for {$emp->employee->first_name}: " . $e->getMessage();
+                }
             }
         }
 
-        return response()->json(['message' => 'Emails sent successfully!']);
+        $updatedEmp = null;
+        if($request->type == 'single' && isset($request->id)) {
+            $updatedEmp = PayrollEmployee::find($request->id);
+        }
+
+        return response()->json([
+            'message' => $sent_count > 0 ? "Email sent successfully!" : "No email sent.",
+            'sent_count' => $sent_count,
+            'errors' => $errors,
+            'payroll_employee' => $updatedEmp
+        ]);
     }
     public function fetch_history(Request $request, $employee_id){
         return PayrollEmployee::where('employee_id', $employee_id)

@@ -22,6 +22,13 @@ class PayrollEmployee extends Model
         'gross_salary',
         'gross_deduction',
         'net_payable_amount',
+        'is_email_sent',
+        'email_sent_at',
+    ];
+
+    protected $casts = [
+        'is_email_sent' => 'boolean',
+        'email_sent_at' => 'datetime',
     ];
 
     public function payroll(){
