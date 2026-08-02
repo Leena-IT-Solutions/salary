@@ -195,7 +195,7 @@ class PDFController extends Controller
         $path = "cheque_print_".$id.".pdf";
         
         return Pdf::loadView('pdf.cheque_print', ['company' => $company, 'payroll' => $payroll])
-        ->setPaper([0, 0, 575.43, 263.62], 'landscape')
+        ->setPaper([0, 0, 575.43, 263.62])
         ->stream($path);
     }
 

@@ -5,154 +5,152 @@
     <title>Cheque Printing - {{ $payroll->payroll_name }}</title>
     <style>
         @page {
-            margin: 0px;
-            size: 575.43pt 263.62pt landscape;
+            margin: 0;
+            size: 575.43pt 263.62pt;
         }
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        body {
+        html, body {
+            width: 575.43pt;
+            height: 263.62pt;
+            margin: 0;
+            padding: 0;
             font-family: 'Helvetica', 'Arial', sans-serif;
             background: #ffffff;
             color: #0f172a;
-            width: 203mm;
-            height: 93mm;
-            margin: 0;
-            padding: 0;
         }
         .cheque-leaf {
-            width: 203mm;
-            height: 93mm;
-            padding: 6mm 8mm;
+            width: 575.43pt;
+            height: 235pt;
+            padding: 12pt 20pt;
             position: relative;
             box-sizing: border-box;
             background: #ffffff;
-            border: 1px solid #cbd5e1;
-            page-break-after: always;
-        }
-        .cheque-leaf:last-child {
-            page-break-after: avoid;
+            page-break-inside: avoid;
+            overflow: hidden;
         }
         .ac-payee-stamp {
             position: absolute;
-            top: 7mm;
-            left: 10mm;
-            font-size: 7.5pt;
+            top: 12pt;
+            left: 20pt;
+            font-size: 7pt;
             font-weight: bold;
             letter-spacing: 1px;
-            border-top: 1.5px solid #0f172a;
-            border-bottom: 1.5px solid #0f172a;
-            padding: 1mm 2.5mm;
+            border-top: 1.5pt solid #0f172a;
+            border-bottom: 1.5pt solid #0f172a;
+            padding: 2pt 5pt;
             text-transform: uppercase;
-            transform: rotate(-6deg);
+            transform: rotate(-5deg);
             color: #0f172a;
         }
         .cheque-date-box {
             position: absolute;
-            top: 6mm;
-            right: 8mm;
+            top: 12pt;
+            right: 20pt;
         }
         .date-title {
             font-size: 7.5pt;
             font-weight: bold;
             color: #475569;
-            margin-right: 1.5mm;
+            margin-right: 3pt;
         }
         .date-cell {
             display: inline-block;
-            width: 4.8mm;
-            height: 5.8mm;
-            border: 1px solid #334155;
+            width: 12pt;
+            height: 14pt;
+            border: 1pt solid #334155;
             text-align: center;
-            line-height: 5.8mm;
+            line-height: 14pt;
             font-size: 8.5pt;
             font-weight: bold;
             background: #ffffff;
-            margin-left: 0.4mm;
+            margin-left: 1pt;
         }
         .payee-section {
             position: absolute;
-            top: 22mm;
-            left: 10mm;
-            right: 8mm;
+            top: 50pt;
+            left: 20pt;
+            right: 20pt;
         }
         .label-text {
             font-size: 8pt;
             font-weight: bold;
             color: #475569;
             display: inline-block;
-            width: 14mm;
+            width: 40pt;
         }
         .payee-name {
             font-size: 11pt;
             font-weight: bold;
             color: #0f172a;
-            border-bottom: 1px dotted #94a3b8;
-            padding-bottom: 1mm;
+            border-bottom: 1pt dotted #94a3b8;
+            padding-bottom: 2pt;
             display: inline-block;
-            width: 165mm;
+            width: 480pt;
         }
         .rupees-section {
             position: absolute;
-            top: 34mm;
-            left: 10mm;
-            right: 8mm;
+            top: 82pt;
+            left: 20pt;
+            right: 20pt;
         }
         .rupees-words {
             font-size: 10pt;
             font-weight: bold;
             color: #0f172a;
             line-height: 1.4;
-            border-bottom: 1px dotted #94a3b8;
-            padding-bottom: 1mm;
+            border-bottom: 1pt dotted #94a3b8;
+            padding-bottom: 2pt;
             display: inline-block;
-            width: 161mm;
+            width: 465pt;
         }
         .amount-figures-box {
             position: absolute;
-            top: 55mm;
-            right: 8mm;
-            width: 52mm;
-            height: 9.5mm;
-            border: 1.5px solid #1e293b;
+            top: 135pt;
+            right: 20pt;
+            width: 145pt;
+            height: 24pt;
+            border: 1.5pt solid #1e293b;
             background: #ffffff;
             text-align: right;
-            line-height: 9.5mm;
-            padding-right: 3mm;
+            line-height: 24pt;
+            padding-right: 8pt;
             font-size: 11pt;
             font-weight: bold;
             color: #0f172a;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.5pt;
         }
         .signature-block {
             position: absolute;
-            bottom: 6mm;
-            right: 8mm;
+            bottom: 12pt;
+            right: 20pt;
             text-align: right;
         }
         .company-title {
-            font-size: 8pt;
+            font-size: 7.5pt;
             font-weight: bold;
             color: #1e293b;
-            margin-bottom: 10mm;
+            margin-bottom: 22pt;
         }
         .sig-line {
-            border-top: 1px solid #475569;
+            border-top: 1pt solid #475569;
             font-size: 7.5pt;
             font-weight: bold;
             color: #334155;
-            padding-top: 1mm;
-            width: 48mm;
+            padding-top: 2pt;
+            width: 125pt;
             display: inline-block;
         }
         .cheque-ref {
             position: absolute;
-            bottom: 6mm;
-            left: 10mm;
+            bottom: 12pt;
+            left: 20pt;
             font-size: 7pt;
             color: #64748b;
+            line-height: 1.3;
         }
     </style>
 </head>
@@ -196,7 +194,7 @@
 
             <!-- REFERENCE & CHEQUE DETAILS -->
             <div class="cheque-ref">
-                <strong>Payroll Ref:</strong> {{ $payroll->payroll_name }}<br>
+                <strong>Payroll:</strong> {{ $payroll->payroll_name }}<br>
                 <strong>Emp Code:</strong> {{ $emp->employee->employee_code }} | <strong>Bank Acc:</strong> {{ $emp->employee->employee_bank->account_number ?? 'N/A' }}
             </div>
 
