@@ -158,34 +158,46 @@
     <div class="info-grid">
         <table style="width: 100%;" class="table-borderless">
             <tr>
-                <td style="width: 25%;">
+                <td style="width: 33%;">
                     <div class="info-label">Employee Profile</div>
                     <div class="info-value">{{ $employee->first_name }} {{ $employee->last_name }}</div>
                     <div style="font-size: 7pt; color: #64748b;">#{{ $employee->employee_code }} | {{ $employee->employee_department->department->department ?? 'N/A' }}</div>
                 </td>
-                <td style="width: 25%; text-align: center;">
+                <td style="width: 33%; text-align: center;">
                     <div class="info-label">Reporting Period</div>
                     <div class="info-value">{{ date('01 M Y', strtotime($from)) }} - {{ date('t M Y', strtotime($from)) }}</div>
                     <div style="font-size: 7pt; color: #64748b;">(Generated on: {{ date('d-m-Y H:i') }})</div>
                 </td>
-                <td style="width: 25%; text-align: center;">
+                <td style="width: 33%; text-align: right;">
                     <div class="info-label">Working Shift</div>
                     <div class="info-value">{{ $employee->working_shift->shift_name ?? 'Standard' }}</div>
                     <div style="font-size: 7pt; color: #64748b;">Timing: {{ $employee->working_shift->in ?? '00:00' }} - {{ $employee->working_shift->out ?? '00:00' }}</div>
                 </td>
-                <td style="width: 25%; text-align: right;">
-                    <div class="info-label">Salary Breakup</div>
-                    @if($employee->employee_salary)
-                        <div class="info-value" style="color: #4338ca; font-size: 8.5pt;">CTC: ₹{{ number_format($employee->employee_salary->ctc, 0) }}</div>
-                        <div style="font-size: 7pt; color: #64748b;">Gross: ₹{{ number_format($employee->employee_salary->gross_pay, 0) }} | Net: ₹{{ number_format($employee->employee_salary->net_pay, 0) }}</div>
-                    @else
-                        <div class="info-value text-muted" style="font-size: 8.5pt;">No Active Salary</div>
-                        <div style="font-size: 7pt; color: #94a3b8;">CTC structure not defined</div>
-                    @endif
-                </td>
             </tr>
         </table>
     </div>
+
+    <!-- Salary Breakup Table -->
+    @if($employee->employee_salary)
+    <table style="width: 100%; margin-bottom: 4mm; font-size: 7.5pt; border-collapse: collapse; border: 1px solid #e2e8f0; table-layout: fixed;">
+        <thead>
+            <tr style="background-color: #f8fafc;">
+                <th style="padding: 1.2mm 2mm; text-align: left; color: #475569; font-weight: bold; border: 1px solid #e2e8f0; text-transform: uppercase; font-size: 7pt; width: 25%;">Salary Parameter</th>
+                <th style="padding: 1.2mm 2mm; text-align: center; color: #475569; font-weight: bold; border: 1px solid #e2e8f0; text-transform: uppercase; font-size: 7pt; width: 25%;">Monthly CTC</th>
+                <th style="padding: 1.2mm 2mm; text-align: center; color: #475569; font-weight: bold; border: 1px solid #e2e8f0; text-transform: uppercase; font-size: 7pt; width: 25%;">Gross Salary</th>
+                <th style="padding: 1.2mm 2mm; text-align: center; color: #475569; font-weight: bold; border: 1px solid #e2e8f0; text-transform: uppercase; font-size: 7pt; width: 25%;">Net Salary</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="padding: 1.2mm 2mm; font-weight: bold; border: 1px solid #e2e8f0; color: #1e293b; text-align: left;">Standard Structure</td>
+                <td style="padding: 1.2mm 2mm; text-align: center; font-weight: bold; border: 1px solid #e2e8f0; color: #4338ca;">Rs. {{ number_format($employee->employee_salary->ctc, 2) }}</td>
+                <td style="padding: 1.2mm 2mm; text-align: center; font-weight: bold; border: 1px solid #e2e8f0; color: #1e293b;">Rs. {{ number_format($employee->employee_salary->gross_pay, 2) }}</td>
+                <td style="padding: 1.2mm 2mm; text-align: center; font-weight: bold; border: 1px solid #e2e8f0; color: #10b981;">Rs. {{ number_format($employee->employee_salary->net_pay, 2) }}</td>
+            </tr>
+        </tbody>
+    </table>
+    @endif
 
     @php
         $totalLop = 0; $totalLate = 0; $presentDays = 0; $absentDays = 0; 
