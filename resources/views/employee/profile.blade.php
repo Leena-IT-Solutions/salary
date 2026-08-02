@@ -337,15 +337,21 @@
                                 </table>
                             </div>
 
-                            <!-- Net Pay & CTC Summary Cards -->
+                            <!-- Net Pay, Gross Pay & CTC Summary Cards -->
                             <div class="row g-2">
-                                <div class="col-6">
+                                <div class="col-12 col-md-4">
                                     <div class="p-3 rounded-3 bg-light border text-center">
                                         <div class="text-uppercase tiny fw-bold text-muted mb-1">Monthly CTC</div>
                                         <div class="h5 fw-bold mb-0 text-primary">Rs. {{ number_format($salary_breakup['ctc'], 2) }}</div>
                                     </div>
                                 </div>
-                                <div class="col-6">
+                                <div class="col-12 col-md-4">
+                                    <div class="p-3 rounded-3 bg-light border text-center">
+                                        <div class="text-uppercase tiny fw-bold text-muted mb-1">Gross Salary</div>
+                                        <div class="h5 fw-bold mb-0 text-dark">Rs. {{ number_format($salary_breakup['gross_pay'], 2) }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-4">
                                     <div class="p-3 rounded-3 bg-success bg-opacity-10 border border-success border-opacity-20 text-center">
                                         <div class="text-uppercase tiny fw-bold text-success mb-1">Estimated Net Pay</div>
                                         <div class="h5 fw-bold mb-0 text-success">Rs. {{ number_format($salary_breakup['net_pay'], 2) }}</div>
