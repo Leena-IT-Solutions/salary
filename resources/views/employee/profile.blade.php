@@ -270,6 +270,100 @@
             </div>
         </div>
 
+        <!-- Card: Detailed Salary Breakup -->
+        <div class="col-12 mb-4">
+            <div class="overview-card shadow-sm border-primary border-opacity-10">
+                <h6 class="fw-900 text-primary small text-uppercase mb-3 border-bottom pb-2">
+                    <i class="bi bi-wallet2 me-2"></i>Detailed Salary Breakup
+                </h6>
+                @if($employee->employee_salary)
+                    <div class="row g-4">
+                        <!-- Left Column: Earnings -->
+                        <div class="col-12 col-md-6 border-md-end pe-md-4">
+                            <h6 class="fw-bold text-dark small mb-3"><i class="bi bi-plus-circle text-success me-2"></i>Earnings (Monthly)</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.85rem;">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Earning Component</th>
+                                            <th class="text-center">Calculation</th>
+                                            <th class="text-end">Monthly Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($salary_breakup['earnings'] as $earning)
+                                            <tr>
+                                                <td class="fw-semibold text-secondary">{{ $earning['name'] }}</td>
+                                                <td class="text-center text-muted small">{{ $earning['calculation'] }} ({{ $earning['value'] }}{{ $earning['calculation'] == 'Flat' ? '' : '%' }})</td>
+                                                <td class="text-end fw-bold text-dark">Rs. {{ number_format($earning['amount'], 2) }}</td>
+                                            </tr>
+                                        @endforeach
+                                        <tr class="table-light">
+                                            <td colspan="2" class="fw-bold text-dark">Total Gross Earnings</td>
+                                            <td class="text-end fw-extrabold text-primary">Rs. {{ number_format($salary_breakup['gross_pay'], 2) }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Deductions & Summary -->
+                        <div class="col-12 col-md-6 ps-md-4">
+                            <h6 class="fw-bold text-dark small mb-3"><i class="bi bi-dash-circle text-danger me-2"></i>Deductions (Monthly)</h6>
+                            <div class="table-responsive mb-4">
+                                <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.85rem;">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Deduction Component</th>
+                                            <th class="text-end">Monthly Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($salary_breakup['deductions'] as $deduction)
+                                            <tr>
+                                                <td class="fw-semibold text-secondary">{{ $deduction['name'] }} ({{ $deduction['type'] }})</td>
+                                                <td class="text-end fw-bold text-danger">Rs. {{ number_format($deduction['amount'], 2) }}</td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="2" class="text-center text-muted py-2 small">No active statutory deductions</td>
+                                            </tr>
+                                        @endforelse
+                                        <tr class="table-light">
+                                            <td class="fw-bold text-dark">Total Deductions</td>
+                                            <td class="text-end fw-bold text-danger">Rs. {{ number_format($salary_breakup['gross_pay'] - $salary_breakup['net_pay'], 2) }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Net Pay & CTC Summary Cards -->
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <div class="p-3 rounded-3 bg-light border text-center">
+                                        <div class="text-uppercase tiny fw-bold text-muted mb-1">Monthly CTC</div>
+                                        <div class="h5 fw-bold mb-0 text-primary">Rs. {{ number_format($salary_breakup['ctc'], 2) }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-3 rounded-3 bg-success bg-opacity-10 border border-success border-opacity-20 text-center">
+                                        <div class="text-uppercase tiny fw-bold text-success mb-1">Estimated Net Pay</div>
+                                        <div class="h5 fw-bold mb-0 text-success">Rs. {{ number_format($salary_breakup['net_pay'], 2) }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <div class="text-center py-4">
+                        <i class="bi bi-wallet2 display-6 text-muted mb-2 opacity-50"></i>
+                        <h6 class="text-muted fw-bold mb-1">No Active Salary Structure Found</h6>
+                        <p class="text-muted small mb-0">Please assign a payroll group and salary structure in the control panel below.</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+
         <!-- Card 5: Lifecycle & Role -->
         <div class="col-12">
             <div class="overview-card bg-light-subtle">

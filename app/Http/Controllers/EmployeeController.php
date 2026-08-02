@@ -24,14 +24,125 @@ class EmployeeController extends Controller
     }
 
     public function profile($id){
-        $employee = Employee::with('employee_work_location.work_location')->with('employee_salary')->find($id);
+        $employee = Employee::with([
+            'employee_work_location.work_location',
+            'employee_salary.salary_group.earnings',
+            'employee_salary.es_statutories.statutory_compliance.statutory_compliance_conditions',
+        ])->find($id);
+
+        $salary_breakup = [
+            'earnings' => [],
+            'deductions' => [],
+            'net_pay' => 0,
+            'gross_pay' => 0,
+            'ctc' => 0,
+            'employer_contribution' => 0
+        ];
+
+        if ($employee && $employee->employee_salary) {
+            $salary = $employee->employee_salary;
+            $salary_breakup['ctc'] = $salary->ctc;
+            $salary_breakup['gross_pay'] = $salary->gross_pay;
+            $salary_breakup['net_pay'] = $salary->net_pay;
+            $salary_breakup['employer_contribution'] = $salary->employer_contribution;
+
+            // 1. Calculate Earnings
+            if ($salary->salary_group) {
+                foreach ($salary->salary_group->earnings as $earning) {
+                    if (!$earning->is_active) continue;
+
+                    $amount = 0;
+                    if ($earning->is_basic_pay) {
+                        $amount = $salary->basic_pay;
+                    } elseif ($earning->calculation === 'CTC') {
+                        $amount = ($salary->ctc * $earning->value) / 100;
+                    } elseif ($earning->calculation === 'Basic') {
+                        $amount = ($salary->basic_pay * $earning->value) / 100;
+                    } elseif ($earning->calculation === 'Flat') {
+                        $amount = $earning->value;
+                    } elseif ($earning->calculation === 'Remaining') {
+                        $amount = $salary->remaining_amount;
+                    }
+
+                    $salary_breakup['earnings'][] = [
+                        'name' => $earning->name,
+                        'calculation' => $earning->calculation,
+                        'value' => $earning->value,
+                        'amount' => round($amount, 2)
+                    ];
+                }
+            }
+
+            // 2. Calculate Deductions (Selected Statutories)
+            foreach ($salary->es_statutories as $statutory) {
+                $comp = $statutory->statutory_compliance;
+                $active_cond = null;
+                if ($comp) {
+                    foreach ($comp->statutory_compliance_conditions as $cond) {
+                        if ($cond->is_active && 
+                            ($cond->gender === 'All' || $cond->gender === $employee->gender) &&
+                            ($cond->employee_contribution != null && $cond->employee_contribution != 0)) {
+                            
+                            $salary_amount = 0;
+                            if ($cond->salary_type === 'Basic Pay') {
+                                $salary_amount = $salary->basic_pay;
+                            } elseif ($cond->salary_type === 'CTC') {
+                                $salary_amount = $salary->ctc;
+                            } elseif ($cond->salary_type === 'Gross Pay') {
+                                $salary_amount = $salary->gross_pay;
+                            }
+
+                            if ($salary_amount >= ($cond->min_salary ?: 0) && (($cond->max_salary ?: 0) == 0 || $salary_amount <= $cond->max_salary)) {
+                                $active_cond = $cond;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if ($active_cond) {
+                    $salary_amount = 0;
+                    if ($active_cond->salary_type === 'Basic Pay') {
+                        $salary_amount = $salary->basic_pay;
+                    } elseif ($active_cond->salary_type === 'CTC') {
+                        $salary_amount = $salary->ctc;
+                    } elseif ($active_cond->salary_type === 'Gross Pay') {
+                        $salary_amount = $salary->gross_pay;
+                    }
+
+                    if ($active_cond->restrict_salary_for_calculation != null && 
+                        $active_cond->restrict_salary_for_calculation != 0 &&
+                        $salary_amount > $active_cond->restrict_salary_for_calculation) {
+                        $salary_amount = $active_cond->restrict_salary_for_calculation;
+                    }
+
+                    $employee_contrib = 0;
+                    if ($active_cond->calculation === 'Flat') {
+                        $employee_contrib = $active_cond->employee_contribution ?: 0;
+                    } elseif ($active_cond->calculation === 'Percentage') {
+                        $employee_contrib = ($salary_amount * $active_cond->employee_contribution) / 100;
+                    }
+
+                    if ($active_cond->max_employee_contribution != null && $active_cond->max_employee_contribution != 0 && $employee_contrib > $active_cond->max_employee_contribution) {
+                        $employee_contrib = $active_cond->max_employee_contribution;
+                    }
+
+                    $salary_breakup['deductions'][] = [
+                        'name' => $comp->scheme_name,
+                        'type' => $comp->abbreviation,
+                        'amount' => round($employee_contrib, 2)
+                    ];
+                }
+            }
+        }
+
         $work_locations = WorkLocation::get(['id as val', 'location_name as key']);
         $designations = Designation::get(['id as val', 'designation as key']);
         $departments = Department::get(['id as val', 'department as key']);
         $leave_groups = LeaveGroup::get(['id as val', 'name as key']);
         $salary_groups = SalaryGroup::where('is_active', true)->get(['id as val', 'salary_group_name as key']);
         $services = ServicesComponent::get(['id as val', 'name as key']);
-        return view('employee.profile', compact('employee', 'work_locations', 'designations', 'departments', 'leave_groups', 'salary_groups', 'services'));
+        return view('employee.profile', compact('employee', 'salary_breakup', 'work_locations', 'designations', 'departments', 'leave_groups', 'salary_groups', 'services'));
     }
 
     protected function getFilteredEmployeesQuery(Request $request){
