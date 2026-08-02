@@ -48,7 +48,12 @@
                             <table class="table table-hover align-middle mb-0">
                                 <thead class="bg-light sticky-top">
                                     <tr>
-                                        <th class="ps-4 border-0">ID</th>
+                                        <th class="ps-4 border-0" style="width: 50px;">
+                                            <div class="form-check custom-checkbox">
+                                                <input class="form-check-input" type="checkbox" :checked="isAllSelected" @change="toggleSelectAll" @click.stop>
+                                            </div>
+                                        </th>
+                                        <th class="border-0">ID</th>
                                         <th class="border-0">Employee Name</th>
                                         <th class="border-0 text-center">Department/Location</th>
                                         <th class="border-0 text-center pe-4">Current Shift</th>
@@ -58,8 +63,13 @@
                                     <tr v-for="emp in employees" :key="emp.id" 
                                         @click="addRemoveEmployee(emp.id)"
                                         class="cursor-pointer transition-all"
-                                        :class="{'table-active-premium': isSelected(emp.id)}">
-                                        <td class="ps-4">
+                                        :class="{'table-active-premium bg-primary bg-opacity-5': isSelected(emp.id)}">
+                                        <td class="ps-4" @click.stop>
+                                            <div class="form-check custom-checkbox">
+                                                <input class="form-check-input" type="checkbox" :checked="isSelected(emp.id)" @change="addRemoveEmployee(emp.id)">
+                                            </div>
+                                        </td>
+                                        <td>
                                             <span class="text-secondary small fw-bold">#{{ emp.id }}</span>
                                         </td>
                                         <td>
@@ -167,7 +177,23 @@ export default {
             employees: [],
         };
     },
+    computed: {
+        isAllSelected() {
+            if (this.employees.length === 0) return false;
+            return this.employees.every(emp => this.isSelected(emp.id));
+        }
+    },
     methods: {
+        toggleSelectAll() {
+            if (this.isAllSelected) {
+                const displayedIds = this.employees.map(emp => emp.id);
+                this.employeeShiftForm.employees = this.employeeShiftForm.employees.filter(id => !displayedIds.includes(id));
+            } else {
+                const displayedIds = this.employees.map(emp => emp.id);
+                const merged = [...new Set([...this.employeeShiftForm.employees, ...displayedIds])];
+                this.employeeShiftForm.employees = merged;
+            }
+        },
         reset(){
             this.employeeShiftForm.employees = [];
             this.employeeShiftForm.working_shift_id = null;
