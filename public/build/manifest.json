@@ -40,14 +40,14 @@
     "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2"
   },
   "resources/js/app.css": {
-    "file": "assets/app-98f985ca.css",
+    "file": "assets/app-41c5abab.css",
     "src": "resources/js/app.css"
   },
   "resources/js/app.js": {
     "css": [
-      "assets/app-98f985ca.css"
+      "assets/app-41c5abab.css"
     ],
-    "file": "assets/app-f94a4f15.js",
+    "file": "assets/app-a4f52629.js",
     "isEntry": true,
     "src": "resources/js/app.js"
   },

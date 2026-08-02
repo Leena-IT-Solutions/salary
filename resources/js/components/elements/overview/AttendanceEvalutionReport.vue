@@ -80,10 +80,10 @@
                         </thead>
                         <tbody>
                             <tr v-for="employee in employees" :key="employee.id" :class="{'bg-primary bg-opacity-5': selectedIds.includes(employee.id)}">
-                                <td class="sticky-column bg-white ps-4 border-end" style="left: 0;">
+                                <td class="sticky-column bg-white ps-4 border-end" style="left: 0; cursor: pointer;" @click="toggleEmployeeSelection(employee.id)">
                                     <div class="d-flex align-items-center gap-3">
                                         <div class="form-check custom-checkbox">
-                                            <input class="form-check-input" type="checkbox" :value="employee.id" v-model="selectedIds">
+                                            <input class="form-check-input" type="checkbox" :value="employee.id" v-model="selectedIds" @click.stop>
                                         </div>
                                         <div>
                                             <div class="fw-bold text-dark">{{ employee.first_name }} {{ employee.last_name }}</div>
@@ -347,6 +347,14 @@ export default {
                 this.selectedIds = this.employees.map(emp => emp.id);
             } else {
                 this.selectedIds = [];
+            }
+        },
+        toggleEmployeeSelection(employeeId) {
+            const index = this.selectedIds.indexOf(employeeId);
+            if (index > -1) {
+                this.selectedIds.splice(index, 1);
+            } else {
+                this.selectedIds.push(employeeId);
             }
         },
         exportPdf() {
