@@ -90,42 +90,48 @@ class PayrollEmployee extends Model
     }
 
     public function displaywords($number){
-        $number_after_decimal = round($number - ($num = floor($number)), 2) * 100;
-
-        // Check if there is any number after decimal
-        $amt_hundred = null;
-        $count_length = strlen($num);
-        $x = 0;
-        $string = array();
-        $change_words = array(
-            0 => 'Zero', 1 => 'One', 2 => 'Two',
-            3 => 'Three', 4 => 'Four', 5 => 'Five', 6 => 'Six',
-            7 => 'Seven', 8 => 'Eight', 9 => 'Nine',
-            10 => 'Ten', 11 => 'Eleven', 12 => 'Twelve',
-            13 => 'Thirteen', 14 => 'Fourteen', 15 => 'Fifteen',
-            16 => 'Sixteen', 17 => 'Seventeen', 18 => 'Eighteen',
-            19 => 'Nineteen', 20 => 'Twenty', 30 => 'Thirty',
-            40 => 'Fourty', 50 => 'Fifty', 60 => 'Sixty',
-            70 => 'Seventy', 80 => 'Eighty', 90 => 'Ninety'
-        );
-        $here_digits = array('', 'Hundred', 'Thousand', 'Lakh', 'Crore');
-        while ($x < $count_length) {
-            $get_divider = ($x == 2) ? 10 : 100;
-            $number = floor($num % $get_divider);
-            $num = floor($num / $get_divider);
-            $x += $get_divider == 10 ? 1 : 2;
-            if ($number) {
-                $add_plural = (($counter = count($string)) && $number > 9) ? 's' : null;
-                $amt_hundred = ($counter == 1 && $string[0]) ? ' and ' : null;
-                $string[] = ($number < 21) ? $change_words[$number] . ' ' . $here_digits[$counter] . $add_plural . '
-        ' . $amt_hundred : $change_words[floor($number / 10) * 10] . ' ' . $change_words[$number % 10] . '
-        ' . $here_digits[$counter] . $add_plural . ' ' . $amt_hundred;
-            } else $string[] = null;
+        $num = (int) floor($number);
+        $number_after_decimal = round($number - $num, 2) * 100;
+        
+        if ($num == 0) {
+            $words = 'Zero';
+        } else {
+            $words = $this->convertNumberToWordsIndian($num);
         }
-        $implode_to_Words = implode('', array_reverse($string));
-        $get_word_after_point = ($number_after_decimal > 0) ? "Point " . ($change_words[$number_after_decimal / 10] . "
-            " . $change_words[$number_after_decimal % 10]) : '';
-        return ($implode_to_Words ? $implode_to_Words : ' ') . $get_word_after_point;
+
+        if ($number_after_decimal > 0) {
+            $words .= ' Point ' . $this->convertNumberToWordsIndian((int)$number_after_decimal);
+        }
+
+        return trim(preg_replace('/\s+/', ' ', $words));
+    }
+
+    private function convertNumberToWordsIndian($number) {
+        $words = array(
+            0 => '', 1 => 'One', 2 => 'Two', 3 => 'Three', 4 => 'Four', 5 => 'Five',
+            6 => 'Six', 7 => 'Seven', 8 => 'Eight', 9 => 'Nine', 10 => 'Ten',
+            11 => 'Eleven', 12 => 'Twelve', 13 => 'Thirteen', 14 => 'Fourteen', 15 => 'Fifteen',
+            16 => 'Sixteen', 17 => 'Seventeen', 18 => 'Eighteen', 19 => 'Nineteen',
+            20 => 'Twenty', 30 => 'Thirty', 40 => 'Forty', 50 => 'Fifty',
+            60 => 'Sixty', 70 => 'Seventy', 80 => 'Eighty', 90 => 'Ninety'
+        );
+
+        if ($number < 21) {
+            return $words[$number];
+        }
+        if ($number < 100) {
+            return $words[floor($number / 10) * 10] . ' ' . $words[$number % 10];
+        }
+        if ($number < 1000) {
+            return $words[floor($number / 100)] . ' Hundred ' . $this->convertNumberToWordsIndian($number % 100);
+        }
+        if ($number < 100000) {
+            return $this->convertNumberToWordsIndian(floor($number / 1000)) . ' Thousand ' . $this->convertNumberToWordsIndian($number % 1000);
+        }
+        if ($number < 10000000) {
+            return $this->convertNumberToWordsIndian(floor($number / 100000)) . ' Lakh ' . $this->convertNumberToWordsIndian($number % 100000);
+        }
+        return $this->convertNumberToWordsIndian(floor($number / 10000000)) . ' Crore ' . $this->convertNumberToWordsIndian($number % 10000000);
     }
     
 }
