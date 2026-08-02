@@ -65,12 +65,12 @@
 
         @foreach($payroll->payroll_employees as $ind => $emp)
             <tr style="{{ $ind % 2 == 0 ? '' : 'background-color: #f8fafc;' }}">
-                <td style="border: 1px solid #e2e8f0; text-align: center;">{{ $emp->employee->employee_code }}</td>
+                <td style="border: 1px solid #e2e8f0; text-align: center; mso-number-format:'\@';">{{ $emp->employee->employee_code }}</td>
                 <td style="border: 1px solid #e2e8f0;">{{ $emp->employee->first_name }} {{ $emp->employee->last_name }}</td>
-                <td style="border: 1px solid #e2e8f0; text-align: center;">{{ $emp->employee->pan ?? '-' }}</td>
-                <td style="border: 1px solid #e2e8f0; text-align: center;">{{ $emp->employee->uan ?? '-' }}</td>
-                <td style="border: 1px solid #e2e8f0; text-align: center;">{{ $emp->employee->pf ?? '-' }}</td>
-                <td style="border: 1px solid #e2e8f0; text-align: center;">{{ $emp->employee->esic ?? '-' }}</td>
+                <td style="border: 1px solid #e2e8f0; text-align: center; mso-number-format:'\@';">{{ $emp->employee->pan ?? '-' }}</td>
+                <td style="border: 1px solid #e2e8f0; text-align: center; mso-number-format:'\@';">{{ $emp->employee->uan ?? '-' }}</td>
+                <td style="border: 1px solid #e2e8f0; text-align: center; mso-number-format:'\@';">{{ $emp->employee->pf ?? '-' }}</td>
+                <td style="border: 1px solid #e2e8f0; text-align: center; mso-number-format:'\@';">{{ $emp->employee->esic ?? '-' }}</td>
                 <td style="border: 1px solid #e2e8f0; text-align: center;">{{ date('d-m-Y', strtotime($emp->employee->doj)) }}</td>
                 <td style="border: 1px solid #e2e8f0; text-align: center;">{{ $payroll->working_days }}</td>
                 <td style="border: 1px solid #e2e8f0; text-align: center; color: #e11d48;">{{ $emp->payroll_employee_attendances->lop }}</td>

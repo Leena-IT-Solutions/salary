@@ -6,13 +6,15 @@ use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Concerns\FromView;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
 use App\Models\Setting;
 use App\Models\Payroll;
 use App\Models\CompanyProfile;
 use App\Models\StatutoryCompliance;
 
-class CAExport implements FromView, WithTitle, ShouldAutoSize
+class CAExport implements FromView, WithTitle, ShouldAutoSize, WithColumnFormatting
 {
     /**
     * @return \Illuminate\Support\Collection
@@ -43,5 +45,16 @@ class CAExport implements FromView, WithTitle, ShouldAutoSize
     public function title(): string
     {
         return 'CA Report';
+    }
+
+    public function columnFormats(): array
+    {
+        return [
+            'A' => NumberFormat::FORMAT_TEXT,
+            'C' => NumberFormat::FORMAT_TEXT,
+            'D' => NumberFormat::FORMAT_TEXT,
+            'E' => NumberFormat::FORMAT_TEXT,
+            'F' => NumberFormat::FORMAT_TEXT,
+        ];
     }
 }
