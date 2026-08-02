@@ -52,10 +52,12 @@ class LoginController extends Controller
 
         $username = User::where('username', $request->user)->exists();
         $email = User::where('email', $request->user)->exists();
+        $mobile = User::where('mobile', $request->user)->exists();
 
         $name = null;
         if($username) { $name = "username"; }
-        if($email) { $name = "email"; }
+        elseif($email) { $name = "email"; }
+        elseif($mobile) { $name = "mobile"; }
 
         $user= [
             $name => $request->user,

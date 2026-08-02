@@ -17,7 +17,8 @@ class UserValidation implements ValidationRule
     {
         $username = User::where('username', $value)->exists();
         $email = User::where('email', $value)->exists();
-        if(!$username & !$email){
+        $mobile = User::where('mobile', $value)->exists();
+        if(!$username && !$email && !$mobile){
             $fail("Credentials do not match");
         }
     }
