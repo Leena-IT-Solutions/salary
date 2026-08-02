@@ -462,7 +462,7 @@ export default {
                 by: 'id',
                 order: 'desc',
                 rows: 10,
-                status: '',
+                status: 'current',
                 department_id: '',
                 designation_id: '',
             },
@@ -472,7 +472,7 @@ export default {
 
     computed: {
         hasActiveFilters() {
-            return this.params.status !== '' || 
+            return this.params.status !== 'current' || 
                    this.params.department_id !== '' || 
                    this.params.designation_id !== '' || 
                    (this.params.value && this.params.value.trim() !== '');
@@ -538,7 +538,7 @@ export default {
 
         clearFilters() {
             this.params.value = '';
-            this.params.status = '';
+            this.params.status = 'current';
             this.params.department_id = '';
             this.params.designation_id = '';
             this.search();
