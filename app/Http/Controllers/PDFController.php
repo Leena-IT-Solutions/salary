@@ -12,6 +12,9 @@ use App\Models\Setting;
 use App\Models\Payroll;
 use App\Models\CompanyProfile;
 use App\Models\StatutoryCompliance;
+use App\Models\EmployeeShift;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\AttendanceMachineController;
 use DB;
 
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -48,6 +51,31 @@ class PDFController extends Controller
             $dates[] = $value->format('Y-m-d');
             $dds[] = $value->format('d');
             $ddmmyyyys[] = $value->format('d-m-Y');
+        }
+
+        $eids = request()->has('eids') ? explode(',', request()->get('eids')) : Employee::active()->pluck('id')->toArray();
+
+        // Run LOP Evaluation
+        $settings = new SettingsController();
+        $amc = new AttendanceMachineController();
+        foreach($eids as $employee_id){
+            $shifts = EmployeeShift::where('employee_id', $employee_id)
+                ->whereBetween('dt', [$from, $to])
+                ->with(['working_shift', 'employee_attendance', 'special_days', 'leave', 'time_update', 'short_leave', 'on_duty'])
+                ->get()
+                ->keyBy('dt');
+
+            foreach($dates as $dd){
+                $employee_shift = $shifts->get($dd);
+                if ($employee_shift) {
+                    $req = new Request();
+                    $req->on_date = $dd;
+                    $req->employee_id = $employee_id;
+                    $req->employee_shift = $employee_shift;
+                    $req->settings = $settings;
+                    $amc->evalute($req);
+                }
+            }
         }
 
         $query = Employee::active();
@@ -89,6 +117,31 @@ class PDFController extends Controller
             $dates[] = $value->format('Y-m-d');
             $dds[] = $value->format('d');
             $ddmmyyyys[] = $value->format('d-m-Y');
+        }
+
+        $eidsArray = $eids ? explode(',', $eids) : Employee::active()->pluck('id')->toArray();
+
+        // Run LOP Evaluation
+        $settings = new SettingsController();
+        $amc = new AttendanceMachineController();
+        foreach($eidsArray as $employee_id){
+            $shifts = EmployeeShift::where('employee_id', $employee_id)
+                ->whereBetween('dt', [$from, $to])
+                ->with(['working_shift', 'employee_attendance', 'special_days', 'leave', 'time_update', 'short_leave', 'on_duty'])
+                ->get()
+                ->keyBy('dt');
+
+            foreach($dates as $dd){
+                $employee_shift = $shifts->get($dd);
+                if ($employee_shift) {
+                    $req = new Request();
+                    $req->on_date = $dd;
+                    $req->employee_id = $employee_id;
+                    $req->employee_shift = $employee_shift;
+                    $req->settings = $settings;
+                    $amc->evalute($req);
+                }
+            }
         }
 
         $query = Employee::active();
