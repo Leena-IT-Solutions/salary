@@ -4,10 +4,30 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Models\FinancialYear;
 
-Auth::routes(['verify' => true]);
+Route::get('/manifest.json', function () {
+    return response('', 404)
+        ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        ->header('Pragma', 'no-cache');
+});
 
-Route::get('/attendance/save', [App\Http\Controllers\AttendanceMachineController::class, 'save']);
-Route::post('/attendance/face_save', [App\Http\Controllers\AttendanceMachineController::class, 'faceSave']);
+Route::get('/sw.js', function () {
+    $script = <<<JS
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        self.registration.unregister().then(() => {
+            return self.clients.matchAll();
+        }).then((clients) => {
+            clients.forEach((client) => client.navigate(client.url));
+        })
+    );
+});
+JS;
+    return response($script, 200)
+        ->header('Content-Type', 'application/javascript')
+        ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        ->header('Pragma', 'no-cache');
+});
 
 Route::middleware(['auth', 'role'])->group(function () {
     /***********************************
