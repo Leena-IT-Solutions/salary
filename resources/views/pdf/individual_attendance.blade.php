@@ -4,7 +4,7 @@
     <title>Individual Attendance Report - {{ date('M Y', strtotime($from)) }}</title>
     <style>
         @page { 
-            margin: 8mm 20mm; 
+            margin: 6mm 15mm; 
             size: A4 portrait;
         }
         body { 
@@ -13,7 +13,7 @@
             line-height: 1.15;
             font-size: 7.5pt;
             margin: 0;
-            padding: 0;
+            padding: 0 5mm;
         }
         .page-wrapper {
             position: relative;
