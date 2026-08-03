@@ -3,7 +3,10 @@
 @section('head')
     <title>Attendance Audit Report</title>
     <style>
-        @page { margin: 10mm; }
+        @page { margin: 10mm 20mm; }
+        /* layouts.pdf's shared `* { margin: 0; }` reset resolves onto Dompdf's page-margin
+           computation and zeroes out the @page margin above unless re-asserted here. */
+        html { margin: 10mm 20mm; }
         body { font-family: 'Helvetica', sans-serif; color: #111827; background: #fff; }
         .report-header { border-bottom: 2px solid #1e3a5f; padding-bottom: 5mm; margin-bottom: 5mm; }
         .company-name { font-size: 6mm; font-weight: bold; color: #111827; }
