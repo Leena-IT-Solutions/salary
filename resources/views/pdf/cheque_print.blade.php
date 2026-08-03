@@ -32,21 +32,20 @@
             overflow: hidden;
         }
 
-        /* A/C PAYEE ONLY CROSSING STAMP (100% Symmetrical alignment) */
+        /* A/C PAYEE ONLY CROSSING STAMP (Exact Canva Vector Coordinates) */
         .ac-payee-stamp {
             position: absolute;
-            top: 9mm;
-            left: -3.5mm;
-            width: 28mm;
-            height: 6mm;
+            top: 8.8mm;
+            left: -3.6mm;
+            width: 25.1mm;
+            height: 4.3mm;
             border-top: 1.5px solid #000000;
             border-bottom: 1.5px solid #000000;
             text-align: center;
-            padding-top: 1.1mm;
-            box-sizing: border-box;
-            font-size: 7pt;
+            line-height: 4.3mm;
+            font-size: 6.5pt;
             font-weight: bold;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.2px;
             text-transform: uppercase;
             transform: rotate(-45deg);
             color: #000000;
