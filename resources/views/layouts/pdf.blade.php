@@ -7,10 +7,7 @@
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    @yield('head')
-
     <style>
-        @page { margin: 0; }
         body { 
             margin: 0;
             font-family: 'Helvetica', 'Arial', sans-serif;
@@ -95,6 +92,7 @@
         }
     </style>
 
+    @yield('head')
 </head>
 <body>
     <div id="app">
