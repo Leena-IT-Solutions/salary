@@ -32,10 +32,10 @@
             overflow: hidden;
         }
 
-        /* A/C PAYEE ONLY CROSSING STAMP */
+        /* A/C PAYEE ONLY CROSSING STAMP (-45deg at x-axis 0mm, top 7mm) */
         .ac-payee-stamp {
             position: absolute;
-            top: 8mm;
+            top: 7mm;
             left: 0mm;
             font-size: 8pt;
             font-weight: bold;
@@ -48,17 +48,18 @@
             color: #000000;
         }
 
-        /* DATE DIGITS GRID (Pre-printed box alignment: 8 digits spaced) */
+        /* DATE DIGITS GRID: Top 5.5mm, Left 149mm, Width 45mm (8 boxes, each 5.6mm) */
         .cheque-date-grid {
             position: absolute;
-            top: 10.5mm;
-            left: 147mm;
+            top: 5.5mm;
+            left: 149mm;
+            width: 45mm;
             height: 6mm;
             line-height: 6mm;
         }
         .date-digit {
             display: inline-block;
-            width: 5.4mm;
+            width: 5.6mm;
             text-align: center;
             font-size: 10.5pt;
             font-weight: bold;
@@ -66,12 +67,12 @@
             color: #000000;
         }
 
-        /* PAYEE NAME (Pay line alignment) */
+        /* PAYEE NAME: Pay line at Top 24mm, Left 18mm */
         .payee-name {
             position: absolute;
-            top: 18mm;
-            left: 28mm;
-            width: 145mm;
+            top: 20.5mm;
+            left: 18mm;
+            width: 128mm;
             font-size: 11pt;
             font-weight: bold;
             color: #000000;
@@ -79,26 +80,28 @@
             letter-spacing: 0.3px;
         }
 
-        /* AMOUNT IN WORDS (Rupees line alignment) */
+        /* AMOUNT IN WORDS: Rupees line at Top 33mm, Left 33mm */
         .rupees-words {
             position: absolute;
-            top: 26.5mm;
-            left: 32mm;
-            width: 140mm;
+            top: 29.5mm;
+            left: 33mm;
+            width: 160mm;
             font-size: 10.5pt;
             font-weight: bold;
             color: #000000;
-            line-height: 1.4;
+            line-height: 1.3;
             letter-spacing: 0.2px;
         }
 
-        /* AMOUNT IN FIGURES (₹ Box alignment) */
+        /* AMOUNT IN FIGURES: ₹ Box at Top 33mm, Left 154mm (153mm + 1mm offset), Width 37mm, Height 8.5mm */
         .amount-figures {
             position: absolute;
-            top: 48mm;
-            left: 148mm;
-            width: 48mm;
-            font-size: 11.5pt;
+            top: 33mm;
+            left: 154mm;
+            width: 37mm;
+            height: 8.5mm;
+            line-height: 8.5mm;
+            font-size: 11pt;
             font-weight: bold;
             color: #000000;
             letter-spacing: 0.5px;
@@ -119,22 +122,22 @@
             <!-- 1. A/C PAYEE ONLY CROSSING STAMP -->
             <div class="ac-payee-stamp">A/C PAYEE ONLY</div>
 
-            <!-- 2. DATE DIGITS GRID (Aligned with pre-printed DDMMYYYY boxes) -->
+            <!-- 2. DATE DIGITS GRID (Top: 5.5mm, Left: 149mm, Width: 45mm) -->
             <div class="cheque-date-grid">
                 <span class="date-digit">{{ $d1 }}</span><span class="date-digit">{{ $d2 }}</span><span class="date-digit">{{ $m1 }}</span><span class="date-digit">{{ $m2 }}</span><span class="date-digit">{{ $y1 }}</span><span class="date-digit">{{ $y2 }}</span><span class="date-digit">{{ $y3 }}</span><span class="date-digit">{{ $y4 }}</span>
             </div>
 
-            <!-- 3. PAYEE NAME (Aligned with pre-printed 'Pay' line) -->
+            <!-- 3. PAYEE NAME (Top: 24mm line, Left: 18mm) -->
             <div class="payee-name">
                 {{ $emp->employee->first_name }} {{ $emp->employee->middle_name }} {{ $emp->employee->last_name }}
             </div>
 
-            <!-- 4. AMOUNT IN WORDS (Aligned with pre-printed 'Rupees' line) -->
+            <!-- 4. AMOUNT IN WORDS (Top: 33mm line, Left: 33mm) -->
             <div class="rupees-words">
                 *** {{ $emp->amount_str }} Rupees Only ***
             </div>
 
-            <!-- 5. AMOUNT IN FIGURES (Aligned inside pre-printed '₹' box) -->
+            <!-- 5. AMOUNT IN FIGURES (Top: 33mm, Left: 154mm, Width: 38.5mm) -->
             <div class="amount-figures">
                 *** {{ number_format($emp->net_payable_amount, 2) }} /-
             </div>
