@@ -30,47 +30,47 @@
         }
         
         /* Header Section */
-        .report-header { 
-            border-bottom: 1.5px solid #d1d5db; 
-            padding-bottom: 3mm; 
-            margin-bottom: 4mm; 
+        .report-header {
+            border-bottom: 1.5px solid #d1d5db;
+            padding-bottom: 2mm;
+            margin-bottom: 3mm;
         }
         .company-name { font-size: 15pt; font-weight: bold; color: #111827; }
         .report-title { font-size: 8.5pt; color: #374151; text-transform: uppercase; letter-spacing: 1px; }
         
         /* Info Cards */
-        .info-grid { 
-            background: #f9fafb; 
+        .info-grid {
+            background: #f9fafb;
             border: 1px solid #d1d5db;
-            padding: 3mm 4mm; 
-            border-radius: 1mm; 
-            margin-bottom: 4mm; 
+            padding: 2mm 4mm;
+            border-radius: 1mm;
+            margin-bottom: 3mm;
         }
         .info-label { font-size: 6.5pt; color: #4b5563; text-transform: uppercase; margin-bottom: 0.3mm; }
         .info-value { font-size: 9.5pt; font-weight: bold; color: #111827; }
         
         /* Matrix Table */
-        .attendance-table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin-bottom: 4mm;
+        .attendance-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 3mm;
             table-layout: fixed;
         }
-        .attendance-table th { 
-            background: #f3f4f6; 
-            color: #111827; 
-            font-weight: bold; 
-            text-align: left; 
-            padding: 1.2mm 1mm; 
-            border: 1px solid #d1d5db; 
-            font-size: 7pt; 
-            text-transform: uppercase; 
+        .attendance-table th {
+            background: #f3f4f6;
+            color: #111827;
+            font-weight: bold;
+            text-align: left;
+            padding: 0.8mm 1mm;
+            border: 1px solid #d1d5db;
+            font-size: 7pt;
+            text-transform: uppercase;
         }
-        .attendance-table td { 
-            padding: 1.2mm 1mm; 
-            border: 1px solid #d1d5db; 
-            font-size: 7pt; 
-            vertical-align: middle; 
+        .attendance-table td {
+            padding: 0.8mm 1mm;
+            border: 1px solid #d1d5db;
+            font-size: 7pt;
+            vertical-align: middle;
             color: #111827;
         }
         
@@ -105,7 +105,7 @@
         }
         .stat-card {
             border: 1px solid #d1d5db;
-            padding: 2.2mm 1mm;
+            padding: 1.6mm 1mm;
             text-align: center;
             background: #ffffff;
         }
@@ -182,21 +182,21 @@
 
     <!-- Salary Breakup Table -->
     @if($employee->employee_salary)
-    <table style="width: 100%; margin-bottom: 4mm; font-size: 7pt; border-collapse: collapse; border: 1px solid #d1d5db; table-layout: fixed;">
+    <table style="width: 100%; margin-bottom: 2.5mm; font-size: 7pt; border-collapse: collapse; border: 1px solid #d1d5db; table-layout: fixed;">
         <thead>
             <tr style="background-color: #f8fafc;">
-                <th style="padding: 1.2mm 1.8mm; text-align: left; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 6.5pt; width: 25%;">Salary Parameter</th>
-                <th style="padding: 1.2mm 1.8mm; text-align: center; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 6.5pt; width: 25%;">Monthly CTC</th>
-                <th style="padding: 1.2mm 1.8mm; text-align: center; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 6.5pt; width: 25%;">Gross Salary</th>
-                <th style="padding: 1.2mm 1.8mm; text-align: center; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 6.5pt; width: 25%;">Net Salary</th>
+                <th style="padding: 0.8mm 1.8mm; text-align: left; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 6.5pt; width: 25%;">Salary Parameter</th>
+                <th style="padding: 0.8mm 1.8mm; text-align: center; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 6.5pt; width: 25%;">Monthly CTC</th>
+                <th style="padding: 0.8mm 1.8mm; text-align: center; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 6.5pt; width: 25%;">Gross Salary</th>
+                <th style="padding: 0.8mm 1.8mm; text-align: center; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 6.5pt; width: 25%;">Net Salary</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td style="padding: 1.2mm 1.8mm; font-weight: bold; border: 1px solid #d1d5db; color: #111827; text-align: left;">Standard Structure</td>
-                <td style="padding: 1.2mm 1.8mm; text-align: center; font-weight: bold; border: 1px solid #d1d5db; color: #111827;">Rs. {{ number_format($employee->employee_salary->ctc, 2) }}</td>
-                <td style="padding: 1.2mm 1.8mm; text-align: center; font-weight: bold; border: 1px solid #d1d5db; color: #111827;">Rs. {{ number_format($employee->employee_salary->gross_pay, 2) }}</td>
-                <td style="padding: 1.2mm 1.8mm; text-align: center; font-weight: bold; border: 1px solid #d1d5db; color: #111827;">Rs. {{ number_format($employee->employee_salary->net_pay, 2) }}</td>
+                <td style="padding: 0.8mm 1.8mm; font-weight: bold; border: 1px solid #d1d5db; color: #111827; text-align: left;">Standard Structure</td>
+                <td style="padding: 0.8mm 1.8mm; text-align: center; font-weight: bold; border: 1px solid #d1d5db; color: #111827;">Rs. {{ number_format($employee->employee_salary->ctc, 2) }}</td>
+                <td style="padding: 0.8mm 1.8mm; text-align: center; font-weight: bold; border: 1px solid #d1d5db; color: #111827;">Rs. {{ number_format($employee->employee_salary->gross_pay, 2) }}</td>
+                <td style="padding: 0.8mm 1.8mm; text-align: center; font-weight: bold; border: 1px solid #d1d5db; color: #111827;">Rs. {{ number_format($employee->employee_salary->net_pay, 2) }}</td>
             </tr>
         </tbody>
     </table>
