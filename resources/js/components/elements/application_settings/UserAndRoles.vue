@@ -33,7 +33,8 @@
                                 <div class="row g-3">
                                     <forms-text-field name="name" label="Full Legal Name" v-model="item.name" placeholder="John Doe" classes="col-md-6"></forms-text-field>
                                     <forms-text-field name="username" label="System Username" v-model="item.username" placeholder="jdoe_admin" classes="col-md-6"></forms-text-field>
-                                    <forms-text-field name="email" label="Professional Email" v-model="item.email" placeholder="john@company.com" classes="col-12"></forms-text-field>
+                                    <forms-text-field name="email" label="Professional Email" v-model="item.email" placeholder="john@company.com" classes="col-md-6"></forms-text-field>
+                                    <forms-text-field name="mobile" label="Mobile Number" v-model="item.mobile" placeholder="9876543210" classes="col-md-6"></forms-text-field>
                                 </div>
                             </div>
                         </div>
@@ -120,7 +121,10 @@
                                     </div>
                                     <div>
                                         <div class="fw-bold text-dark fs-6">{{ row.name || 'Unnamed User' }}</div>
-                                        <div class="text-muted small">{{ row.email || 'No email' }}</div>
+                                        <div class="text-muted small">
+                                            {{ row.email || 'No email' }}
+                                            <span v-if="row.mobile" class="ms-2 text-primary fw-medium"><i class="bi bi-telephone me-1"></i>{{ row.mobile }}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </td>
@@ -181,6 +185,7 @@ export default {
                 id: null,
                 name: null,
                 email: null,
+                mobile: null,
                 username: null,
                 role: 'Employee',
                 status: 'Active',
@@ -228,6 +233,7 @@ export default {
             this.item.id = null;
             this.item.name = null;
             this.item.email = null;
+            this.item.mobile = null;
             this.item.username = null;
             this.item.role = 'Employee';
             this.item.status = 'Active';
@@ -238,6 +244,7 @@ export default {
             this.item.id = item.id;
             this.item.name = item.name;
             this.item.email = item.email;
+            this.item.mobile = item.mobile;
             this.item.username = item.username;
             this.item.role = item.role;
             this.item.status = item.status;
