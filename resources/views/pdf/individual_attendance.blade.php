@@ -4,7 +4,7 @@
     <title>Individual Attendance Report - {{ date('M Y', strtotime($from)) }}</title>
     <style>
         @page { 
-            margin: 6mm 15mm; 
+            margin: 10mm 20mm; 
             size: A4 portrait;
         }
         body { 
@@ -13,7 +13,7 @@
             line-height: 1.15;
             font-size: 7.5pt;
             margin: 0;
-            padding: 0 5mm;
+            padding: 0;
         }
         .page-wrapper {
             position: relative;
@@ -27,8 +27,8 @@
         /* Header Section */
         .report-header { 
             border-bottom: 1.5px solid #d1d5db; 
-            padding-bottom: 2.5mm; 
-            margin-bottom: 3.5mm; 
+            padding-bottom: 3mm; 
+            margin-bottom: 4mm; 
         }
         .company-name { font-size: 15pt; font-weight: bold; color: #111827; }
         .report-title { font-size: 8.5pt; color: #374151; text-transform: uppercase; letter-spacing: 1px; }
@@ -37,9 +37,9 @@
         .info-grid { 
             background: #f9fafb; 
             border: 1px solid #d1d5db;
-            padding: 2.5mm 3.5mm; 
+            padding: 3mm 4mm; 
             border-radius: 1mm; 
-            margin-bottom: 3.5mm; 
+            margin-bottom: 4mm; 
         }
         .info-label { font-size: 6.5pt; color: #4b5563; text-transform: uppercase; margin-bottom: 0.3mm; }
         .info-value { font-size: 9.5pt; font-weight: bold; color: #111827; }
@@ -48,7 +48,7 @@
         .attendance-table { 
             width: 100%; 
             border-collapse: collapse; 
-            margin-bottom: 3.5mm;
+            margin-bottom: 4mm;
             table-layout: fixed;
         }
         .attendance-table th { 
@@ -56,13 +56,13 @@
             color: #111827; 
             font-weight: bold; 
             text-align: left; 
-            padding: 1mm 1mm; 
+            padding: 1.2mm 1mm; 
             border: 1px solid #d1d5db; 
             font-size: 7pt; 
             text-transform: uppercase; 
         }
         .attendance-table td { 
-            padding: 1mm 1mm; 
+            padding: 1.2mm 1mm; 
             border: 1px solid #d1d5db; 
             font-size: 7pt; 
             vertical-align: middle; 
@@ -95,24 +95,17 @@
         /* Stats Section */
         .stats-grid { 
             width: 100%; 
-            margin-bottom: 4mm;
+            margin-bottom: 2mm;
             border-collapse: collapse;
         }
         .stat-card {
             border: 1px solid #d1d5db;
-            padding: 2mm 1mm;
+            padding: 2.2mm 1mm;
             text-align: center;
             background: #ffffff;
         }
-        .stat-card .val { font-size: 10pt; font-weight: bold; color: #111827; display: block; line-height: 1; }
+        .stat-card .val { font-size: 10.5pt; font-weight: bold; color: #111827; display: block; line-height: 1; }
         .stat-card .lbl { font-size: 6pt; color: #374151; text-transform: uppercase; font-weight: bold; margin-top: 0.8mm; display: block; }
-        
-        /* Footer */
-        .signature-section { 
-            margin-top: 6mm;
-            border-top: 1px solid #e5e7eb;
-            padding-top: 4mm;
-        }
         
         .row-hover:nth-child(even) { background-color: #f9fafb; }
         .text-danger { color: #dc2626; }
@@ -184,21 +177,21 @@
 
     <!-- Salary Breakup Table -->
     @if($employee->employee_salary)
-    <table style="width: 100%; margin-bottom: 3.5mm; font-size: 7pt; border-collapse: collapse; border: 1px solid #d1d5db; table-layout: fixed;">
+    <table style="width: 100%; margin-bottom: 4mm; font-size: 7pt; border-collapse: collapse; border: 1px solid #d1d5db; table-layout: fixed;">
         <thead>
             <tr style="background-color: #f8fafc;">
-                <th style="padding: 1mm 1.8mm; text-align: left; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 6.5pt; width: 25%;">Salary Parameter</th>
-                <th style="padding: 1mm 1.8mm; text-align: center; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 6.5pt; width: 25%;">Monthly CTC</th>
-                <th style="padding: 1mm 1.8mm; text-align: center; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 6.5pt; width: 25%;">Gross Salary</th>
-                <th style="padding: 1mm 1.8mm; text-align: center; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 6.5pt; width: 25%;">Net Salary</th>
+                <th style="padding: 1.2mm 1.8mm; text-align: left; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 6.5pt; width: 25%;">Salary Parameter</th>
+                <th style="padding: 1.2mm 1.8mm; text-align: center; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 6.5pt; width: 25%;">Monthly CTC</th>
+                <th style="padding: 1.2mm 1.8mm; text-align: center; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 6.5pt; width: 25%;">Gross Salary</th>
+                <th style="padding: 1.2mm 1.8mm; text-align: center; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 6.5pt; width: 25%;">Net Salary</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td style="padding: 1mm 1.8mm; font-weight: bold; border: 1px solid #d1d5db; color: #111827; text-align: left;">Standard Structure</td>
-                <td style="padding: 1mm 1.8mm; text-align: center; font-weight: bold; border: 1px solid #d1d5db; color: #111827;">Rs. {{ number_format($employee->employee_salary->ctc, 2) }}</td>
-                <td style="padding: 1mm 1.8mm; text-align: center; font-weight: bold; border: 1px solid #d1d5db; color: #111827;">Rs. {{ number_format($employee->employee_salary->gross_pay, 2) }}</td>
-                <td style="padding: 1mm 1.8mm; text-align: center; font-weight: bold; border: 1px solid #d1d5db; color: #111827;">Rs. {{ number_format($employee->employee_salary->net_pay, 2) }}</td>
+                <td style="padding: 1.2mm 1.8mm; font-weight: bold; border: 1px solid #d1d5db; color: #111827; text-align: left;">Standard Structure</td>
+                <td style="padding: 1.2mm 1.8mm; text-align: center; font-weight: bold; border: 1px solid #d1d5db; color: #111827;">Rs. {{ number_format($employee->employee_salary->ctc, 2) }}</td>
+                <td style="padding: 1.2mm 1.8mm; text-align: center; font-weight: bold; border: 1px solid #d1d5db; color: #111827;">Rs. {{ number_format($employee->employee_salary->gross_pay, 2) }}</td>
+                <td style="padding: 1.2mm 1.8mm; text-align: center; font-weight: bold; border: 1px solid #d1d5db; color: #111827;">Rs. {{ number_format($employee->employee_salary->net_pay, 2) }}</td>
             </tr>
         </tbody>
     </table>
@@ -373,7 +366,7 @@
             <td style="width: 14.28%; padding: 0.5mm;">
                 <div class="stat-card" style="border-top: 1mm solid #06b6d4;"><span class="val">{{ $halfDays }}</span><span class="lbl">Half Days</span></div>
             </td>
-            <td style="width: 14.28%; padding: 0.5mm;">
+            <td style="width: 14.28%; padding: 0.4mm;">
                 <div class="stat-card" style="border-top: 1mm solid #86198f;"><span class="val">{{ $onDutyDays }}</span><span class="lbl">On Duty</span></div>
             </td>
             <td style="width: 14.28%; padding: 0.5mm;">
@@ -393,21 +386,6 @@
             </td>
         </tr>
     </table>
-
-    <!-- Signatures -->
-    <div class="signature-section">
-        <table style="width: 100%;" class="table-borderless">
-            <tr>
-                <td style="width: 30%; border-top: 0.2mm dashed #9ca3af; padding-top: 2mm; text-align: center;">
-                    <div style="font-size: 7pt; color: #374151; text-transform: uppercase;">Employee Acknowledgment</div>
-                </td>
-                <td style="width: 35%;"></td>
-                <td style="width: 30%; border-top: 0.2mm dashed #9ca3af; padding-top: 2mm; text-align: center;">
-                    <div style="font-size: 7pt; color: #374151; text-transform: uppercase;">Head of Department / HR</div>
-                </td>
-            </tr>
-        </table>
-    </div>
 </div>
 @endforeach
 
