@@ -9,7 +9,7 @@
         }
         body { 
             font-family: 'Helvetica', sans-serif; 
-            color: #1e293b; 
+            color: #111827; 
             line-height: 1.1;
             font-size: 8pt;
             margin: 0;
@@ -26,23 +26,23 @@
         
         /* Header Section */
         .report-header { 
-            border-bottom: 1px solid #e2e8f0; 
+            border-bottom: 1px solid #d1d5db; 
             padding-bottom: 3mm; 
             margin-bottom: 4mm; 
         }
-        .company-name { font-size: 14pt; font-weight: bold; color: #4338ca; }
-        .report-title { font-size: 9pt; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+        .company-name { font-size: 14pt; font-weight: bold; color: #111827; }
+        .report-title { font-size: 9pt; color: #374151; text-transform: uppercase; letter-spacing: 1px; }
         
         /* Info Cards */
         .info-grid { 
-            background: #f8fafc; 
-            border: 1px solid #e2e8f0;
+            background: #f9fafb; 
+            border: 1px solid #d1d5db;
             padding: 3mm; 
             border-radius: 1mm; 
             margin-bottom: 4mm; 
         }
-        .info-label { font-size: 6.5pt; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.5mm; }
-        .info-value { font-size: 9pt; font-weight: bold; color: #1e293b; }
+        .info-label { font-size: 6.5pt; color: #4b5563; text-transform: uppercase; margin-bottom: 0.5mm; }
+        .info-value { font-size: 9pt; font-weight: bold; color: #111827; }
         
         /* Matrix Table */
         .attendance-table { 
@@ -52,40 +52,42 @@
             table-layout: fixed;
         }
         .attendance-table th { 
-            background: #f1f5f9; 
-            color: #475569; 
+            background: #f3f4f6; 
+            color: #111827; 
             font-weight: bold; 
             text-align: left; 
             padding: 1mm 1mm; 
-            border: 1px solid #e2e8f0; 
+            border: 1px solid #d1d5db; 
             font-size: 7pt; 
             text-transform: uppercase; 
         }
         .attendance-table td { 
             padding: 0.8mm 1mm; 
-            border: 1px solid #e2e8f0; 
+            border: 1px solid #d1d5db; 
             font-size: 7.2pt; 
             vertical-align: middle; 
+            color: #111827;
         }
         
         /* Badges */
         .badge { padding: 0.4mm 1.5mm; border-radius: 0.5mm; font-weight: bold; font-size: 6.5pt; display: inline-block; }
-        .bg-present { background: #dcfce7; color: #166534; }
+        .bg-present { background: #dcfce7; color: #065f46; }
         .bg-absent { background: #fee2e2; color: #991b1b; }
-        .bg-weekoff { background: #f1f5f9; color: #475569; }
-        .bg-leave { background: #e0e7ff; color: #3730a3; }
-        .bg-onduty { background: #fae8ff; color: #86198f; }
+        .bg-weekoff { background: #f3f4f6; color: #374151; }
+        .bg-leave { background: #e0e7ff; color: #312e81; }
+        .bg-onduty { background: #fae8ff; color: #701a75; }
         
         .time-badge { 
             background: #ffffff; 
-            border: 0.1mm solid #e2e8f0;
-            color: #4338ca; 
+            border: 0.1mm solid #d1d5db;
+            color: #1e3a5f; 
             padding: 0.3mm 1mm; 
             border-radius: 0.5mm; 
             margin-right: 0.5mm; 
             font-size: 6.5pt; 
             display: inline-block; 
             font-family: monospace;
+            font-weight: bold;
         }
         
         /* Stats Section */
@@ -94,12 +96,12 @@
             margin-bottom: 6mm;
         }
         .stat-card {
-            border: 1px solid #e2e8f0;
+            border: 1px solid #d1d5db;
             padding: 2.5mm;
             text-align: center;
         }
-        .stat-card .val { font-size: 11pt; font-weight: bold; color: #1e293b; display: block; }
-        .stat-card .lbl { font-size: 6.5pt; color: #64748b; text-transform: uppercase; }
+        .stat-card .val { font-size: 11pt; font-weight: bold; color: #111827; display: block; }
+        .stat-card .lbl { font-size: 6.5pt; color: #374151; text-transform: uppercase; }
         
         /* Footer */
         .signature-section { 
@@ -108,9 +110,9 @@
             padding-top: 10mm;
         }
         
-        .row-hover:nth-child(even) { background-color: #fafbfc; }
-        .text-danger { color: #ef4444; }
-        .text-primary { color: #6366f1; }
+        .row-hover:nth-child(even) { background-color: #f9fafb; }
+        .text-danger { color: #991b1b; }
+        .text-primary { color: #1e3a5f; }
         .fw-bold { font-weight: bold; }
         
         /* Indicator Icons */
@@ -124,9 +126,9 @@
             margin-right: 1mm;
             font-weight: bold;
         }
-        .ind-tu { background: #fff7ed; color: #9a3412; border: 0.1mm solid #ffedd5; }
-        .ind-sl { background: #f0f9ff; color: #075985; border: 0.1mm solid #e0f2fe; }
-        .ind-ot { background: #fdf2f8; color: #9d174d; border: 0.1mm solid #fce7f3; }
+        .ind-tu { background: #fff7ed; color: #7c2d12; border: 0.1mm solid #ffedd5; }
+        .ind-sl { background: #f0f9ff; color: #0c4a6e; border: 0.1mm solid #e0f2fe; }
+        .ind-ot { background: #fdf2f8; color: #831843; border: 0.1mm solid #fce7f3; }
     </style>
 @endsection
 
@@ -161,17 +163,17 @@
                 <td style="width: 33%;">
                     <div class="info-label">Employee Profile</div>
                     <div class="info-value">{{ $employee->first_name }} {{ $employee->last_name }}</div>
-                    <div style="font-size: 7pt; color: #64748b;">#{{ $employee->employee_code }} | {{ $employee->employee_department->department->department ?? 'N/A' }}</div>
+                    <div style="font-size: 7pt; color: #374151;">#{{ $employee->employee_code }} | {{ $employee->employee_department->department->department ?? 'N/A' }}</div>
                 </td>
                 <td style="width: 33%; text-align: center;">
                     <div class="info-label">Reporting Period</div>
                     <div class="info-value">{{ date('01 M Y', strtotime($from)) }} - {{ date('t M Y', strtotime($from)) }}</div>
-                    <div style="font-size: 7pt; color: #64748b;">(Generated on: {{ date('d-m-Y H:i') }})</div>
+                    <div style="font-size: 7pt; color: #374151;">(Generated on: {{ date('d-m-Y H:i') }})</div>
                 </td>
                 <td style="width: 33%; text-align: right;">
                     <div class="info-label">Working Shift</div>
                     <div class="info-value">{{ $employee->working_shift->shift_name ?? 'Standard' }}</div>
-                    <div style="font-size: 7pt; color: #64748b;">Timing: {{ $employee->working_shift->in ?? '00:00' }} - {{ $employee->working_shift->out ?? '00:00' }}</div>
+                    <div style="font-size: 7pt; color: #374151;">Timing: {{ $employee->working_shift->in ?? '00:00' }} - {{ $employee->working_shift->out ?? '00:00' }}</div>
                 </td>
             </tr>
         </table>
@@ -182,18 +184,18 @@
     <table style="width: 100%; margin-bottom: 4mm; font-size: 7.5pt; border-collapse: collapse; border: 1px solid #e2e8f0; table-layout: fixed;">
         <thead>
             <tr style="background-color: #f8fafc;">
-                <th style="padding: 1.2mm 2mm; text-align: left; color: #475569; font-weight: bold; border: 1px solid #e2e8f0; text-transform: uppercase; font-size: 7pt; width: 25%;">Salary Parameter</th>
-                <th style="padding: 1.2mm 2mm; text-align: center; color: #475569; font-weight: bold; border: 1px solid #e2e8f0; text-transform: uppercase; font-size: 7pt; width: 25%;">Monthly CTC</th>
-                <th style="padding: 1.2mm 2mm; text-align: center; color: #475569; font-weight: bold; border: 1px solid #e2e8f0; text-transform: uppercase; font-size: 7pt; width: 25%;">Gross Salary</th>
-                <th style="padding: 1.2mm 2mm; text-align: center; color: #475569; font-weight: bold; border: 1px solid #e2e8f0; text-transform: uppercase; font-size: 7pt; width: 25%;">Net Salary</th>
+            <th style="padding: 1.2mm 2mm; text-align: left; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 7pt; width: 25%;">Salary Parameter</th>
+                <th style="padding: 1.2mm 2mm; text-align: center; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 7pt; width: 25%;">Monthly CTC</th>
+                <th style="padding: 1.2mm 2mm; text-align: center; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 7pt; width: 25%;">Gross Salary</th>
+                <th style="padding: 1.2mm 2mm; text-align: center; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 7pt; width: 25%;">Net Salary</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td style="padding: 1.2mm 2mm; font-weight: bold; border: 1px solid #e2e8f0; color: #1e293b; text-align: left;">Standard Structure</td>
-                <td style="padding: 1.2mm 2mm; text-align: center; font-weight: bold; border: 1px solid #e2e8f0; color: #4338ca;">Rs. {{ number_format($employee->employee_salary->ctc, 2) }}</td>
-                <td style="padding: 1.2mm 2mm; text-align: center; font-weight: bold; border: 1px solid #e2e8f0; color: #1e293b;">Rs. {{ number_format($employee->employee_salary->gross_pay, 2) }}</td>
-                <td style="padding: 1.2mm 2mm; text-align: center; font-weight: bold; border: 1px solid #e2e8f0; color: #10b981;">Rs. {{ number_format($employee->employee_salary->net_pay, 2) }}</td>
+                <td style="padding: 1.2mm 2mm; font-weight: bold; border: 1px solid #d1d5db; color: #111827; text-align: left;">Standard Structure</td>
+                <td style="padding: 1.2mm 2mm; text-align: center; font-weight: bold; border: 1px solid #d1d5db; color: #111827;">Rs. {{ number_format($employee->employee_salary->ctc, 2) }}</td>
+                <td style="padding: 1.2mm 2mm; text-align: center; font-weight: bold; border: 1px solid #d1d5db; color: #111827;">Rs. {{ number_format($employee->employee_salary->gross_pay, 2) }}</td>
+                <td style="padding: 1.2mm 2mm; text-align: center; font-weight: bold; border: 1px solid #d1d5db; color: #111827;">Rs. {{ number_format($employee->employee_salary->net_pay, 2) }}</td>
             </tr>
         </tbody>
     </table>
@@ -224,7 +226,7 @@
                     $es = $employee->employee_shifts->get($date);
                 @endphp
                 <tr class="row-hover">
-                    <td class="fw-bold">{{ date('d M Y', strtotime($date)) }} <span style="color: #94a3b8; font-weight: normal; font-size: 6.5pt;">({{ date('D', strtotime($date)) }})</span></td>
+                    <td class="fw-bold">{{ date('d M Y', strtotime($date)) }} <span style="color: #6b7280; font-weight: normal; font-size: 6.5pt;">({{ date('D', strtotime($date)) }})</span></td>
                     <td>
                         @if($es)
                             @php
@@ -236,7 +238,7 @@
                             @endphp
                             <span class="badge {{ $statusClass }}">{{ $es->status }}</span>
                         @else
-                            <span style="color: #cbd5e1;">-</span>
+                            <span style="color: #9ca3af;">-</span>
                         @endif
                     </td>
                     <td>
@@ -305,7 +307,7 @@
                 <div class="stat-card" style="border-top: 1mm solid #f59e0b;"><span class="val">{{ $totalLate }}m</span><span class="lbl">Late Ad.</span></div>
             </td>
             <td style="width:11%; padding: 0.5mm;">
-                <div class="stat-card" style="background: #f8fafc; border: 1px solid #4338ca;"><span class="val" style="color: #4338ca;">{{ $totalLop }}</span><span class="lbl">Total LOP</span></div>
+                <div class="stat-card" style="background: #f9fafb; border: 1px solid #1e3a5f;"><span class="val" style="color: #111827;">{{ $totalLop }}</span><span class="lbl">Total LOP</span></div>
             </td>
         </tr>
     </table>
@@ -315,11 +317,11 @@
         <table style="width: 100%;" class="table-borderless">
             <tr>
                 <td style="width: 30%; border-top: 0.2mm dashed #cbd5e1; padding-top: 2mm; text-align: center;">
-                    <div style="font-size: 7pt; color: #64748b; text-transform: uppercase;">Employee Acknowledgment</div>
+                    <div style="font-size: 7pt; color: #374151; text-transform: uppercase;">Employee Acknowledgment</div>
                 </td>
                 <td style="width: 35%;"></td>
-                <td style="width: 30%; border-top: 0.2mm dashed #cbd5e1; padding-top: 2mm; text-align: center;">
-                    <div style="font-size: 7pt; color: #64748b; text-transform: uppercase;">Head of Department / HR</div>
+                <td style="width: 30%; border-top: 0.2mm dashed #9ca3af; padding-top: 2mm; text-align: center;">
+                    <div style="font-size: 7pt; color: #374151; text-transform: uppercase;">Head of Department / HR</div>
                 </td>
             </tr>
         </table>
