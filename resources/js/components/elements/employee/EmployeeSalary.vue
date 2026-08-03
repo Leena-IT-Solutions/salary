@@ -274,6 +274,14 @@ export default {
         startCalculation(){
             this.item.total_gross_percentage = 0;
             this.item.basic_pay = 0;
+            this.item.checking_gross_pay = 0;
+            this.item.new_checking_gross_pay = 0;
+            this.item.gross_pay = 0;
+            this.item.net_pay = 0;
+            this.item.remaining_amount = 0;
+            this.item.per_hour = 0;
+            this.item.per_minute = 0;
+            this.item.employer_contribution = 0;
             if(this.item.ctc > 0 && this.item.salary_group_id){
                 this.getSalaryComponents();
             }
@@ -348,6 +356,7 @@ export default {
             });
 
             this.item.checking_gross_pay = this.item.ctc - this.calculateEmployerContribution();
+            this.item.new_checking_gross_pay = this.item.checking_gross_pay; // safe default; loop below only adjusts it further when applicable
 
             this.statutories.forEach(row => {
                 if(row.is_active && row.is_part_of_salary){
