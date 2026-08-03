@@ -32,20 +32,20 @@
             overflow: hidden;
         }
 
-        /* A/C PAYEE ONLY CROSSING STAMP (-45deg at x-axis 0mm, top 7mm) */
+        /* A/C PAYEE ONLY CROSSING STAMP (27mm top/left intercept, 5mm line gap) */
         .ac-payee-stamp {
             position: absolute;
-            top: 7mm;
-            left: -2mm;
+            top: 13mm;
+            left: -5mm;
             width: 38mm;
-            height: 7mm;
+            height: 5mm;
             border-top: 1.5px solid #000000;
             border-bottom: 1.5px solid #000000;
             text-align: center;
-            line-height: 7mm;
-            font-size: 8pt;
+            line-height: 5mm;
+            font-size: 7.5pt;
             font-weight: bold;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
             transform: rotate(-45deg);
             color: #000000;
