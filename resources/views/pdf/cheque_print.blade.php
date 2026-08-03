@@ -36,13 +36,16 @@
         .ac-payee-stamp {
             position: absolute;
             top: 7mm;
-            left: 0mm;
+            left: -2mm;
+            width: 38mm;
+            height: 7mm;
+            border-top: 1.5px solid #000000;
+            border-bottom: 1.5px solid #000000;
+            text-align: center;
+            line-height: 7mm;
             font-size: 8pt;
             font-weight: bold;
             letter-spacing: 1px;
-            border-top: 1.5px solid #000000;
-            border-bottom: 1.5px solid #000000;
-            padding: 1mm 2.5mm;
             text-transform: uppercase;
             transform: rotate(-45deg);
             color: #000000;
