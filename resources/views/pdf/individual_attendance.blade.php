@@ -3,11 +3,16 @@
 @section('head')
     <title>Individual Attendance Report - {{ date('M Y', strtotime($from)) }}</title>
     <style>
-        @page { 
-            margin: 10mm 20mm; 
+        @page {
+            margin: 10mm 20mm;
             size: A4 portrait;
         }
-        body { 
+        /* layouts.pdf's shared `* { margin: 0; }` reset resolves onto Dompdf's page-margin
+           computation and zeroes out the @page margin above unless re-asserted here. */
+        html {
+            margin: 10mm 20mm;
+        }
+        body {
             font-family: 'Helvetica', sans-serif; 
             color: #111827; 
             line-height: 1.15;
