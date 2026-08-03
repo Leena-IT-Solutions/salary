@@ -275,10 +275,14 @@ export default {
         evalutePayCycle(){
             this.loading = true;
             this.progressText = 'Starting...';
+            const selectedEmployeeIds = this.selectedIds.length > 0 
+                ? this.selectedIds 
+                : this.employees.map(emp => emp.id);
+
             let data = {
                 from: this.item.from,
                 to: this.item.to,
-                eids: this.employees.map(emp => emp.id),
+                eids: selectedEmployeeIds,
             };
             axios.post('/attendance_evalution_report/run_lop', data).then((res) => {
                 const jobId = res.data.jobId;
@@ -309,7 +313,8 @@ export default {
                     this.getData();
                 } else {
                     const processed = res.data.processed || 0;
-                    const total = res.data.total || (this.employees ? this.employees.length : 0);
+                    const defaultTotal = this.selectedIds.length > 0 ? this.selectedIds.length : (this.employees ? this.employees.length : 0);
+                    const total = (res.data.total !== undefined && res.data.total !== null) ? res.data.total : defaultTotal;
                     this.progressText = `Evaluating: ${processed} / ${total}`;
                     setTimeout(() => {
                         this.pollProgress(jobId, attempts + 1);
