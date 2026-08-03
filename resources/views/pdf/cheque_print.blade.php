@@ -35,8 +35,8 @@
         /* A/C PAYEE ONLY CROSSING STAMP */
         .ac-payee-stamp {
             position: absolute;
-            top: 7mm;
-            left: 6mm;
+            top: 8mm;
+            left: 0mm;
             font-size: 8pt;
             font-weight: bold;
             letter-spacing: 1px;
