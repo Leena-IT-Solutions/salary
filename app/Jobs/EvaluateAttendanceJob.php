@@ -42,12 +42,20 @@ class EvaluateAttendanceJob implements ShouldQueue
      */
     public function handle(): void
     {
+        $totalEmployees = count($this->eids);
+        $processedCount = 0;
+
         // Uniqueness lock: prevent concurrent runs of the same evaluation
         $lockKey = 'attendance_evaluation_lock';
         $lock = Cache::lock($lockKey, 300); // 5 minutes lock
 
         if (!$lock->get()) {
-            // Already running
+            // If already running by another process, mark this job completed to prevent frontend polling loop
+            Cache::put("attendance_job_{$this->jobId}", [
+                'status' => 'completed',
+                'processed' => $totalEmployees,
+                'total' => $totalEmployees,
+            ], 600);
             return;
         }
 
@@ -64,8 +72,6 @@ class EvaluateAttendanceJob implements ShouldQueue
             }
 
             $settings = new SettingsController();
-            $totalEmployees = count($this->eids);
-            $processedCount = 0;
 
             // Initialize progress
             Cache::put("attendance_job_{$this->jobId}", [
@@ -76,7 +82,6 @@ class EvaluateAttendanceJob implements ShouldQueue
 
             foreach ($this->eids as $employee_id) {
                 // Wrap each employee's range evaluation in a local transaction
-                // (Though MyISAM won't roll back, InnoDB tables if any will, and it keeps it clean)
                 DB::transaction(function () use ($employee_id, $dates, $settings) {
                     $shifts = EmployeeShift::where('employee_id', $employee_id)
                         ->whereBetween('dt', [$this->from, $this->to])
@@ -89,10 +94,9 @@ class EvaluateAttendanceJob implements ShouldQueue
                         if ($employee_shift) {
                             $amc = new AttendanceMachineController();
                             $req = new Request();
-                            $req->on_date = $dd;
-                            $req->employee_id = $employee_id;
-                            $req->employee_shift = $employee_shift;
-                            $req->settings = $settings;
+                            $req->merge(['on_date' => $dd, 'employee_id' => $employee_id]);
+                            $req->attributes->set('employee_shift', $employee_shift);
+                            $req->attributes->set('settings', $settings);
                             $amc->evalute($req);
                         }
                     }

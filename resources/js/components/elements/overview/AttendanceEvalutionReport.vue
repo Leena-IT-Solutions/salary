@@ -289,7 +289,13 @@ export default {
                 alert('Error starting evaluation.');
             });
         },
-        pollProgress(jobId){
+        pollProgress(jobId, attempts = 0){
+            if (attempts > 45) {
+                this.loading = false;
+                this.progressText = '';
+                this.getData();
+                return;
+            }
             axios.get(`/attendance_evalution_report/progress/${jobId}`).then(res => {
                 const status = res.data.status;
                 if (status === 'completed') {
@@ -300,20 +306,19 @@ export default {
                     this.loading = false;
                     this.progressText = '';
                     alert('Evaluation failed: ' + (res.data.error || 'Unknown error'));
+                    this.getData();
                 } else {
-                    const processed = res.data.processed;
-                    const total = res.data.total;
+                    const processed = res.data.processed || 0;
+                    const total = res.data.total || (this.employees ? this.employees.length : 0);
                     this.progressText = `Evaluating: ${processed} / ${total}`;
                     setTimeout(() => {
-                        this.pollProgress(jobId);
+                        this.pollProgress(jobId, attempts + 1);
                     }, 1000);
                 }
             }).catch(err => {
-                setTimeout(() => {
-                    this.loading = false;
-                    this.progressText = '';
-                    this.getData();
-                }, 5000);
+                this.loading = false;
+                this.progressText = '';
+                this.getData();
             });
         },
         shift_dates(what){

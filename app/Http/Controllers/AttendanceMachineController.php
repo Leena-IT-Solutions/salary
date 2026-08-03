@@ -142,8 +142,8 @@ class AttendanceMachineController extends Controller
 
     public function evalute(Request $request){
 
-        $employee_ids = $request->employee_ids;
-        $on_date = $request->on_date;
+        $employee_ids = $request->input('employee_ids') ?? $request->attributes->get('employee_ids') ?? $request->employee_ids;
+        $on_date = $request->input('on_date') ?? $request->attributes->get('on_date') ?? $request->on_date;
 
         if (is_array($employee_ids)) {
             $settings = new SettingsController();
@@ -159,19 +159,18 @@ class AttendanceMachineController extends Controller
                 $employee_shift = $shifts->get($employee_id);
                 if ($employee_shift) {
                     $subReq = new Request();
-                    $subReq->on_date = $on_date;
-                    $subReq->employee_id = $employee_id;
-                    $subReq->employee_shift = $employee_shift;
-                    $subReq->settings = $settings;
+                    $subReq->merge(['on_date' => $on_date, 'employee_id' => $employee_id]);
+                    $subReq->attributes->set('employee_shift', $employee_shift);
+                    $subReq->attributes->set('settings', $settings);
                     $this->evalute($subReq);
                 }
             }
             return response()->json(["message" => "Success"]);
         }
 
-        $employee_id = $request->employee_id;
-        
-        $employee_shift = $request->employee_shift ?? null;
+        $employee_id = $request->input('employee_id') ?? $request->attributes->get('employee_id') ?? $request->employee_id;
+        $employee_shift = $request->attributes->get('employee_shift') ?? $request->employee_shift ?? null;
+        $settings = $request->attributes->get('settings') ?? $request->settings ?? new SettingsController();
         
         if (!$employee_shift) {
             $es = EmployeeShift::where('employee_id', $employee_id)->where('dt', $on_date);

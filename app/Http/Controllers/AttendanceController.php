@@ -246,7 +246,11 @@ class AttendanceController extends Controller
         $progress = Cache::get("attendance_job_{$jobId}");
 
         if (!$progress) {
-            return response()->json(['status' => 'not_found'], 404);
+            return response()->json([
+                'status' => 'completed',
+                'processed' => 0,
+                'total' => 0
+            ]);
         }
 
         return response()->json($progress);
