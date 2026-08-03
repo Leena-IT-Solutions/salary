@@ -223,18 +223,17 @@ class AttendanceController extends Controller
     public function run_lop(Request $request){
         $jobId = Str::uuid()->toString();
 
-        Cache::put("attendance_job_{$jobId}", [
-            'status' => 'pending',
-            'processed' => 0,
-            'total' => count($request->eids),
-        ], 600);
+        $eids = is_array($request->eids) ? array_values($request->eids) : [];
 
-        dispatch(new EvaluateAttendanceJob(
-            $request->from,
-            $request->to,
-            $request->eids,
-            $jobId
-        ));
+        Cache::put("attendance_job_{$jobId}", [
+            'status' => 'processing',
+            'processed' => 0,
+            'total' => count($eids),
+            'eids' => $eids,
+            'from' => $request->from,
+            'to' => $request->to,
+            'error' => null
+        ], 1800);
 
         return [
             "message" => "Success",
@@ -243,9 +242,9 @@ class AttendanceController extends Controller
     }
 
     public function get_progress(string $jobId) {
-        $progress = Cache::get("attendance_job_{$jobId}");
+        $job = Cache::get("attendance_job_{$jobId}");
 
-        if (!$progress) {
+        if (!$job) {
             return response()->json([
                 'status' => 'completed',
                 'processed' => 0,
@@ -253,6 +252,79 @@ class AttendanceController extends Controller
             ]);
         }
 
-        return response()->json($progress);
+        if ($job['status'] === 'completed' || $job['status'] === 'failed') {
+            return response()->json($job);
+        }
+
+        $processed = $job['processed'] ?? 0;
+        $total = $job['total'] ?? 0;
+        $eids = $job['eids'] ?? [];
+        $chunkSize = 3; // Evaluate 3 employees per progress poll for smooth UI counter updates
+
+        if ($processed < $total && !empty($eids)) {
+            $slice = array_slice($eids, $processed, $chunkSize);
+            $from = $job['from'];
+            $to = $job['to'];
+
+            try {
+                $period = new \DatePeriod(
+                    new \DateTime($from),
+                    new \DateInterval('P1D'),
+                    new \DateTime(date('Y-m-d', strtotime('+1 Day', strtotime($to))))
+                );
+
+                $dates = [];
+                foreach ($period as $value) {
+                    $dates[] = $value->format('Y-m-d');
+                }
+
+                $settings = new SettingsController();
+                $amc = new AttendanceMachineController();
+
+                foreach ($slice as $employee_id) {
+                    \Illuminate\Support\Facades\DB::transaction(function () use ($employee_id, $dates, $from, $to, $settings, $amc) {
+                        $shifts = \App\Models\EmployeeShift::where('employee_id', $employee_id)
+                            ->whereBetween('dt', [$from, $to])
+                            ->with(['working_shift', 'employee_attendance', 'special_days', 'leave', 'time_update', 'short_leave', 'on_duty'])
+                            ->get()
+                            ->keyBy('dt');
+
+                        foreach ($dates as $dd) {
+                            $employee_shift = $shifts->get($dd);
+                            if ($employee_shift) {
+                                $req = new Request();
+                                $req->merge(['on_date' => $dd, 'employee_id' => $employee_id]);
+                                $req->attributes->set('employee_shift', $employee_shift);
+                                $req->attributes->set('settings', $settings);
+                                $amc->evalute($req);
+                            }
+                        }
+                    });
+                    $processed++;
+                }
+
+                $job['processed'] = $processed;
+                if ($processed >= $total) {
+                    $job['status'] = 'completed';
+                }
+
+                Cache::put("attendance_job_{$jobId}", $job, 1800);
+
+            } catch (\Exception $e) {
+                $job['status'] = 'failed';
+                $job['error'] = $e->getMessage();
+                Cache::put("attendance_job_{$jobId}", $job, 1800);
+            }
+        } else {
+            $job['status'] = 'completed';
+            Cache::put("attendance_job_{$jobId}", $job, 1800);
+        }
+
+        return response()->json([
+            'status' => $job['status'],
+            'processed' => $job['processed'],
+            'total' => $job['total'],
+            'error' => $job['error'] ?? null,
+        ]);
     }
 }
