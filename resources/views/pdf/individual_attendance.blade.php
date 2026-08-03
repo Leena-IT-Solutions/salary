@@ -4,16 +4,16 @@
     <title>Individual Attendance Report - {{ date('M Y', strtotime($from)) }}</title>
     <style>
         @page { 
-            margin: 4mm; 
+            margin: 8mm 10mm; 
             size: A4 portrait;
         }
         body { 
             font-family: 'Helvetica', sans-serif; 
             color: #111827; 
-            line-height: 1.05;
-            font-size: 7pt;
+            line-height: 1.15;
+            font-size: 7.5pt;
             margin: 0;
-            padding: 2mm;
+            padding: 0;
         }
         .page-wrapper {
             position: relative;
@@ -26,29 +26,29 @@
         
         /* Header Section */
         .report-header { 
-            border-bottom: 1px solid #d1d5db; 
-            padding-bottom: 1.5mm; 
-            margin-bottom: 2mm; 
+            border-bottom: 1.5px solid #d1d5db; 
+            padding-bottom: 2.5mm; 
+            margin-bottom: 3.5mm; 
         }
-        .company-name { font-size: 13pt; font-weight: bold; color: #111827; }
-        .report-title { font-size: 8pt; color: #374151; text-transform: uppercase; letter-spacing: 1px; }
+        .company-name { font-size: 15pt; font-weight: bold; color: #111827; }
+        .report-title { font-size: 8.5pt; color: #374151; text-transform: uppercase; letter-spacing: 1px; }
         
         /* Info Cards */
         .info-grid { 
             background: #f9fafb; 
             border: 1px solid #d1d5db;
-            padding: 1.5mm 2mm; 
+            padding: 2.5mm 3.5mm; 
             border-radius: 1mm; 
-            margin-bottom: 2mm; 
+            margin-bottom: 3.5mm; 
         }
-        .info-label { font-size: 6pt; color: #4b5563; text-transform: uppercase; margin-bottom: 0.2mm; }
-        .info-value { font-size: 8.5pt; font-weight: bold; color: #111827; }
+        .info-label { font-size: 6.5pt; color: #4b5563; text-transform: uppercase; margin-bottom: 0.3mm; }
+        .info-value { font-size: 9.5pt; font-weight: bold; color: #111827; }
         
         /* Matrix Table */
         .attendance-table { 
             width: 100%; 
             border-collapse: collapse; 
-            margin-bottom: 2mm;
+            margin-bottom: 3.5mm;
             table-layout: fixed;
         }
         .attendance-table th { 
@@ -56,21 +56,21 @@
             color: #111827; 
             font-weight: bold; 
             text-align: left; 
-            padding: 0.6mm 0.8mm; 
+            padding: 1mm 1mm; 
             border: 1px solid #d1d5db; 
-            font-size: 6.5pt; 
+            font-size: 7pt; 
             text-transform: uppercase; 
         }
         .attendance-table td { 
-            padding: 0.4mm 0.8mm; 
+            padding: 1mm 1mm; 
             border: 1px solid #d1d5db; 
-            font-size: 6.5pt; 
+            font-size: 7pt; 
             vertical-align: middle; 
             color: #111827;
         }
         
         /* Badges */
-        .badge { padding: 0.3mm 1.2mm; border-radius: 0.5mm; font-weight: bold; font-size: 5.8pt; display: inline-block; }
+        .badge { padding: 0.4mm 1.5mm; border-radius: 0.5mm; font-weight: bold; font-size: 6.2pt; display: inline-block; }
         .bg-present { background: #dcfce7; color: #065f46; }
         .bg-absent { background: #fee2e2; color: #991b1b; }
         .bg-weekoff { background: #f3f4f6; color: #374151; }
@@ -83,10 +83,10 @@
             background: #ffffff; 
             border: 0.1mm solid #d1d5db;
             color: #1e3a5f; 
-            padding: 0.2mm 0.8mm; 
+            padding: 0.3mm 1mm; 
             border-radius: 0.5mm; 
-            margin-right: 0.4mm; 
-            font-size: 6pt; 
+            margin-right: 0.5mm; 
+            font-size: 6.5pt; 
             display: inline-block; 
             font-family: monospace;
             font-weight: bold;
@@ -95,23 +95,23 @@
         /* Stats Section */
         .stats-grid { 
             width: 100%; 
-            margin-bottom: 2mm;
+            margin-bottom: 4mm;
             border-collapse: collapse;
         }
         .stat-card {
             border: 1px solid #d1d5db;
-            padding: 1.2mm 0.8mm;
+            padding: 2mm 1mm;
             text-align: center;
             background: #ffffff;
         }
-        .stat-card .val { font-size: 8.5pt; font-weight: bold; color: #111827; display: block; line-height: 1; }
-        .stat-card .lbl { font-size: 5.5pt; color: #374151; text-transform: uppercase; font-weight: bold; margin-top: 0.5mm; display: block; }
+        .stat-card .val { font-size: 10pt; font-weight: bold; color: #111827; display: block; line-height: 1; }
+        .stat-card .lbl { font-size: 6pt; color: #374151; text-transform: uppercase; font-weight: bold; margin-top: 0.8mm; display: block; }
         
         /* Footer */
         .signature-section { 
-            margin-top: 2mm;
+            margin-top: 6mm;
             border-top: 1px solid #e5e7eb;
-            padding-top: 3mm;
+            padding-top: 4mm;
         }
         
         .row-hover:nth-child(even) { background-color: #f9fafb; }
@@ -122,11 +122,11 @@
         /* Indicator Icons */
         .indicator {
             display: inline-block;
-            font-size: 5.5pt;
-            padding: 0.2mm 0.6mm;
+            font-size: 6pt;
+            padding: 0.3mm 0.8mm;
             border-radius: 0.3mm;
             text-align: center;
-            margin-right: 0.6mm;
+            margin-right: 0.8mm;
             font-weight: bold;
         }
         .ind-tu { background: #fff7ed; color: #7c2d12; border: 0.1mm solid #ffedd5; }
@@ -152,7 +152,7 @@
                 </td>
                 <td style="text-align: right;">
                     @if($company->logo)
-                        <img src="{{ public_path('storage/logo/'.$company->logo) }}" style="height: 8mm;">
+                        <img src="{{ public_path('storage/logo/'.$company->logo) }}" style="height: 10mm;">
                     @endif
                 </td>
             </tr>
@@ -166,17 +166,17 @@
                 <td style="width: 33%;">
                     <div class="info-label">Employee Profile</div>
                     <div class="info-value">{{ $employee->first_name }} {{ $employee->last_name }}</div>
-                    <div style="font-size: 6.5pt; color: #374151;">#{{ $employee->employee_code }} | {{ $employee->employee_department->department->department ?? 'N/A' }}</div>
+                    <div style="font-size: 7pt; color: #374151;">#{{ $employee->employee_code }} | {{ $employee->employee_department->department->department ?? 'N/A' }}</div>
                 </td>
                 <td style="width: 33%; text-align: center;">
                     <div class="info-label">Reporting Period</div>
                     <div class="info-value">{{ date('01 M Y', strtotime($from)) }} - {{ date('t M Y', strtotime($from)) }}</div>
-                    <div style="font-size: 6.5pt; color: #374151;">(Generated on: {{ date('d-m-Y H:i') }})</div>
+                    <div style="font-size: 7pt; color: #374151;">(Generated on: {{ date('d-m-Y H:i') }})</div>
                 </td>
                 <td style="width: 33%; text-align: right;">
                     <div class="info-label">Working Shift</div>
                     <div class="info-value">{{ $employee->working_shift->shift_name ?? 'Standard' }}</div>
-                    <div style="font-size: 6.5pt; color: #374151;">Timing: {{ $employee->working_shift->in ?? '00:00' }} - {{ $employee->working_shift->out ?? '00:00' }}</div>
+                    <div style="font-size: 7pt; color: #374151;">Timing: {{ $employee->working_shift->in ?? '00:00' }} - {{ $employee->working_shift->out ?? '00:00' }}</div>
                 </td>
             </tr>
         </table>
@@ -184,21 +184,21 @@
 
     <!-- Salary Breakup Table -->
     @if($employee->employee_salary)
-    <table style="width: 100%; margin-bottom: 2mm; font-size: 6.5pt; border-collapse: collapse; border: 1px solid #d1d5db; table-layout: fixed;">
+    <table style="width: 100%; margin-bottom: 3.5mm; font-size: 7pt; border-collapse: collapse; border: 1px solid #d1d5db; table-layout: fixed;">
         <thead>
             <tr style="background-color: #f8fafc;">
-                <th style="padding: 0.8mm 1.5mm; text-align: left; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 6pt; width: 25%;">Salary Parameter</th>
-                <th style="padding: 0.8mm 1.5mm; text-align: center; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 6pt; width: 25%;">Monthly CTC</th>
-                <th style="padding: 0.8mm 1.5mm; text-align: center; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 6pt; width: 25%;">Gross Salary</th>
-                <th style="padding: 0.8mm 1.5mm; text-align: center; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 6pt; width: 25%;">Net Salary</th>
+                <th style="padding: 1mm 1.8mm; text-align: left; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 6.5pt; width: 25%;">Salary Parameter</th>
+                <th style="padding: 1mm 1.8mm; text-align: center; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 6.5pt; width: 25%;">Monthly CTC</th>
+                <th style="padding: 1mm 1.8mm; text-align: center; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 6.5pt; width: 25%;">Gross Salary</th>
+                <th style="padding: 1mm 1.8mm; text-align: center; color: #111827; font-weight: bold; border: 1px solid #d1d5db; text-transform: uppercase; font-size: 6.5pt; width: 25%;">Net Salary</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td style="padding: 0.8mm 1.5mm; font-weight: bold; border: 1px solid #d1d5db; color: #111827; text-align: left;">Standard Structure</td>
-                <td style="padding: 0.8mm 1.5mm; text-align: center; font-weight: bold; border: 1px solid #d1d5db; color: #111827;">Rs. {{ number_format($employee->employee_salary->ctc, 2) }}</td>
-                <td style="padding: 0.8mm 1.5mm; text-align: center; font-weight: bold; border: 1px solid #d1d5db; color: #111827;">Rs. {{ number_format($employee->employee_salary->gross_pay, 2) }}</td>
-                <td style="padding: 0.8mm 1.5mm; text-align: center; font-weight: bold; border: 1px solid #d1d5db; color: #111827;">Rs. {{ number_format($employee->employee_salary->net_pay, 2) }}</td>
+                <td style="padding: 1mm 1.8mm; font-weight: bold; border: 1px solid #d1d5db; color: #111827; text-align: left;">Standard Structure</td>
+                <td style="padding: 1mm 1.8mm; text-align: center; font-weight: bold; border: 1px solid #d1d5db; color: #111827;">Rs. {{ number_format($employee->employee_salary->ctc, 2) }}</td>
+                <td style="padding: 1mm 1.8mm; text-align: center; font-weight: bold; border: 1px solid #d1d5db; color: #111827;">Rs. {{ number_format($employee->employee_salary->gross_pay, 2) }}</td>
+                <td style="padding: 1mm 1.8mm; text-align: center; font-weight: bold; border: 1px solid #d1d5db; color: #111827;">Rs. {{ number_format($employee->employee_salary->net_pay, 2) }}</td>
             </tr>
         </tbody>
     </table>
@@ -300,7 +300,7 @@
                     elseif($statusStr == 'Halfday Working' || $statusStr == 'Halfday') { $statusClass = 'bg-halfday'; }
                 @endphp
                 <tr class="row-hover">
-                    <td class="fw-bold">{{ date('d M Y', strtotime($date)) }} <span style="color: #6b7280; font-weight: normal; font-size: 6pt;">({{ date('D', strtotime($date)) }})</span></td>
+                    <td class="fw-bold">{{ date('d M Y', strtotime($date)) }} <span style="color: #6b7280; font-weight: normal; font-size: 6.5pt;">({{ date('D', strtotime($date)) }})</span></td>
                     <td>
                         @if($es)
                             <span class="badge {{ $statusClass }}">{{ $es->status }}</span>
@@ -347,48 +347,48 @@
     <!-- Analytics Summary -->
     <table class="stats-grid table-borderless">
         <tr>
-            <td style="width: 14.28%; padding: 0.4mm;">
+            <td style="width: 14.28%; padding: 0.5mm;">
                 <div class="stat-card"><span class="val">{{ $totalDays }}</span><span class="lbl">Total Days</span></div>
             </td>
-            <td style="width: 14.28%; padding: 0.4mm;">
-                <div class="stat-card" style="border-top: 0.8mm solid #3b82f6;"><span class="val">{{ $workingDays }}</span><span class="lbl">Working Days</span></div>
+            <td style="width: 14.28%; padding: 0.5mm;">
+                <div class="stat-card" style="border-top: 1mm solid #3b82f6;"><span class="val">{{ $workingDays }}</span><span class="lbl">Working Days</span></div>
+            </td>
+            <td style="width: 14.28%; padding: 0.5mm;">
+                <div class="stat-card" style="border-top: 1mm solid #10b981;"><span class="val">{{ $presentDays }}</span><span class="lbl">Present</span></div>
             </td>
             <td style="width: 14.28%; padding: 0.4mm;">
-                <div class="stat-card" style="border-top: 0.8mm solid #10b981;"><span class="val">{{ $presentDays }}</span><span class="lbl">Present</span></div>
+                <div class="stat-card" style="border-top: 1mm solid #ef4444;"><span class="val">{{ $absentDays }}</span><span class="lbl">Absent</span></div>
             </td>
-            <td style="width: 14.28%; padding: 0.4mm;">
-                <div class="stat-card" style="border-top: 0.8mm solid #ef4444;"><span class="val">{{ $absentDays }}</span><span class="lbl">Absent</span></div>
+            <td style="width: 14.28%; padding: 0.5mm;">
+                <div class="stat-card" style="border-top: 1mm solid #6366f1;"><span class="val">{{ $leaveDays }}</span><span class="lbl">Leave</span></div>
             </td>
-            <td style="width: 14.28%; padding: 0.4mm;">
-                <div class="stat-card" style="border-top: 0.8mm solid #6366f1;"><span class="val">{{ $leaveDays }}</span><span class="lbl">Leave</span></div>
+            <td style="width: 14.28%; padding: 0.5mm;">
+                <div class="stat-card" style="border-top: 1mm solid #6b7280;"><span class="val">{{ $weekoffDays }}</span><span class="lbl">Week Offs</span></div>
             </td>
-            <td style="width: 14.28%; padding: 0.4mm;">
-                <div class="stat-card" style="border-top: 0.8mm solid #6b7280;"><span class="val">{{ $weekoffDays }}</span><span class="lbl">Week Offs</span></div>
-            </td>
-            <td style="width: 14.28%; padding: 0.4mm;">
-                <div class="stat-card" style="border-top: 0.8mm solid #f59e0b;"><span class="val">{{ $holidayDays }}</span><span class="lbl">Holidays</span></div>
+            <td style="width: 14.28%; padding: 0.5mm;">
+                <div class="stat-card" style="border-top: 1mm solid #f59e0b;"><span class="val">{{ $holidayDays }}</span><span class="lbl">Holidays</span></div>
             </td>
         </tr>
         <tr>
-            <td style="width: 14.28%; padding: 0.4mm;">
-                <div class="stat-card" style="border-top: 0.8mm solid #06b6d4;"><span class="val">{{ $halfDays }}</span><span class="lbl">Half Days</span></div>
+            <td style="width: 14.28%; padding: 0.5mm;">
+                <div class="stat-card" style="border-top: 1mm solid #06b6d4;"><span class="val">{{ $halfDays }}</span><span class="lbl">Half Days</span></div>
             </td>
-            <td style="width: 14.28%; padding: 0.4mm;">
-                <div class="stat-card" style="border-top: 0.8mm solid #86198f;"><span class="val">{{ $onDutyDays }}</span><span class="lbl">On Duty</span></div>
+            <td style="width: 14.28%; padding: 0.5mm;">
+                <div class="stat-card" style="border-top: 1mm solid #86198f;"><span class="val">{{ $onDutyDays }}</span><span class="lbl">On Duty</span></div>
             </td>
-            <td style="width: 14.28%; padding: 0.4mm;">
-                <div class="stat-card" style="border-top: 0.8mm solid #0ea5e9;"><span class="val">{{ $shortLeaves }}</span><span class="lbl">Short LV</span></div>
+            <td style="width: 14.28%; padding: 0.5mm;">
+                <div class="stat-card" style="border-top: 1mm solid #0ea5e9;"><span class="val">{{ $shortLeaves }}</span><span class="lbl">Short LV</span></div>
             </td>
-            <td style="width: 14.28%; padding: 0.4mm;">
-                <div class="stat-card" style="border-top: 0.8mm solid #ec4899;"><span class="val">{{ $totalOT }}h</span><span class="lbl">Overtime</span></div>
+            <td style="width: 14.28%; padding: 0.5mm;">
+                <div class="stat-card" style="border-top: 1mm solid #ec4899;"><span class="val">{{ $totalOT }}h</span><span class="lbl">Overtime</span></div>
             </td>
-            <td style="width: 14.28%; padding: 0.4mm;">
-                <div class="stat-card" style="border-top: 0.8mm solid #dc2626;"><span class="val" style="color: #dc2626;">{{ $totalLate }}m</span><span class="lbl">Late Min.</span></div>
+            <td style="width: 14.28%; padding: 0.5mm;">
+                <div class="stat-card" style="border-top: 1mm solid #dc2626;"><span class="val" style="color: #dc2626;">{{ $totalLate }}m</span><span class="lbl">Late Min.</span></div>
             </td>
-            <td style="width: 14.28%; padding: 0.4mm;">
-                <div class="stat-card" style="border-top: 0.8mm solid #dc2626;"><span class="val" style="color: #dc2626;">{{ $totalEarly }}m</span><span class="lbl">Early Min.</span></div>
+            <td style="width: 14.28%; padding: 0.5mm;">
+                <div class="stat-card" style="border-top: 1mm solid #dc2626;"><span class="val" style="color: #dc2626;">{{ $totalEarly }}m</span><span class="lbl">Early Min.</span></div>
             </td>
-            <td style="width: 14.28%; padding: 0.4mm;">
+            <td style="width: 14.28%; padding: 0.5mm;">
                 <div class="stat-card" style="background: #f9fafb; border: 1px solid #1e3a5f;"><span class="val" style="color: #111827;">{{ $totalLop }}</span><span class="lbl">Total LOP</span></div>
             </td>
         </tr>
@@ -398,12 +398,12 @@
     <div class="signature-section">
         <table style="width: 100%;" class="table-borderless">
             <tr>
-                <td style="width: 30%; border-top: 0.2mm dashed #9ca3af; padding-top: 1.5mm; text-align: center;">
-                    <div style="font-size: 6.5pt; color: #374151; text-transform: uppercase;">Employee Acknowledgment</div>
+                <td style="width: 30%; border-top: 0.2mm dashed #9ca3af; padding-top: 2mm; text-align: center;">
+                    <div style="font-size: 7pt; color: #374151; text-transform: uppercase;">Employee Acknowledgment</div>
                 </td>
                 <td style="width: 35%;"></td>
-                <td style="width: 30%; border-top: 0.2mm dashed #9ca3af; padding-top: 1.5mm; text-align: center;">
-                    <div style="font-size: 6.5pt; color: #374151; text-transform: uppercase;">Head of Department / HR</div>
+                <td style="width: 30%; border-top: 0.2mm dashed #9ca3af; padding-top: 2mm; text-align: center;">
+                    <div style="font-size: 7pt; color: #374151; text-transform: uppercase;">Head of Department / HR</div>
                 </td>
             </tr>
         </table>
