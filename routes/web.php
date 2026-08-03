@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Models\FinancialYear;
 
+Auth::routes(['verify' => true]);
+
 Route::get('/manifest.json', function () {
     return response('', 404)
         ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
