@@ -14,19 +14,11 @@
 
     @yield('head')
 
-    <!-- PWA -->
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#4f46e5">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Salary Manager">
-
     <!-- Scripts -->
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 </head>
 <body class="bg-primary bg-gradient text-white">
     <div id="app">
-        <pwa-install></pwa-install>
 
         <div class="container min-vh-100 d-flex align-items-center justify-content-center">
             <div class="row w-100 justify-content-center">

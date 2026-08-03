@@ -17,7 +17,6 @@ import '@fortawesome/fontawesome-free/js/all.js';
 const app = createApp({});
 
 import AppNavigation from './components/AppNavigation.vue';
-import PwaInstall from './components/PwaInstall.vue';
 import PageHeader from './components/elements/PageHeader.vue';
 import SectionTitle from './components/elements/SectionTitle.vue';
 
@@ -106,7 +105,6 @@ import Preferences from './components/elements/application_settings/Preferences.
 
 
 app.component('app-navigation', AppNavigation);
-app.component('pwa-install', PwaInstall);
 app.component('page-header', PageHeader);
 app.component('section-title', SectionTitle);
 
@@ -217,10 +215,10 @@ app.mount('#app');
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(registration => {
-            console.log('ServiceWorker registration successful with scope: ', registration.scope);
-        }).catch(error => {
-            console.log('ServiceWorker registration failed: ', error);
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+            for (let registration of registrations) {
+                registration.unregister();
+            }
         });
     });
 }
