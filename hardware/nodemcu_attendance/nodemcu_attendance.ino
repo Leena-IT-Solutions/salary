@@ -2,7 +2,7 @@
  * Salary Manager - NodeMCU ESP8266 Biometric & RFID Attendance Terminal
  * 
  * 100% ZERO EXTERNAL LIBRARY DEPENDENCY EDITION
- * Includes Comprehensive Multi-Pin & Address I2C Bus Diagnostic Scanner!
+ * Bundled with local Adafruit_PN532 driver for 100% rock-solid RFID card reading!
  * 
  * Hardware Pinout:
  * - SCL -> NodeMCU D1 (GPIO5)
@@ -23,27 +23,10 @@
 #include <time.h>
 
 #include "config.h"
+#include "Adafruit_PN532.h"
 
-// Runtime Detected PN532 Pinout & Address
-uint8_t detectedPn532Addr = 0x24;
-int activeSdaPin = OLED_SDA_PIN;
-int activeSclPin = OLED_SCL_PIN;
-
-// ==========================================
-// NXP Official I2C Bus Recovery
-// ==========================================
-void recoverI2CBus(int sdaPin, int sclPin) {
-    pinMode(sclPin, OUTPUT);
-    pinMode(sdaPin, INPUT_PULLUP);
-    for (int i = 0; i < 10; i++) {
-        digitalWrite(sclPin, HIGH);
-        delayMicroseconds(10);
-        digitalWrite(sclPin, LOW);
-        delayMicroseconds(10);
-    }
-    digitalWrite(sclPin, HIGH);
-    delayMicroseconds(10);
-}
+// Hardware Objects
+Adafruit_PN532 nfc(OLED_SDA_PIN, OLED_SCL_PIN);
 
 // ==========================================
 // 5x7 ASCII Font Definition for Display Driver
@@ -210,188 +193,6 @@ bool inAPMode = false;
 unsigned long buttonPressStart = 0;
 unsigned long lastSyncCheck = 0;
 unsigned long lastDisplayUpdate = 0;
-
-// ==========================================
-// Comprehensive Multi-Pin Diagnostic Scanner
-// ==========================================
-void diagnosticPinScan() {
-    Serial.println("\n==========================================");
-    Serial.println("[DIAGNOSTICS] Comprehensive I2C Pin & Address Probe");
-    Serial.println("==========================================");
-    
-    int testPins[][2] = {
-        {4, 5}, // SDA: D2, SCL: D1 (Standard)
-        {5, 4}, // SDA: D1, SCL: D2 (Crossed)
-        {0, 2}, // SDA: D3, SCL: D4
-        {14, 12} // SDA: D5, SCL: D6
-    };
-    
-    for (int p = 0; p < 4; p++) {
-        int sda = testPins[p][0];
-        int scl = testPins[p][1];
-        
-        recoverI2CBus(sda, scl);
-        Wire.begin(sda, scl);
-        Wire.setClock(50000);
-        Wire.setClockStretchLimit(20000);
-        
-        Serial.printf("[PROBE] Testing Pins SDA: GPIO%d, SCL: GPIO%d...\n", sda, scl);
-        uint8_t found = 0;
-        
-        for (uint8_t addr = 1; addr < 127; addr++) {
-            Wire.beginTransmission(addr);
-            uint8_t err = Wire.endTransmission();
-            if (err == 0) {
-                Serial.printf("  -> MATCH DETECTED! Device found at Address 0x%02X\n", addr);
-                found++;
-                if (sda == OLED_SDA_PIN && scl == OLED_SCL_PIN && addr != OLED_I2C_ADDR) {
-                    detectedPn532Addr = addr;
-                }
-            }
-        }
-        if (found == 0) {
-            Serial.println("  -> No response on these pins.");
-        }
-    }
-    
-    // Reset to primary SDA D2 (4), SCL D1 (5)
-    recoverI2CBus(OLED_SDA_PIN, OLED_SCL_PIN);
-    Wire.begin(OLED_SDA_PIN, OLED_SCL_PIN);
-    Wire.setClock(50000);
-    Wire.setClockStretchLimit(20000);
-    Serial.println("==========================================\n");
-}
-
-// ==========================================
-// Robust Self-Contained PN532 Driver over I2C
-// ==========================================
-bool pn532ReadAck() {
-    delay(5);
-    uint8_t reqLen = Wire.requestFrom((int)detectedPn532Addr, 7);
-    if (reqLen < 6) return false;
-    uint8_t ackBuf[7];
-    for (uint8_t i = 0; i < reqLen; i++) ackBuf[i] = Wire.read();
-    
-    if (ackBuf[1] == 0x00 && ackBuf[2] == 0x00 && ackBuf[3] == 0xFF && ackBuf[4] == 0x00 && ackBuf[5] == 0xFF) {
-        return true;
-    }
-    return false;
-}
-
-bool pn532Init() {
-    Serial.printf("[PN532] Initializing PN532 RFID reader at I2C address 0x%02X...\n", detectedPn532Addr);
-    
-    // High-Speed I2C Wakeup Burst
-    Wire.beginTransmission(detectedPn532Addr);
-    Wire.write(0x55); Wire.write(0x55); Wire.write(0x00); Wire.write(0x00);
-    Wire.write(0x00); Wire.write(0x00); Wire.write(0x00); Wire.write(0x00);
-    Wire.endTransmission();
-    delay(30);
-    
-    // SAM Configuration Command (0xD4 0x14 0x01 0x14 0x01)
-    Wire.beginTransmission(detectedPn532Addr);
-    Wire.write(0x00); Wire.write(0x00); Wire.write(0xFF);
-    Wire.write(0x05); Wire.write(0xFB);
-    Wire.write(0xD4); Wire.write(0x14); Wire.write(0x01); Wire.write(0x14); Wire.write(0x01);
-    Wire.write(0x18); Wire.write(0x00);
-    uint8_t res = Wire.endTransmission();
-    
-    pn532ReadAck();
-    
-    if (res == 0) {
-        Serial.println("[PN532] SAM Configuration OK! Reader ready.");
-        return true;
-    } else {
-        Serial.printf("[PN532] Init response code: %d (Proceeding with scan loop)\n", res);
-        return false;
-    }
-}
-
-bool pn532ReadPassiveTarget(uint8_t* uid, uint8_t* uidLength) {
-    // InListPassiveTarget (0xD4 0x4A 0x01 0x00)
-    Wire.beginTransmission(detectedPn532Addr);
-    Wire.write(0x00); Wire.write(0x00); Wire.write(0xFF);
-    Wire.write(0x04); Wire.write(0xFC);
-    Wire.write(0xD4); Wire.write(0x4A); Wire.write(0x01); Wire.write(0x00);
-    Wire.write(0xE1); Wire.write(0x00);
-    if (Wire.endTransmission() != 0) return false;
-    
-    pn532ReadAck();
-    delay(40);
-    
-    uint8_t reqLen = Wire.requestFrom((int)detectedPn532Addr, 24);
-    if (reqLen < 12) return false;
-    
-    uint8_t buf[24];
-    for (uint8_t i = 0; i < reqLen; i++) {
-        buf[i] = Wire.read();
-    }
-    
-    if (buf[0] != 0x01) return false;
-    
-    for (uint8_t i = 1; i < reqLen - 6; i++) {
-        if (buf[i] == 0xD5 && buf[i+1] == 0x4B) {
-            *uidLength = buf[i+7];
-            if (*uidLength > 7 || *uidLength == 0) *uidLength = 4;
-            for (uint8_t j = 0; j < *uidLength; j++) {
-                uid[j] = buf[i+8+j];
-            }
-            return true;
-        }
-    }
-    return false;
-}
-
-String pn532ReadCardBlock4(uint8_t* uid, uint8_t uidLength) {
-    // Auth Block 4 with Key A (0xFF 0xFF 0xFF 0xFF 0xFF 0xFF)
-    Wire.beginTransmission(detectedPn532Addr);
-    Wire.write(0x00); Wire.write(0x00); Wire.write(0xFF);
-    Wire.write(0x0F); Wire.write(0xF1);
-    Wire.write(0xD4); Wire.write(0x40); Wire.write(0x01); Wire.write(0x60); Wire.write(0x04);
-    for (int k = 0; k < 6; k++) Wire.write(0xFF);
-    for (int u = 0; u < 4; u++) Wire.write(uid[u]);
-    Wire.write(0x00); Wire.write(0x00);
-    Wire.endTransmission();
-    
-    pn532ReadAck();
-    delay(15);
-    
-    // Read Block 4 Data
-    Wire.beginTransmission(detectedPn532Addr);
-    Wire.write(0x00); Wire.write(0x00); Wire.write(0xFF);
-    Wire.write(0x05); Wire.write(0xFB);
-    Wire.write(0xD4); Wire.write(0x40); Wire.write(0x01); Wire.write(0x30); Wire.write(0x04);
-    Wire.write(0xB6); Wire.write(0x00);
-    Wire.endTransmission();
-    
-    pn532ReadAck();
-    delay(15);
-    
-    uint8_t reqLen = Wire.requestFrom((int)detectedPn532Addr, 26);
-    if (reqLen < 20) return String(currentConfig.device_code);
-    
-    uint8_t buf[26];
-    for (uint8_t i = 0; i < reqLen; i++) buf[i] = Wire.read();
-    
-    if (buf[0] != 0x01) return String(currentConfig.device_code);
-    
-    char blockStr[17] = {0};
-    int dataIdx = 0;
-    for (uint8_t i = 1; i < reqLen - 16; i++) {
-        if (buf[i] == 0xD5 && buf[i+1] == 0x41 && buf[i+2] == 0x00) {
-            for (int k = 0; k < 16; k++) {
-                char c = (char)buf[i + 3 + k];
-                if (c >= 32 && c <= 126) {
-                    blockStr[dataIdx++] = c;
-                }
-            }
-            break;
-        }
-    }
-    blockStr[dataIdx] = '\0';
-    if (strlen(blockStr) > 0) return String(blockStr);
-    return String(currentConfig.device_code);
-}
 
 // Helper to get Mode Character
 char getModeChar(uint8_t mode) {
@@ -870,8 +671,23 @@ void processCardScan(String tagidStr, uint8_t* uid, uint8_t uidLength) {
     beepScan();
     
     // Read Card Message (tagms) from Block 4 or use fallback
-    String tagmsStr = pn532ReadCardBlock4(uid, uidLength);
-    if (tagmsStr.length() == 0) tagmsStr = String(currentConfig.device_code);
+    uint8_t keyA[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+    String tagmsStr = String(currentConfig.device_code);
+    
+    if (nfc.mifareclassic_AuthenticateBlock(uid, uidLength, 4, 0, keyA)) {
+        uint8_t blockBuf[16] = {0};
+        if (nfc.mifareclassic_ReadDataBlock(4, blockBuf)) {
+            char blockStr[17] = {0};
+            int idx = 0;
+            for (int k = 0; k < 16; k++) {
+                if (blockBuf[k] >= 32 && blockBuf[k] <= 126) {
+                    blockStr[idx++] = (char)blockBuf[k];
+                }
+            }
+            blockStr[idx] = '\0';
+            if (strlen(blockStr) > 0) tagmsStr = String(blockStr);
+        }
+    }
     
     Serial.printf("[CARD SCAN] UID: %s | tagms: %s\n", tagidStr.c_str(), tagmsStr.c_str());
     
@@ -966,10 +782,24 @@ void processCardScan(String tagidStr, uint8_t* uid, uint8_t uidLength) {
                 renderScreen("No Value Set!", "MSG: " + tagmsStr);
                 break;
             }
-            beepSuccess();
-            renderScreen("Card Written OK!", "Value: " + String(currentConfig.card_value));
-            currentConfig.op_mode = MODE_READ;
-            saveConfig();
+            
+            if (nfc.mifareclassic_AuthenticateBlock(uid, uidLength, 4, 0, keyA)) {
+                uint8_t blockData[16] = {0};
+                strncpy((char*)blockData, currentConfig.card_value, 16);
+                
+                if (nfc.mifareclassic_WriteDataBlock(4, blockData)) {
+                    beepSuccess();
+                    renderScreen("Card Written OK!", "Value: " + String(currentConfig.card_value));
+                    currentConfig.op_mode = MODE_READ;
+                    saveConfig();
+                } else {
+                    beepError();
+                    renderScreen("Write Failed!", "ID: " + tagidStr);
+                }
+            } else {
+                beepError();
+                renderScreen("Auth Failed!", "ID: " + tagidStr);
+            }
             break;
         }
         
@@ -977,8 +807,19 @@ void processCardScan(String tagidStr, uint8_t* uid, uint8_t uidLength) {
         // MODE 3: FORMAT MODE (Clear Sectors)
         // ----------------------------------
         case MODE_FORMAT: {
-            beepSuccess();
-            renderScreen("Formatted OK!", "ID: " + tagidStr);
+            if (nfc.mifareclassic_AuthenticateBlock(uid, uidLength, 4, 0, keyA)) {
+                uint8_t emptyBlock[16] = {0};
+                if (nfc.mifareclassic_WriteDataBlock(4, emptyBlock)) {
+                    beepSuccess();
+                    renderScreen("Formatted OK!", "ID: " + tagidStr);
+                } else {
+                    beepError();
+                    renderScreen("Format Failed!", "ID: " + tagidStr);
+                }
+            } else {
+                beepError();
+                renderScreen("Auth Failed!", "ID: " + tagidStr);
+            }
             break;
         }
         
@@ -986,8 +827,16 @@ void processCardScan(String tagidStr, uint8_t* uid, uint8_t uidLength) {
         // MODE 4: DELETE MODE (Clear Card Data)
         // ----------------------------------
         case MODE_DELETE: {
-            beepSuccess();
-            renderScreen("Card Cleared!", "ID: " + tagidStr);
+            if (nfc.mifareclassic_AuthenticateBlock(uid, uidLength, 4, 0, keyA)) {
+                uint8_t emptyBlock[16] = {0};
+                if (nfc.mifareclassic_WriteDataBlock(4, emptyBlock)) {
+                    beepSuccess();
+                    renderScreen("Card Cleared!", "ID: " + tagidStr);
+                }
+            } else {
+                beepError();
+                renderScreen("Delete Failed!", "ID: " + tagidStr);
+            }
             break;
         }
         
@@ -1039,8 +888,8 @@ void setup() {
     LittleFS.begin();
     loadConfig();
     
-    // Perform Multi-Pin Diagnostic Probe
-    diagnosticPinScan();
+    // Initialize Hardware Adafruit PN532 (Handles Wire.begin on SDA D2 & SCL D1)
+    nfc.begin();
     
     // Self-Contained OLED Init
     oledInit();
@@ -1049,8 +898,17 @@ void setup() {
     renderScreen("Initialising...");
     delay(300);
     
-    // Initialize PN532 with auto-detected address
-    pn532Init();
+    uint32_t versiondata = nfc.getFirmwareVersion();
+    if (!versiondata) {
+        Serial.println("[PN532] PN532 Board Not Responding!");
+        renderScreen("PN532 Offline");
+    } else {
+        Serial.printf("[PN532] Found PN5%02X Chip Firmware Ver %d.%d\n", 
+                      (versiondata >> 24) & 0xFF, 
+                      (versiondata >> 16) & 0xFF, 
+                      (versiondata >> 8) & 0xFF);
+        nfc.SAMConfig();
+    }
     
     connectWiFi();
 }
@@ -1092,7 +950,7 @@ void loop() {
     uint8_t uid[7];
     uint8_t uidLength = 0;
     
-    if (pn532ReadPassiveTarget(uid, &uidLength)) {
+    if (nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength, 100)) {
         String tagidStr = "";
         for (uint8_t i = 0; i < uidLength; i++) {
             if (i > 0) tagidStr += " ";
