@@ -541,6 +541,11 @@ void handleWebRoot() {
 
 void handleSaveWeb() {
     if (server.hasArg("host_uri")) {
+        String oldWifiSsid = String(currentConfig.wifi_ssid);
+        String oldWifiPass = String(currentConfig.wifi_pass);
+        String oldApSsid = String(currentConfig.ap_ssid);
+        String oldApPass = String(currentConfig.ap_pass);
+        
         if (server.hasArg("ap_ssid")) strncpy(currentConfig.ap_ssid, server.arg("ap_ssid").c_str(), sizeof(currentConfig.ap_ssid));
         if (server.hasArg("ap_pass")) strncpy(currentConfig.ap_pass, server.arg("ap_pass").c_str(), sizeof(currentConfig.ap_pass));
         if (server.hasArg("wifi_ssid")) strncpy(currentConfig.wifi_ssid, server.arg("wifi_ssid").c_str(), sizeof(currentConfig.wifi_ssid));
@@ -551,12 +556,28 @@ void handleSaveWeb() {
         if (server.hasArg("api_token")) strncpy(currentConfig.api_token, server.arg("api_token").c_str(), sizeof(currentConfig.api_token));
         if (server.hasArg("op_mode")) currentConfig.op_mode = server.arg("op_mode").toInt();
         
+        // Save to EEPROM
         saveConfig();
         
-        String html = "<html><body><h2>Settings Saved Successfully!</h2><p>Rebooting terminal to apply new settings...</p></body></html>";
+        // Render OLED screen immediately with new settings
+        renderScreen();
+        beepSuccess();
+        
+        // Live Wi-Fi reconnect if credentials changed
+        if (String(currentConfig.wifi_ssid) != oldWifiSsid || String(currentConfig.wifi_pass) != oldWifiPass) {
+            if (strlen(currentConfig.wifi_ssid) > 0) {
+                WiFi.disconnect();
+                WiFi.begin(currentConfig.wifi_ssid, currentConfig.wifi_pass);
+            }
+        }
+        
+        // Live AP update if AP credentials changed
+        if (inAPMode && (String(currentConfig.ap_ssid) != oldApSsid || String(currentConfig.ap_pass) != oldApPass)) {
+            WiFi.softAP(currentConfig.ap_ssid, currentConfig.ap_pass);
+        }
+        
+        String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><meta http-equiv='refresh' content='2;url=/'><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f4f6f9;text-align:center;padding:50px;} .card{background:#fff;padding:30px;border-radius:12px;display:inline-block;box-shadow:0 4px 15px rgba(0,0,0,0.1);} h2{color:#10b981;margin-top:0;} a{color:#1e3a5f;text-decoration:none;font-weight:bold;}</style></head><body><div class='card'><h2>✓ Settings Applied Live!</h2><p>Changes are saved and running in real-time without rebooting.</p><p><a href='/'>Returning to Dashboard...</a></p></div></body></html>";
         server.send(200, "text/html", html);
-        delay(1500);
-        ESP.restart();
     } else {
         server.send(400, "text/plain", "Bad Request");
     }
