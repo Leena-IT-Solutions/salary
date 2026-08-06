@@ -38,10 +38,13 @@ This document details the exact hardware schematic, PCB pinout, and wiring mappi
 - **I2C Address**: Default `0x3C` (or `0x3D` if jumper set to `0x7A`)
 
 ### B. PN532 NFC/RFID Reader (I2C Mode)
-> ⚠️ **DIP Switch Settings on PN532 Board:**  
-> Set the 2-position DIP switch for **I2C Mode**:
-> - **Switch 1**: `OFF` (0 / Low)
-> - **Switch 2**: `ON` (1 / High)
+> ⚠️ **PN532 DIP Switch Configuration (Verified from Board Photo):**
+> 
+> | Interface Mode | Switch 1 | Switch 2 | Physical Switch Position |
+> |---|---|---|---|
+> | **I2C Mode (Selected)** | `0` (OFF / DOWN) | `1` (ON / UP) | **Switch 1 DOWN, Switch 2 UP** |
+> | HSU (High Speed UART) | `0` (OFF) | `0` (OFF) | Both Switches DOWN |
+> | SPI Mode | `1` (ON) | `0` (OFF) | Switch 1 UP, Switch 2 DOWN |
 
 - **VCC** → NodeMCU 3V3 / VIN
 - **GND** → NodeMCU GND
