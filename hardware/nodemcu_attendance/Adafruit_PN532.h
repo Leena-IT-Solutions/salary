@@ -43,6 +43,7 @@ public:
     Adafruit_PN532(uint8_t reset);
 
     void begin(void);
+    void wakeup(void);
     bool SAMConfig(void);
     uint32_t getFirmwareVersion(void);
     

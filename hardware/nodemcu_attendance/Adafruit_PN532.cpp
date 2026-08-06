@@ -18,8 +18,17 @@ Adafruit_PN532::Adafruit_PN532(uint8_t reset) {
     _usingI2C = true;
 }
 
+void Adafruit_PN532::wakeup(void) {
+    Wire.beginTransmission(PN532_I2C_ADDRESS);
+    Wire.write(0x55); Wire.write(0x55); Wire.write(0x00); Wire.write(0x00); Wire.write(0x00);
+    Wire.endTransmission();
+    delay(20);
+}
+
 void Adafruit_PN532::begin(void) {
-    Wire.begin();
+    Wire.begin(4, 5); // SDA: GPIO4 (D2), SCL: GPIO5 (D1)
+    Wire.setClock(100000);
+    wakeup();
 }
 
 bool Adafruit_PN532::isready(void) {
@@ -47,6 +56,8 @@ int8_t Adafruit_PN532::readack(void) {
 
 void Adafruit_PN532::writecommand(uint8_t *cmd, uint8_t cmdlen) {
     uint8_t checksum;
+    
+    wakeup();
 
     cmdlen++;
 
