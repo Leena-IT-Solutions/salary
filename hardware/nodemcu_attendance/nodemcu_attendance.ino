@@ -2,7 +2,7 @@
  * Salary Manager - NodeMCU ESP8266 Biometric & RFID Attendance Terminal
  * 
  * 100% ZERO EXTERNAL LIBRARY DEPENDENCY EDITION
- * Includes Automatic I2C Bus Scanner & Auto-Address Detection for PN532!
+ * Includes NXP I2C Bus Recovery, Clock Stretch Extension & PN532 Wakeup!
  * 
  * Hardware Pinout:
  * - SCL -> NodeMCU D1 (GPIO5)
@@ -26,6 +26,22 @@
 
 // Runtime Detected PN532 I2C Address
 uint8_t detectedPn532Addr = 0x24;
+
+// ==========================================
+// NXP Official I2C Bus Recovery (Clears stuck SDA/SCL lines)
+// ==========================================
+void recoverI2CBus() {
+    pinMode(OLED_SCL_PIN, OUTPUT);
+    pinMode(OLED_SDA_PIN, INPUT_PULLUP);
+    for (int i = 0; i < 10; i++) {
+        digitalWrite(OLED_SCL_PIN, HIGH);
+        delayMicroseconds(10);
+        digitalWrite(OLED_SCL_PIN, LOW);
+        delayMicroseconds(10);
+    }
+    digitalWrite(OLED_SCL_PIN, HIGH);
+    delayMicroseconds(10);
+}
 
 // ==========================================
 // 5x7 ASCII Font Definition for Display Driver
@@ -194,7 +210,7 @@ unsigned long lastSyncCheck = 0;
 unsigned long lastDisplayUpdate = 0;
 
 // ==========================================
-// Automatic I2C Bus Scanner (Safe Data Probe)
+// Automatic I2C Bus Scanner
 // ==========================================
 void scanI2CBus() {
     Serial.println("[I2C SCANNER] Scanning I2C bus (SDA: D2 / GPIO4, SCL: D1 / GPIO5)...");
@@ -202,10 +218,9 @@ void scanI2CBus() {
     
     for (uint8_t addr = 1; addr < 127; addr++) {
         Wire.beginTransmission(addr);
-        Wire.write(0x00);
         uint8_t error = Wire.endTransmission();
         
-        if (error == 0 || error == 3) {
+        if (error == 0) {
             Serial.printf("[I2C SCANNER] -> Found active device at 0x%02X\n", addr);
             if (addr != OLED_I2C_ADDR) {
                 detectedPn532Addr = addr;
@@ -988,12 +1003,13 @@ void setup() {
     Serial.println("NodeMCU Attendance Terminal Starting...");
     Serial.println("==========================================");
     
-    pinMode(OLED_SDA_PIN, INPUT_PULLUP);
-    pinMode(OLED_SCL_PIN, INPUT_PULLUP);
+    // NXP Official I2C Bus Recovery sequence
+    recoverI2CBus();
     
     // Single I2C Bus Master Init (SDA: D2 / GPIO4, SCL: D1 / GPIO5)
     Wire.begin(OLED_SDA_PIN, OLED_SCL_PIN);
-    Wire.setClock(100000); // 100kHz standard I2C clock speed
+    Wire.setClock(50000); // 50kHz safe I2C clock speed for shared bus
+    Wire.setClockStretchLimit(20000); // Allow PN532 clock stretching up to 20ms
     delay(100);
     
     pinMode(BUZZER_PIN, OUTPUT);
