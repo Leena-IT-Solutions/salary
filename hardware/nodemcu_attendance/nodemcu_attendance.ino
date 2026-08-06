@@ -1,31 +1,39 @@
 /*
- * Salary Manager - NodeMCU ESP8266 Biometric & RFID Attendance Terminal
+ * Salary Manager - Upgraded NodeMCU ESP8266 Biometric & RFID Attendance Terminal
  * 
- * Hardware Connections:
- * - NodeMCU ESP8266 (ESP-12E)
- * - 1.3" OLED Display (I2C): SDA -> D2 (GPIO4), SCL -> D1 (GPIO5), VCC -> 3V3/5V, GND -> GND
- * - PN532 RFID Module (I2C): SDA -> D2 (GPIO4), SCL -> D1 (GPIO5), VCC -> 3V3/5V, GND -> GND
- * - Buzzer: Positive -> D5 (GPIO14), Negative -> GND
+ * Hardware Connections (Identical & Unchanged):
+ * - NodeMCU ESP8266 (ESP-12E / CP2102)
+ * - 1.3" OLED Display (I2C): SDA -> D2 (GPIO4), SCL -> D1 (GPIO5)
+ * - PN532 RFID Module (I2C): SDA -> D2 (GPIO4), SCL -> D1 (GPIO5) [DIP Switch: 1=OFF, 2=ON]
+ * - Active Buzzer: Positive -> D5 (GPIO14), Negative -> GND
  * - Tactile Button: Terminal 1 -> D6 (GPIO12), Terminal 2 -> GND
  * 
- * Requirements & Features:
- * 1. Initial / Fallback Access Point Mode:
+ * Features & Specifications:
+ * 1. Default Access Point Mode:
  *    - IP: 192.168.4.1
  *    - SSID: attendance
  *    - Password: password
  * 2. Web Server & mDNS:
- *    - Web Server at IP & http://attendance.local
- *    - Web UI to configure Wi-Fi credentials, Server URL, Device ID
- * 3. PN532 RFID Reader & Buzzer Audio Feedback
- * 4. 1.3" OLED Display Interface
- * 5. Backend Integration with /attendance/save API
- * 6. Offline Punch Storage & Auto-Sync Queue (LittleFS)
+ *    - Accessible via IP (192.168.4.1 or local Wi-Fi IP) & http://attendance.local
+ *    - Upgraded Modern Web Management Interface
+ * 3. 6 Operation Modes & OLED Indicators:
+ *    - Setup (S), Read (R - Default), Write (W), Format (F), Delete (D), Clear (C)
+ * 4. OLED Display (Matching Machine Photo):
+ *    - Top Line: Company Name (e.g. "Sarvodaya Vidyalay")
+ *    - Center Line: Large Real-Time Clock ("01:16")
+ *    - Bottom Line: IP Address (Left) & Mode Indicator ('S'/'R'/'W'/'F'/'D'/'C') (Right)
+ * 5. Secure Endpoint Integration:
+ *    - Endpoint: https://payroll.sarvodayavidyalay.com/attendance/save
+ *    - Parameters: tagms, tagid, dt, tim
+ *    - Authorization Header: Bearer <api_token>
+ * 6. Resilient Offline Punch Storage & Auto-Sync (LittleFS)
  */
 
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 #include <ESP8266HTTPClient.h>
+#include <WiFiClientSecure.h>
 #include <WiFiClient.h>
 #include <Wire.h>
 #include <EEPROM.h>
@@ -33,15 +41,14 @@
 #include <ArduinoJson.h>
 #include <time.h>
 
-// Display Libraries (Adafruit GFX + SH1106 / SSD1306)
 #include <Adafruit_GFX.h>
 #include <Adafruit_SH1106.h>
 #include <Adafruit_PN532.h>
 
 #include "config.h"
 
-// Hardware Objects
-Adafruit_SH1106 display(OLED_SDA_PIN, OLED_SCL_PIN); // I2C OLED
+// Hardware Devices
+Adafruit_SH1106 display(OLED_SDA_PIN, OLED_SCL_PIN); // 1.3" I2C OLED
 Adafruit_PN532 nfc(OLED_SDA_PIN, OLED_SCL_PIN);     // I2C PN532
 
 ESP8266WebServer server(80);
@@ -50,17 +57,24 @@ Config currentConfig;
 bool inAPMode = false;
 unsigned long buttonPressStart = 0;
 unsigned long lastSyncCheck = 0;
-String statusMessage = "Ready";
+unsigned long lastDisplayUpdate = 0;
+String currentStatusText = "";
 
-// Offline Punch Structure
-struct OfflinePunch {
-    char tagid[32];
-    char dateStr[16];
-    char timeStr[16];
-};
+// Mode Helper String
+char getModeChar(uint8_t mode) {
+    switch (mode) {
+        case MODE_SETUP:  return 'S';
+        case MODE_READ:   return 'R';
+        case MODE_WRITE:  return 'W';
+        case MODE_FORMAT: return 'F';
+        case MODE_DELETE: return 'D';
+        case MODE_CLEAR:  return 'C';
+        default:          return 'R';
+    }
+}
 
 // ==========================================
-// Buzzer Helper Functions
+// Audio Feedback (Buzzer)
 // ==========================================
 void beep(int durationMs, int count = 1) {
     for (int i = 0; i < count; i++) {
@@ -71,52 +85,94 @@ void beep(int durationMs, int count = 1) {
     }
 }
 
-void beepSuccess() {
-    beep(70, 2); // Double short beep
-}
-
-void beepError() {
-    beep(400, 1); // Long warning beep
-}
-
-void beepScan() {
-    beep(50, 1); // Quick scan beep
-}
+void beepSuccess() { beep(70, 2); }
+void beepError()   { beep(400, 1); }
+void beepScan()    { beep(50, 1); }
 
 // ==========================================
-// Display Helper Functions
+// OLED Screen Renderer (Matching Hardware Photo Layout)
 // ==========================================
-void updateDisplay(String line1, String line2 = "", String line3 = "", String line4 = "") {
+void renderScreen(String customMsg = "") {
     display.clearDisplay();
+    display.setTextWrap(false);
+    
+    // Top Line: Company / Institution Name (Centered)
     display.setTextSize(1);
     display.setTextColor(WHITE);
-    display.setCursor(0, 0);
+    String compName = String(currentConfig.company_name);
+    if (compName.length() == 0) compName = DEFAULT_COMPANY_NAME;
+    int16_t x1, y1;
+    uint16_t w, h;
+    display.getTextBounds(compName, 0, 0, &x1, &y1, &w, &h);
+    int xPos = (128 - w) / 2;
+    if (xPos < 0) xPos = 0;
+    display.setCursor(xPos, 2);
+    display.print(compName);
     
-    // Header
-    display.println("Salary Manager");
-    display.println("--------------------");
+    if (customMsg.length() > 0) {
+        // Show scan result / custom alert message
+        display.setCursor(0, 22);
+        display.setTextSize(1);
+        display.println(customMsg);
+    } else {
+        // Line 2 (Center): Large Digital Clock (NTP Time)
+        time_t now = time(nullptr);
+        struct tm* timeinfo = localtime(&now);
+        char timeStr[16];
+        if (now > 100000) {
+            strftime(timeStr, sizeof(timeStr), "%H:%M", timeinfo);
+        } else {
+            strcpy(timeStr, "--:--");
+        }
+        
+        display.setTextSize(2); // Large Font for Time
+        display.getTextBounds(timeStr, 0, 0, &x1, &y1, &w, &h);
+        int clockX = (128 - w) / 2;
+        if (clockX < 0) clockX = 0;
+        display.setCursor(clockX, 22);
+        display.print(timeStr);
+    }
     
-    display.println(line1);
-    if (line2.length() > 0) display.println(line2);
-    if (line3.length() > 0) display.println(line3);
-    if (line4.length() > 0) display.println(line4);
+    // Line 3 (Bottom): IP Address (Left) & Mode Indicator ('S'/'R'/'W'/'F'/'D'/'C') (Right)
+    display.setTextSize(1);
+    display.setCursor(0, 52);
+    
+    if (inAPMode) {
+        display.print("192.168.4.1");
+    } else if (WiFi.status() == WL_CONNECTED) {
+        display.print(WiFi.localIP().toString());
+    } else {
+        display.print("No Wi-Fi");
+    }
+    
+    // Mode Indicator Right Aligned
+    char mChar = getModeChar(currentConfig.op_mode);
+    display.setCursor(118, 52);
+    display.print(mChar);
     
     display.display();
 }
 
 // ==========================================
-// EEPROM Config Management
+// EEPROM Configuration Persistence
 // ==========================================
 void loadConfig() {
     EEPROM.begin(EEPROM_SIZE);
     EEPROM.get(0, currentConfig);
     
-    if (currentConfig.configured != true) {
-        // Defaults
+    if (!currentConfig.configured) {
+        strncpy(currentConfig.ap_ssid, DEFAULT_AP_SSID, sizeof(currentConfig.ap_ssid));
+        strncpy(currentConfig.ap_pass, DEFAULT_AP_PASS, sizeof(currentConfig.ap_pass));
         strncpy(currentConfig.wifi_ssid, "", sizeof(currentConfig.wifi_ssid));
         strncpy(currentConfig.wifi_pass, "", sizeof(currentConfig.wifi_pass));
-        strncpy(currentConfig.server_url, DEFAULT_SERVER_URL, sizeof(currentConfig.server_url));
-        strncpy(currentConfig.device_id, DEFAULT_DEVICE_ID, sizeof(currentConfig.device_id));
+        strncpy(currentConfig.company_name, DEFAULT_COMPANY_NAME, sizeof(currentConfig.company_name));
+        strncpy(currentConfig.location_name, DEFAULT_LOCATION, sizeof(currentConfig.location_name));
+        strncpy(currentConfig.host_uri, DEFAULT_HOST_URI, sizeof(currentConfig.host_uri));
+        strncpy(currentConfig.api_token, "", sizeof(currentConfig.api_token));
+        strncpy(currentConfig.device_code, DEFAULT_DEVICE_CODE, sizeof(currentConfig.device_code));
+        strncpy(currentConfig.card_value, "", sizeof(currentConfig.card_value));
+        currentConfig.op_mode = MODE_READ;
+        currentConfig.tz_offset = 19800; // IST UTC+5:30
         currentConfig.configured = false;
     }
 }
@@ -134,50 +190,118 @@ void resetConfig() {
 }
 
 // ==========================================
-// Web Server & Captive Portal Configuration
+// Upgraded Modern Web Management Portal
 // ==========================================
-void handleRoot() {
-    String html = "<!DOCTYPE html><html><head><title>Attendance Terminal Config</title>";
-    html += "<meta name='viewport' content='width=device-width, initial-scale=1'>";
-    html += "<style>body{font-family:Arial,sans-serif;margin:20px;background:#f4f6f9;color:#333}";
-    html += ".card{background:#fff;padding:20px;border-radius:8px;max-width:400px;margin:auto;box-shadow:0 2px 10px rgba(0,0,0,0.1)}";
-    html += "h2{color:#1e3a5f;margin-top:0}label{font-weight:bold;display:block;margin-top:12px}";
-    html += "input[type=text],input[type=password]{width:100%;padding:10px;margin-top:4px;border:1px solid #ccc;border-radius:4px;box-sizing:border-box}";
-    html += "input[type=submit]{background:#10b981;color:#fff;border:0;padding:12px;width:100%;margin-top:20px;border-radius:4px;font-weight:bold;cursor:pointer}";
-    html += ".status{background:#e0f2fe;color:#075985;padding:10px;border-radius:4px;margin-bottom:15px}";
-    html += "</style></head><body><div class='card'>";
-    html += "<h2>Salary Manager Terminal</h2>";
-    html += "<div class='status'>Status: " + String(inAPMode ? "Access Point Mode (192.168.4.1)" : "Connected (" + WiFi.localIP().toString() + ")") + "</div>";
+void handleWebRoot() {
+    String html = "<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'>";
+    html += "<meta name='viewport' content='width=device-width, initial-scale=1.0'>";
+    html += "<title>Attendance System | Leena IT Solutions</title>";
+    html += "<style>";
+    html += ":root{--primary:#1e3a5f;--accent:#10b981;--bg:#f4f6f9;--card:#ffffff;--text:#1f2937}";
+    html += "body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);margin:0;padding:20px}";
+    html += ".container{max-width:600px;margin:auto}";
+    html += ".header{text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #e5e7eb}";
+    html += ".header h1{margin:0;font-size:24px;color:var(--primary)}";
+    html += ".header p{margin:5px 0 0;font-size:13px;color:#6b7280}";
+    html += ".card{background:var(--card);border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 4px 15px rgba(0,0,0,0.05)}";
+    html += ".card h2{margin-top:0;font-size:16px;color:var(--primary);border-bottom:1px solid #f3f4f6;padding-bottom:8px}";
+    html += "label{display:block;font-size:13px;font-weight:600;margin-top:12px;color:#374151}";
+    html += "input[type=text],input[type=password],select{width:100%;padding:10px 12px;margin-top:4px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;box-sizing:border-box}";
+    html += ".btn{background:var(--primary);color:#fff;border:0;padding:12px 20px;border-radius:6px;font-weight:bold;cursor:pointer;width:100%;font-size:15px;margin-top:15px;transition:background 0.2s}";
+    html += ".btn:hover{background:#0f2744}";
+    html += ".btn-success{background:var(--accent)}";
+    html += ".btn-success:hover{background:#059669}";
+    html += ".status-badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:bold;background:#d1fae5;color:#065f46}";
+    html += ".status-badge.ap{background:#feefc3;color:#7c2d12}";
+    html += ".grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}";
+    html += "</style></head><body><div class='container'>";
     
+    html += "<div class='header'><h1>Attendance System</h1><p>Powered By Leena IT Solutions</p></div>";
+    
+    // Status Bar Card
+    html += "<div class='card'><h2>Device Diagnostics</h2>";
+    html += "<div style='margin-bottom:10px;'>System Status: ";
+    if (inAPMode) {
+        html += "<span class='status-badge ap'>Access Point Mode (192.168.4.1)</span>";
+    } else {
+        html += "<span class='status-badge'>Connected (" + WiFi.localIP().toString() + ")</span>";
+    }
+    html += "</div>";
+    html += "<div class='grid'>";
+    html += "<div><strong>mDNS Domain:</strong> http://attendance.local</div>";
+    html += "<div><strong>Signal Strength:</strong> " + String(WiFi.RSSI()) + " dBm</div>";
+    html += "</div></div>";
+    
+    // Main Config Form
     html += "<form action='/save' method='POST'>";
-    html += "<label>Wi-Fi Network SSID:</label>";
-    html += "<input type='text' name='ssid' value='" + String(currentConfig.wifi_ssid) + "' required>";
     
-    html += "<label>Wi-Fi Password:</label>";
-    html += "<input type='password' name='pass' value='" + String(currentConfig.wifi_pass) + "'>";
+    // Access Point Setup Card
+    html += "<div class='card'><h2>Access Point Setup</h2>";
+    html += "<label>Enter Accesspoint SSID:</label>";
+    html += "<input type='text' name='ap_ssid' value='" + String(currentConfig.ap_ssid) + "' required>";
+    html += "<label>Enter Accesspoint Password:</label>";
+    html += "<input type='password' name='ap_pass' value='" + String(currentConfig.ap_pass) + "' required>";
+    html += "</div>";
     
-    html += "<label>Attendance API Server URL:</label>";
-    html += "<input type='text' name='server' value='" + String(currentConfig.server_url) + "' required>";
+    // WiFi Setup Card
+    html += "<div class='card'><h2>WiFi Setup</h2>";
+    html += "<label>Enter WiFi SSID:</label>";
+    html += "<input type='text' name='wifi_ssid' value='" + String(currentConfig.wifi_ssid) + "'>";
+    html += "<label>Enter WiFi Password:</label>";
+    html += "<input type='password' name='wifi_pass' value='" + String(currentConfig.wifi_pass) + "'>";
+    html += "</div>";
     
-    html += "<label>Device / Machine Code:</label>";
-    html += "<input type='text' name='device' value='" + String(currentConfig.device_id) + "' required>";
+    // Terminal & Organization Settings Card
+    html += "<div class='card'><h2>Terminal & Company Settings</h2>";
+    html += "<label>Company / Institution Name:</label>";
+    html += "<input type='text' name='company_name' value='" + String(currentConfig.company_name) + "' placeholder='Sarvodaya Vidyalay'>";
+    html += "<label>Machine Code (tagms):</label>";
+    html += "<input type='text' name='device_code' value='" + String(currentConfig.device_code) + "' required>";
+    html += "<label>Operation Mode:</label>";
+    html += "<select name='op_mode'>";
+    html += "<option value='0'" + String(currentConfig.op_mode == MODE_SETUP ? " selected" : "") + ">Setup (S)</option>";
+    html += "<option value='1'" + String(currentConfig.op_mode == MODE_READ ? " selected" : "") + ">Read (R) - Normal Attendance</option>";
+    html += "<option value='2'" + String(currentConfig.op_mode == MODE_WRITE ? " selected" : "") + ">Write (W) - Card Burning</option>";
+    html += "<option value='3'" + String(currentConfig.op_mode == MODE_FORMAT ? " selected" : "") + ">Format (F) - Format Card</option>";
+    html += "<option value='4'" + String(currentConfig.op_mode == MODE_DELETE ? " selected" : "") + ">Delete (D) - Clear Card Data</option>";
+    html += "<option value='5'" + String(currentConfig.op_mode == MODE_CLEAR ? " selected" : "") + ">Clear (C) - Flush Offline Queue</option>";
+    html += "</select>";
+    html += "<label>Host URI Endpoint:</label>";
+    html += "<input type='text' name='host_uri' value='" + String(currentConfig.host_uri) + "' required>";
+    html += "<label>Bearer API Access Token (Optional):</label>";
+    html += "<input type='password' name='api_token' value='" + String(currentConfig.api_token) + "' placeholder='Bearer Token'>";
+    html += "<input type='submit' class='btn' value='Save Settings'>";
+    html += "</div>";
+    html += "</form>";
     
-    html += "<input type='submit' value='Save & Connect'>";
-    html += "</form></div></body></html>";
+    // RFID Card Writer Tool Card
+    html += "<div class='card'><h2>Write Card</h2>";
+    html += "<form action='/write_card' method='POST'>";
+    html += "<label>Card Value / Employee Code:</label>";
+    html += "<input type='text' name='card_val' value='" + String(currentConfig.card_value) + "' placeholder='Enter value to write'>";
+    html += "<input type='submit' class='btn btn-success' value='Write Card'>";
+    html += "</form></div>";
+    
+    html += "</div></body></html>";
     
     server.send(200, "text/html", html);
 }
 
-void handleSave() {
-    if (server.hasArg("ssid") && server.hasArg("server")) {
-        strncpy(currentConfig.wifi_ssid, server.arg("ssid").c_str(), sizeof(currentConfig.wifi_ssid));
-        strncpy(currentConfig.wifi_pass, server.arg("pass").c_str(), sizeof(currentConfig.wifi_pass));
-        strncpy(currentConfig.server_url, server.arg("server").c_str(), sizeof(currentConfig.server_url));
-        strncpy(currentConfig.device_id, server.arg("device").c_str(), sizeof(currentConfig.device_id));
+void handleSaveWeb() {
+    if (server.hasArg("host_uri")) {
+        if (server.hasArg("ap_ssid")) strncpy(currentConfig.ap_ssid, server.arg("ap_ssid").c_str(), sizeof(currentConfig.ap_ssid));
+        if (server.hasArg("ap_pass")) strncpy(currentConfig.ap_pass, server.arg("ap_pass").c_str(), sizeof(currentConfig.ap_pass));
+        if (server.hasArg("wifi_ssid")) strncpy(currentConfig.wifi_ssid, server.arg("wifi_ssid").c_str(), sizeof(currentConfig.wifi_ssid));
+        if (server.hasArg("wifi_pass")) strncpy(currentConfig.wifi_pass, server.arg("wifi_pass").c_str(), sizeof(currentConfig.wifi_pass));
+        if (server.hasArg("company_name")) strncpy(currentConfig.company_name, server.arg("company_name").c_str(), sizeof(currentConfig.company_name));
+        if (server.hasArg("device_code")) strncpy(currentConfig.device_code, server.arg("device_code").c_str(), sizeof(currentConfig.device_code));
+        if (server.hasArg("host_uri")) strncpy(currentConfig.host_uri, server.arg("host_uri").c_str(), sizeof(currentConfig.host_uri));
+        if (server.hasArg("api_token")) strncpy(currentConfig.api_token, server.arg("api_token").c_str(), sizeof(currentConfig.api_token));
+        if (server.hasArg("op_mode")) currentConfig.op_mode = server.arg("op_mode").toInt();
         
         saveConfig();
         
-        String html = "<html><body><h2>Configuration Saved!</h2><p>Rebooting and connecting to Wi-Fi...</p></body></html>";
+        String html = "<html><body><h2>Settings Saved Successfully!</h2><p>Rebooting terminal to apply new settings...</p></body></html>";
         server.send(200, "text/html", html);
         delay(1500);
         ESP.restart();
@@ -186,9 +310,23 @@ void handleSave() {
     }
 }
 
+void handleWriteCardWeb() {
+    if (server.hasArg("card_val")) {
+        strncpy(currentConfig.card_value, server.arg("card_val").c_str(), sizeof(currentConfig.card_value));
+        currentConfig.op_mode = MODE_WRITE; // Switch mode to Write
+        saveConfig();
+        
+        String html = "<html><body><h2>Write Mode Armed!</h2><p>Please place RFID card near reader to write value: <strong>" + String(currentConfig.card_value) + "</strong></p><p><a href='/'>Back to Dashboard</a></p></body></html>";
+        server.send(200, "text/html", html);
+    } else {
+        server.send(400, "text/plain", "Bad Request");
+    }
+}
+
 void setupWebServer() {
-    server.on("/", handleRoot);
-    server.on("/save", HTTP_POST, handleSave);
+    server.on("/", handleWebRoot);
+    server.on("/save", HTTP_POST, handleSaveWeb);
+    server.on("/write_card", HTTP_POST, handleWriteCardWeb);
     server.onNotFound([]() {
         server.sendHeader("Location", "http://192.168.4.1/", true);
         server.send(302, "text/plain", "");
@@ -207,14 +345,18 @@ void startAPMode() {
     IPAddress gateway(192, 168, 4, 1);
     IPAddress subnet(255, 255, 255, 0);
     
-    WiFi.softAPConfig(local_IP, gateway, subnet);
-    WiFi.softAP(AP_SSID, AP_PASSWORD);
+    String apSsid = String(currentConfig.ap_ssid);
+    String apPass = String(currentConfig.ap_pass);
+    if (apSsid.length() == 0) apSsid = DEFAULT_AP_SSID;
+    if (apPass.length() == 0) apPass = DEFAULT_AP_PASS;
     
-    MDNS.begin(MDNS_NAME);
+    WiFi.softAPConfig(local_IP, gateway, subnet);
+    WiFi.softAP(apSsid.c_str(), apPass.c_str());
+    
+    MDNS.begin(DEFAULT_MDNS_NAME);
     MDNS.addService("http", "tcp", 80);
     
     setupWebServer();
-    updateDisplay("AP Mode Active", "SSID: " String(AP_SSID), "Pass: " String(AP_PASSWORD), "IP: 192.168.4.1");
     beep(100, 3);
 }
 
@@ -227,48 +369,38 @@ void connectWiFi() {
     WiFi.mode(WIFI_STA);
     WiFi.begin(currentConfig.wifi_ssid, currentConfig.wifi_pass);
     
-    updateDisplay("Connecting Wi-Fi...", String(currentConfig.wifi_ssid));
-    
     int attempts = 0;
-    while (WiFi.status() != WL_CONNECTED && attempts < 25) {
+    while (WiFi.status() != WL_CONNECTED && attempts < 20) {
         delay(500);
         attempts++;
     }
     
     if (WiFi.status() == WL_CONNECTED) {
         inAPMode = false;
-        configTime(19800, 0, "pool.ntp.org", "time.nist.gov"); // IST UTC+5:30
+        configTime(currentConfig.tz_offset, 0, "pool.ntp.org", "time.nist.gov");
         
-        MDNS.begin(MDNS_NAME);
+        MDNS.begin(DEFAULT_MDNS_NAME);
         MDNS.addService("http", "tcp", 80);
         setupWebServer();
-        
-        updateDisplay("Wi-Fi Connected!", "IP: " + WiFi.localIP().toString(), "Domain: attendance.local");
         beepSuccess();
-        delay(1500);
     } else {
-        // Fall back to Access Point Mode
         startAPMode();
     }
 }
 
 // ==========================================
-// Offline Queue (LittleFS Storage)
+// LittleFS Offline Punch Queue
 // ==========================================
 void saveOfflinePunch(String tagid, String dateStr, String timeStr) {
     DynamicJsonDocument doc(4096);
-    JsonArray array;
-    
     if (LittleFS.exists("/punches.json")) {
         File file = LittleFS.open("/punches.json", "r");
         deserializeJson(doc, file);
         file.close();
     }
     
-    array = doc.as<JsonArray>();
-    if (array.isNull()) {
-        array = doc.to<JsonArray>();
-    }
+    JsonArray array = doc.as<JsonArray>();
+    if (array.isNull()) array = doc.to<JsonArray>();
     
     JsonObject obj = array.createNestedObject();
     obj["tagid"] = tagid;
@@ -296,23 +428,37 @@ void syncOfflinePunches() {
     DynamicJsonDocument remainingDoc(4096);
     JsonArray remainingArray = remainingDoc.to<JsonArray>();
     
-    WiFiClient client;
+    WiFiClientSecure clientSecure;
+    WiFiClient clientPlain;
     HTTPClient http;
+    
+    String hostUri = String(currentConfig.host_uri);
+    bool isHttps = hostUri.startsWith("https");
+    if (isHttps) clientSecure.setInsecure();
     
     for (JsonObject obj : array) {
         String tagid = obj["tagid"].as<String>();
         String dt = obj["dt"].as<String>();
         String tim = obj["tim"].as<String>();
         
-        String url = String(currentConfig.server_url);
-        url += "?tagid=" + tagid + "&tagms=" + String(currentConfig.device_id) + "&dt=" + dt + "&tim=" + tim;
+        String url = hostUri;
+        url += (url.indexOf('?') >= 0 ? "&" : "?");
+        url += "tagid=" + tagid + "&tagms=" + String(currentConfig.device_code) + "&dt=" + dt + "&tim=" + tim;
         
-        http.begin(client, url);
+        if (isHttps) {
+            http.begin(clientSecure, url);
+        } else {
+            http.begin(clientPlain, url);
+        }
+        
+        if (strlen(currentConfig.api_token) > 0) {
+            http.addHeader("Authorization", "Bearer " + String(currentConfig.api_token));
+        }
+        
         int httpCode = http.GET();
         http.end();
         
         if (httpCode != 200) {
-            // Keep in queue for next retry
             remainingArray.add(obj);
         }
     }
@@ -323,68 +469,183 @@ void syncOfflinePunches() {
 }
 
 // ==========================================
-// Attendance API Punch Submission
+// Mode Action Handlers (Setup, Read, Write, Format, Delete, Clear)
 // ==========================================
-void submitPunch(String tagid) {
+void processCardScan(String tagidStr, uint8_t* uid, uint8_t uidLength) {
     beepScan();
     
-    time_t now = time(nullptr);
-    struct tm* timeinfo = localtime(&now);
-    
-    char dateBuf[16];
-    char timeBuf[16];
-    
-    if (now > 100000) {
-        strftime(dateBuf, sizeof(dateBuf), "%Y-%m-%d", timeinfo);
-        strftime(timeBuf, sizeof(timeBuf), "%H:%M", timeinfo);
-    } else {
-        // Fallback default
-        strcpy(dateBuf, "2026-08-01");
-        strcpy(timeBuf, "09:00");
-    }
-    
-    if (WiFi.status() == WL_CONNECTED) {
-        WiFiClient client;
-        HTTPClient http;
+    switch (currentConfig.op_mode) {
         
-        String url = String(currentConfig.server_url);
-        url += "?tagid=" + tagid + "&tagms=" + String(currentConfig.device_id) + "&dt=" + String(dateBuf) + "&tim=" + String(timeBuf);
-        
-        updateDisplay("Sending Punch...", "Tag: " + tagid);
-        
-        http.begin(client, url);
-        int httpCode = http.GET();
-        
-        if (httpCode == 200) {
-            String payload = http.getString();
-            http.end();
+        // ----------------------------------
+        // MODE 1: READ MODE (Default Attendance)
+        // ----------------------------------
+        case MODE_READ: {
+            time_t now = time(nullptr);
+            struct tm* timeinfo = localtime(&now);
+            char dateBuf[16];
+            char timeBuf[16];
             
-            DynamicJsonDocument doc(1024);
-            deserializeJson(doc, payload);
+            if (now > 100000) {
+                strftime(dateBuf, sizeof(dateBuf), "%Y-%m-%d", timeinfo);
+                strftime(timeBuf, sizeof(timeBuf), "%H:%M", timeinfo);
+            } else {
+                strcpy(dateBuf, "2026-08-01");
+                strcpy(timeBuf, "09:00");
+            }
             
-            String employee = doc["employee"] | "Employee";
-            String msg = doc["message"] | "Success";
+            if (WiFi.status() == WL_CONNECTED) {
+                WiFiClientSecure clientSecure;
+                WiFiClient clientPlain;
+                HTTPClient http;
+                
+                String url = String(currentConfig.host_uri);
+                url += (url.indexOf('?') >= 0 ? "&" : "?");
+                url += "tagid=" + tagidStr + "&tagms=" + String(currentConfig.device_code) + "&dt=" + String(dateBuf) + "&tim=" + String(timeBuf);
+                
+                bool isHttps = url.startsWith("https");
+                if (isHttps) clientSecure.setInsecure();
+                
+                if (isHttps) {
+                    http.begin(clientSecure, url);
+                } else {
+                    http.begin(clientPlain, url);
+                }
+                
+                if (strlen(currentConfig.api_token) > 0) {
+                    http.addHeader("Authorization", "Bearer " + String(currentConfig.api_token));
+                }
+                
+                int httpCode = http.GET();
+                
+                if (httpCode == 200) {
+                    String payload = http.getString();
+                    http.end();
+                    
+                    DynamicJsonDocument doc(1024);
+                    deserializeJson(doc, payload);
+                    
+                    String employee = doc["employee"] | "Employee";
+                    String msg = doc["message"] | "Success";
+                    
+                    if (msg == "Success") {
+                        beepSuccess();
+                        renderScreen("Saved: " + employee);
+                    } else if (msg == "Already Exists") {
+                        beep(150, 1);
+                        renderScreen("Already Marked");
+                    } else {
+                        beepError();
+                        renderScreen("Invalid Card");
+                    }
+                } else {
+                    http.end();
+                    saveOfflinePunch(tagidStr, String(dateBuf), String(timeBuf));
+                    beep(100, 2);
+                    renderScreen("Saved Offline");
+                }
+            } else {
+                saveOfflinePunch(tagidStr, String(dateBuf), String(timeBuf));
+                beep(100, 2);
+                renderScreen("Saved Offline");
+            }
+            break;
+        }
+        
+        // ----------------------------------
+        // MODE 2: WRITE MODE (Card Burning)
+        // ----------------------------------
+        case MODE_WRITE: {
+            if (strlen(currentConfig.card_value) == 0) {
+                beepError();
+                renderScreen("No Value Set!");
+                break;
+            }
             
-            if (msg == "Success") {
-                beepSuccess();
-                updateDisplay("Attendance Saved!", employee, "Status: " + msg, timeBuf);
-            } else if (msg == "Already Exists") {
-                beep(150, 1);
-                updateDisplay("Already Marked", employee, timeBuf);
+            // Authenticate & write data to Block 4
+            uint8_t keyA[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+            uint8_t authenticated = nfc.mifareclassic_AuthenticateBlock(uid, uidLength, 4, 0, keyA);
+            
+            if (authenticated) {
+                uint8_t blockData[16] = {0};
+                strncpy((char*)blockData, currentConfig.card_value, 16);
+                
+                uint8_t writeSuccess = nfc.mifareclassic_WriteDataBlock(4, blockData);
+                if (writeSuccess) {
+                    beepSuccess();
+                    renderScreen("Card Written OK!");
+                    currentConfig.op_mode = MODE_READ; // Return to Read Mode
+                    saveConfig();
+                } else {
+                    beepError();
+                    renderScreen("Write Failed!");
+                }
             } else {
                 beepError();
-                updateDisplay("Invalid Employee", "Tag: " + tagid, msg);
+                renderScreen("Auth Failed!");
             }
-        } else {
-            http.end();
-            saveOfflinePunch(tagid, String(dateBuf), String(timeBuf));
-            beep(100, 2);
-            updateDisplay("Saved Offline", "Tag: " + tagid, "Queued to Memory");
+            break;
         }
-    } else {
-        saveOfflinePunch(tagid, String(dateBuf), String(timeBuf));
-        beep(100, 2);
-        updateDisplay("Saved Offline", "Tag: " + tagid, "No Wi-Fi Connection");
+        
+        // ----------------------------------
+        // MODE 3: FORMAT MODE (Clear Sectors)
+        // ----------------------------------
+        case MODE_FORMAT: {
+            uint8_t keyA[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+            if (nfc.mifareclassic_AuthenticateBlock(uid, uidLength, 4, 0, keyA)) {
+                uint8_t emptyBlock[16] = {0};
+                if (nfc.mifareclassic_WriteDataBlock(4, emptyBlock)) {
+                    beepSuccess();
+                    renderScreen("Formatted OK!");
+                } else {
+                    beepError();
+                    renderScreen("Format Failed!");
+                }
+            } else {
+                beepError();
+                renderScreen("Auth Failed!");
+            }
+            break;
+        }
+        
+        // ----------------------------------
+        // MODE 4: DELETE MODE (Clear Card Data)
+        // ----------------------------------
+        case MODE_DELETE: {
+            uint8_t keyA[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+            if (nfc.mifareclassic_AuthenticateBlock(uid, uidLength, 4, 0, keyA)) {
+                uint8_t emptyBlock[16] = {0};
+                nfc.mifareclassic_WriteDataBlock(4, emptyBlock);
+                beepSuccess();
+                renderScreen("Card Cleared!");
+            } else {
+                beepError();
+                renderScreen("Delete Failed!");
+            }
+            break;
+        }
+        
+        // ----------------------------------
+        // MODE 5: CLEAR MODE (Clear Queue)
+        // ----------------------------------
+        case MODE_CLEAR: {
+            if (LittleFS.exists("/punches.json")) {
+                LittleFS.remove("/punches.json");
+            }
+            beepSuccess();
+            renderScreen("Queue Cleared!");
+            currentConfig.op_mode = MODE_READ;
+            saveConfig();
+            break;
+        }
+        
+        // ----------------------------------
+        // MODE 0: SETUP MODE (Diagnostic)
+        // ----------------------------------
+        case MODE_SETUP: {
+            beepScan();
+            renderScreen("UID: " + tagidStr);
+            break;
+        }
     }
     
     delay(2000);
@@ -410,20 +671,20 @@ void setup() {
     display.clearDisplay();
     display.display();
     
-    updateDisplay("Salary Manager", "Initialising...", "RFID Terminal");
+    renderScreen("Initialising...");
     beep(80, 1);
-    delay(1000);
+    delay(800);
     
     // PN532 Init
     nfc.begin();
     uint32_t versiondata = nfc.getFirmwareVersion();
     if (!versiondata) {
-        updateDisplay("PN532 Error!", "Check Wiring", "SDA: D2, SCL: D1");
+        renderScreen("PN532 Error!");
         beepError();
         while (1) delay(100);
     }
     
-    nfc.SAMConfig(); // Configure board to read RFID tags
+    nfc.SAMConfig(); // Enable PN532 to read RFID cards
     connectWiFi();
 }
 
@@ -434,12 +695,12 @@ void loop() {
     server.handleClient();
     MDNS.update();
     
-    // Tactile Button Check (Hold >3s to reset Wi-Fi & launch AP Mode)
+    // Tactile Switch Reset Check (Hold >3s to reset Wi-Fi & enter AP Mode)
     if (digitalRead(BUTTON_PIN) == LOW) {
         if (buttonPressStart == 0) buttonPressStart = millis();
         if (millis() - buttonPressStart > 3000) {
             beep(200, 2);
-            updateDisplay("Resetting Wi-Fi...", "Launching AP Mode");
+            renderScreen("Resetting Wi-Fi");
             resetConfig();
             startAPMode();
             buttonPressStart = 0;
@@ -448,18 +709,24 @@ void loop() {
         buttonPressStart = 0;
     }
     
-    // Periodic Offline Sync (Every 30s)
+    // Periodic Offline Queue Sync (Every 30 seconds)
     if (millis() - lastSyncCheck > 30000) {
         lastSyncCheck = millis();
         syncOfflinePunches();
     }
     
-    // Read PN532 RFID Cards
+    // Periodic Screen Refresh for Digital Clock (Every 1 second)
+    if (millis() - lastDisplayUpdate > 1000) {
+        lastDisplayUpdate = millis();
+        renderScreen();
+    }
+    
+    // RFID Card Scan Detection
     uint8_t success;
     uint8_t uid[7];
     uint8_t uidLength;
     
-    success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength, 100);
+    success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength, 80);
     
     if (success) {
         String tagidStr = "";
@@ -470,17 +737,6 @@ void loop() {
         }
         tagidStr.toUpperCase();
         
-        submitPunch(tagidStr);
-    }
-    
-    // Ready Idle Display
-    static unsigned long lastIdleUpdate = 0;
-    if (millis() - lastIdleUpdate > 5000) {
-        lastIdleUpdate = millis();
-        if (inAPMode) {
-            updateDisplay("AP Mode (Config)", "SSID: " String(AP_SSID), "Pass: " String(AP_PASSWORD), "IP: 192.168.4.1");
-        } else {
-            updateDisplay("Ready to Scan", "SSID: " + WiFi.SSID(), "IP: " + WiFi.localIP().toString(), "Domain: attendance.local");
-        }
+        processCardScan(tagidStr, uid, uidLength);
     }
 }

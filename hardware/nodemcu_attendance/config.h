@@ -9,8 +9,8 @@
 #define OLED_SDA_PIN    4   // NodeMCU D2 (GPIO4)
 #define OLED_SCL_PIN    5   // NodeMCU D1 (GPIO5)
 
-#define PN532_SDA_PIN   4   // NodeMCU D2 (GPIO4) - Shared I2C
-#define PN532_SCL_PIN   5   // NodeMCU D1 (GPIO5) - Shared I2C
+#define PN532_SDA_PIN   4   // NodeMCU D2 (GPIO4) - Shared I2C Bus
+#define PN532_SCL_PIN   5   // NodeMCU D1 (GPIO5) - Shared I2C Bus
 
 #define BUZZER_PIN      14  // NodeMCU D5 (GPIO14)
 #define BUTTON_PIN      12  // NodeMCU D6 (GPIO12)
@@ -22,28 +22,51 @@
 #define PN532_I2C_ADDR  0x24 // PN532 RFID I2C Address
 
 // ==========================================
-// Wi-Fi Access Point & Config Mode
+// Default Access Point & Config Settings
 // ==========================================
-#define AP_SSID         "attendance"
-#define AP_PASSWORD     "password"
-#define AP_IP           "192.168.4.1"
-#define MDNS_NAME       "attendance" // Resolves to http://attendance.local
+#define DEFAULT_AP_SSID     "attendance"
+#define DEFAULT_AP_PASS     "password"
+#define DEFAULT_AP_IP       "192.168.4.1"
+#define DEFAULT_MDNS_NAME   "attendance" // Accessible as http://attendance.local
 
-// ==========================================
-// Default API Configuration
-// ==========================================
-#define DEFAULT_SERVER_URL  "http://192.168.0.100:8000/attendance/save"
-#define DEFAULT_DEVICE_ID   "DEV_001"
+#define DEFAULT_COMPANY_NAME "Sarvodaya Vidyalay"
+#define DEFAULT_LOCATION     "Main Gate"
+#define DEFAULT_HOST_URI     "https://payroll.sarvodayavidyalay.com/attendance/save"
+#define DEFAULT_DEVICE_CODE  "SAR24101"
 
-// EEPROM / Memory Storage Config
-#define EEPROM_SIZE         512
-#define MAX_QUEUE_ITEMS     50
+// EEPROM Storage Configuration
+#define EEPROM_SIZE         1024
+#define MAX_QUEUE_ITEMS     100
+
+// Operation Modes:
+// 0 = Setup (S)
+// 1 = Read (R) - Default Attendance Mode
+// 2 = Write (W) - Card Burning Mode
+// 3 = Format (F) - Format Mifare Card Sectors
+// 4 = Delete (D) - Clear Employee Data from Card
+// 5 = Clear (C) - Clear Offline Punch Queue
+enum OperationMode {
+    MODE_SETUP = 0,
+    MODE_READ = 1,
+    MODE_WRITE = 2,
+    MODE_FORMAT = 3,
+    MODE_DELETE = 4,
+    MODE_CLEAR = 5
+};
 
 struct Config {
+    char ap_ssid[32];
+    char ap_pass[32];
     char wifi_ssid[64];
     char wifi_pass[64];
-    char server_url[128];
-    char device_id[32];
+    char company_name[64];
+    char location_name[32];
+    char host_uri[128];
+    char api_token[64];
+    char device_code[32];
+    char card_value[32];
+    uint8_t op_mode; // OperationMode enum
+    long tz_offset;  // Default 19800 for IST UTC+5:30
     bool configured;
 };
 
