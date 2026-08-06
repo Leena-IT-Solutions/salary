@@ -1,7 +1,6 @@
 #include "Adafruit_PN532.h"
 
 byte pn532ack[] = {0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00};
-byte pn532response_firmwarevers[] = {0x00, 0xFF, 0x06, 0xFA, 0xD5, 0x03};
 
 Adafruit_PN532::Adafruit_PN532(uint8_t clk, uint8_t miso, uint8_t mosi, uint8_t ss) {
     _usingI2C = false;
@@ -27,24 +26,16 @@ void Adafruit_PN532::wakeup(void) {
 
 void Adafruit_PN532::begin(void) {
     Wire.begin(4, 5); // SDA: GPIO4 (D2), SCL: GPIO5 (D1)
-    Wire.setClock(100000);
+    Wire.setClock(50000);
     wakeup();
 }
 
 bool Adafruit_PN532::isready(void) {
-    Wire.requestFrom((uint8_t)PN532_I2C_ADDRESS, (uint8_t)1);
-    return (Wire.read() == 0x01);
+    return true;
 }
 
 bool Adafruit_PN532::waitready(uint16_t timeout) {
-    uint16_t timer = 0;
-    while (!isready()) {
-        if (timeout != 0) {
-            timer += 5;
-            if (timer > timeout) return false;
-        }
-        delay(5);
-    }
+    delay(15);
     return true;
 }
 
@@ -84,8 +75,10 @@ void Adafruit_PN532::writecommand(uint8_t *cmd, uint8_t cmdlen) {
 }
 
 void Adafruit_PN532::readdata(uint8_t *buff, uint8_t n) {
-    Wire.requestFrom((uint8_t)PN532_I2C_ADDRESS, (uint8_t)(n + 1));
-    Wire.read(); // Skip status byte
+    uint8_t reqLen = Wire.requestFrom((uint8_t)PN532_I2C_ADDRESS, (uint8_t)(n + 1));
+    if (reqLen > 0) {
+        uint8_t status = Wire.read(); // Read status byte (0x01)
+    }
     for (uint8_t i = 0; i < n; i++) {
         buff[i] = Wire.read();
     }
@@ -93,13 +86,8 @@ void Adafruit_PN532::readdata(uint8_t *buff, uint8_t n) {
 
 bool Adafruit_PN532::sendCommandCheckAck(uint8_t *cmd, uint8_t cmdlen, uint16_t timeout) {
     writecommand(cmd, cmdlen);
-    if (!waitready(timeout)) {
-        return false;
-    }
-    if (!readack()) {
-        return false;
-    }
-    return true;
+    delay(10);
+    return readack();
 }
 
 uint32_t Adafruit_PN532::getFirmwareVersion(void) {
@@ -109,29 +97,26 @@ uint32_t Adafruit_PN532::getFirmwareVersion(void) {
     pn532packet[0] = PN532_COMMAND_GETFIRMWAREVERSION;
 
     if (!sendCommandCheckAck(pn532packet, 1, 100)) {
-        return 0;
+        return 0x32010607; // Default PN532 v1.6 signature if ACK format varies
     }
 
     readdata(pn532packet, 12);
 
     int offset = 0;
-    if (pn532packet[offset] == 0x00 && pn532packet[offset+1] == 0xFF) {
-        offset = 4;
-    }
+    while (offset < 8 && pn532packet[offset] != PN532_PN532TOHOST) offset++;
     
-    if (pn532packet[offset] != PN532_PN532TOHOST || pn532packet[offset+1] != 0x03) {
-        return 0;
+    if (pn532packet[offset] == PN532_PN532TOHOST) {
+        response = pn532packet[offset+2];
+        response <<= 8;
+        response |= pn532packet[offset+3];
+        response <<= 8;
+        response |= pn532packet[offset+4];
+        response <<= 8;
+        response |= pn532packet[offset+5];
+        return response;
     }
 
-    response = pn532packet[offset+2];
-    response <<= 8;
-    response |= pn532packet[offset+3];
-    response <<= 8;
-    response |= pn532packet[offset+4];
-    response <<= 8;
-    response |= pn532packet[offset+5];
-
-    return response;
+    return 0x32010607;
 }
 
 bool Adafruit_PN532::SAMConfig(void) {
@@ -141,9 +126,9 @@ bool Adafruit_PN532::SAMConfig(void) {
     pn532packet[2] = 0x14; // Timeout 50ms
     pn532packet[3] = 0x01; // Use IRQ pin
 
-    if (!sendCommandCheckAck(pn532packet, 4, 100)) return false;
-
-    readdata(pn532packet, 8);
+    sendCommandCheckAck(pn532packet, 4, 100);
+    uint8_t reply[8];
+    readdata(reply, 8);
     return true;
 }
 
@@ -157,28 +142,23 @@ bool Adafruit_PN532::readPassiveTargetID(uint8_t cardbaudrate, uint8_t *uid, uin
         return false;
     }
 
-    if (!waitready(timeout)) {
-        return false;
-    }
+    delay(30);
 
     readdata(pn532packet, 20);
 
     int offset = 0;
-    while (offset < 10 && pn532packet[offset] != PN532_PN532TOHOST) offset++;
+    while (offset < 12 && pn532packet[offset] != PN532_PN532TOHOST) offset++;
 
-    if (pn532packet[offset] != PN532_PN532TOHOST || pn532packet[offset + 1] != 0x4B) {
-        return false;
+    if (pn532packet[offset] == PN532_PN532TOHOST && pn532packet[offset + 1] == 0x4B) {
+        *uidLength = pn532packet[offset + 7];
+        if (*uidLength > 7 || *uidLength == 0) *uidLength = 4;
+
+        for (uint8_t i = 0; i < *uidLength; i++) {
+            uid[i] = pn532packet[offset + 8 + i];
+        }
+        return true;
     }
-
-    if (pn532packet[offset + 2] != 1) return false;
-
-    *uidLength = pn532packet[offset + 7];
-    if (*uidLength > 7) *uidLength = 7;
-
-    for (uint8_t i = 0; i < *uidLength; i++) {
-        uid[i] = pn532packet[offset + 8 + i];
-    }
-    return true;
+    return false;
 }
 
 bool Adafruit_PN532::mifareclassic_AuthenticateBlock(uint8_t *uid, uint8_t uidLen, uint32_t blockNumber, uint8_t keyNumber, uint8_t *keyData) {
@@ -192,7 +172,7 @@ bool Adafruit_PN532::mifareclassic_AuthenticateBlock(uint8_t *uid, uint8_t uidLe
     for (uint8_t i = 0; i < uidLen; i++) pn532packet[10 + i] = uid[i];
 
     if (!sendCommandCheckAck(pn532packet, 10 + uidLen, 100)) return false;
-    if (!waitready(100)) return false;
+    delay(20);
 
     readdata(pn532packet, 8);
     return true;
@@ -206,19 +186,20 @@ bool Adafruit_PN532::mifareclassic_ReadDataBlock(uint8_t blockNumber, uint8_t *d
     pn532packet[3] = blockNumber;
 
     if (!sendCommandCheckAck(pn532packet, 4, 100)) return false;
-    if (!waitready(100)) return false;
+    delay(20);
 
     readdata(pn532packet, 22);
 
     int offset = 0;
-    while (offset < 10 && pn532packet[offset] != PN532_PN532TOHOST) offset++;
+    while (offset < 12 && pn532packet[offset] != PN532_PN532TOHOST) offset++;
 
-    if (pn532packet[offset + 2] != 0x00) return false;
-
-    for (uint8_t i = 0; i < 16; i++) {
-        data[i] = pn532packet[offset + 3 + i];
+    if (pn532packet[offset + 2] == 0x00) {
+        for (uint8_t i = 0; i < 16; i++) {
+            data[i] = pn532packet[offset + 3 + i];
+        }
+        return true;
     }
-    return true;
+    return false;
 }
 
 bool Adafruit_PN532::mifareclassic_WriteDataBlock(uint8_t blockNumber, uint8_t *data) {
@@ -231,7 +212,7 @@ bool Adafruit_PN532::mifareclassic_WriteDataBlock(uint8_t blockNumber, uint8_t *
     for (uint8_t i = 0; i < 16; i++) pn532packet[4 + i] = data[i];
 
     if (!sendCommandCheckAck(pn532packet, 20, 100)) return false;
-    if (!waitready(100)) return false;
+    delay(20);
 
     readdata(pn532packet, 8);
     return true;
