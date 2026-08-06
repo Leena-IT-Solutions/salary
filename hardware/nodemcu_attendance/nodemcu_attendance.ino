@@ -379,11 +379,28 @@ void renderScreen(String customMsg = "") {
 // ==========================================
 // EEPROM Configuration Persistence
 // ==========================================
+void sanitizeString(char* str, size_t maxLen) {
+    str[maxLen - 1] = '\0';
+    for (size_t i = 0; i < maxLen && str[i] != '\0'; i++) {
+        if ((uint8_t)str[i] < 32 || (uint8_t)str[i] > 126) {
+            str[i] = '\0';
+            break;
+        }
+    }
+}
+
+void saveConfig() {
+    currentConfig.magic = CONFIG_MAGIC;
+    EEPROM.put(0, currentConfig);
+    EEPROM.commit();
+}
+
 void loadConfig() {
     EEPROM.begin(EEPROM_SIZE);
     EEPROM.get(0, currentConfig);
     
-    if (!currentConfig.configured) {
+    if (currentConfig.magic != CONFIG_MAGIC) {
+        currentConfig.magic = CONFIG_MAGIC;
         strncpy(currentConfig.ap_ssid, DEFAULT_AP_SSID, sizeof(currentConfig.ap_ssid));
         strncpy(currentConfig.ap_pass, DEFAULT_AP_PASS, sizeof(currentConfig.ap_pass));
         strncpy(currentConfig.wifi_ssid, "", sizeof(currentConfig.wifi_ssid));
@@ -396,20 +413,32 @@ void loadConfig() {
         strncpy(currentConfig.card_value, "", sizeof(currentConfig.card_value));
         currentConfig.op_mode = MODE_READ;
         currentConfig.tz_offset = 19800; // IST UTC+5:30
-        currentConfig.configured = false;
+        saveConfig();
+    } else {
+        sanitizeString(currentConfig.ap_ssid, sizeof(currentConfig.ap_ssid));
+        sanitizeString(currentConfig.ap_pass, sizeof(currentConfig.ap_pass));
+        sanitizeString(currentConfig.wifi_ssid, sizeof(currentConfig.wifi_ssid));
+        sanitizeString(currentConfig.wifi_pass, sizeof(currentConfig.wifi_pass));
+        sanitizeString(currentConfig.company_name, sizeof(currentConfig.company_name));
+        sanitizeString(currentConfig.location_name, sizeof(currentConfig.location_name));
+        sanitizeString(currentConfig.host_uri, sizeof(currentConfig.host_uri));
+        sanitizeString(currentConfig.api_token, sizeof(currentConfig.api_token));
+        sanitizeString(currentConfig.device_code, sizeof(currentConfig.device_code));
+        sanitizeString(currentConfig.card_value, sizeof(currentConfig.card_value));
+        
+        if (strlen(currentConfig.ap_ssid) == 0) strncpy(currentConfig.ap_ssid, DEFAULT_AP_SSID, sizeof(currentConfig.ap_ssid));
+        if (strlen(currentConfig.ap_pass) == 0) strncpy(currentConfig.ap_pass, DEFAULT_AP_PASS, sizeof(currentConfig.ap_pass));
+        if (strlen(currentConfig.company_name) == 0) strncpy(currentConfig.company_name, DEFAULT_COMPANY_NAME, sizeof(currentConfig.company_name));
+        if (strlen(currentConfig.host_uri) == 0) strncpy(currentConfig.host_uri, DEFAULT_HOST_URI, sizeof(currentConfig.host_uri));
+        if (strlen(currentConfig.device_code) == 0) strncpy(currentConfig.device_code, DEFAULT_DEVICE_CODE, sizeof(currentConfig.device_code));
     }
 }
 
-void saveConfig() {
-    currentConfig.configured = true;
-    EEPROM.put(0, currentConfig);
-    EEPROM.commit();
-}
-
 void resetConfig() {
-    currentConfig.configured = false;
+    currentConfig.magic = 0x00000000;
     EEPROM.put(0, currentConfig);
     EEPROM.commit();
+    loadConfig();
 }
 
 // ==========================================

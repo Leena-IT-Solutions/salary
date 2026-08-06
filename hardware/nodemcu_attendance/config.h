@@ -54,7 +54,10 @@ enum OperationMode {
     MODE_CLEAR = 5
 };
 
+#define CONFIG_MAGIC 0x53414C59 // Magic Header Key 'SALY'
+
 struct Config {
+    uint32_t magic;  // Must equal CONFIG_MAGIC
     char ap_ssid[32];
     char ap_pass[32];
     char wifi_ssid[64];
@@ -67,7 +70,6 @@ struct Config {
     char card_value[32];
     uint8_t op_mode; // OperationMode enum
     long tz_offset;  // Default 19800 for IST UTC+5:30
-    bool configured;
 };
 
 #endif // CONFIG_H
