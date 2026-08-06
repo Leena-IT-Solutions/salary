@@ -328,6 +328,20 @@ void beepSuccess() { beep(70, 2); }
 void beepError()   { beep(400, 1); }
 void beepScan()    { beep(50, 1); }
 
+void beepPowerOn() {
+    digitalWrite(BUZZER_PIN, HIGH);
+    delay(60);
+    digitalWrite(BUZZER_PIN, LOW);
+    delay(50);
+    digitalWrite(BUZZER_PIN, HIGH);
+    delay(60);
+    digitalWrite(BUZZER_PIN, LOW);
+    delay(50);
+    digitalWrite(BUZZER_PIN, HIGH);
+    delay(120);
+    digitalWrite(BUZZER_PIN, LOW);
+}
+
 // ==========================================
 // OLED Screen Renderer (Matching Hardware Photo Layout)
 // ==========================================
@@ -891,6 +905,9 @@ void setup() {
     
     pinMode(BUZZER_PIN, OUTPUT);
     digitalWrite(BUZZER_PIN, LOW);
+    
+    // Instant Power-On Audio Feedback
+    beepPowerOn();
     
     pinMode(BUTTON_PIN, INPUT_PULLUP);
     
