@@ -2,10 +2,9 @@
  * Salary Manager - NodeMCU ESP8266 Biometric & RFID Attendance Terminal
  * 
  * 100% ZERO EXTERNAL LIBRARY DEPENDENCY EDITION
- * Does NOT require Adafruit_GFX, Adafruit_SH1106, Adafruit_PN532, or ArduinoJson!
- * Compiles cleanly out of the box in standard Arduino IDE with ESP8266 board support!
+ * Includes Automatic I2C Bus Scanner & Auto-Address Detection for PN532!
  * 
- * Hardware Pinout (Verified & Fixed):
+ * Hardware Pinout:
  * - SCL -> NodeMCU D1 (GPIO5)
  * - SDA -> NodeMCU D2 (GPIO4)
  * - Buzzer (+) -> NodeMCU D7 (GPIO13)
@@ -24,6 +23,9 @@
 #include <time.h>
 
 #include "config.h"
+
+// Runtime Detected PN532 I2C Address
+uint8_t detectedPn532Addr = 0x24;
 
 // ==========================================
 // 5x7 ASCII Font Definition for Display Driver
@@ -103,9 +105,6 @@ void oledWriteCommand(uint8_t cmd) {
 }
 
 void oledInit() {
-    Wire.begin(OLED_SDA_PIN, OLED_SCL_PIN);
-    delay(100);
-    
     oledWriteCommand(0xAE); // Display Off
     oledWriteCommand(0xD5); oledWriteCommand(0x80);
     oledWriteCommand(0xA8); oledWriteCommand(0x3F);
@@ -195,16 +194,43 @@ unsigned long lastSyncCheck = 0;
 unsigned long lastDisplayUpdate = 0;
 
 // ==========================================
-// Robust Self-Contained PN532 Driver over I2C (With ACK & Status Handshaking)
+// Automatic I2C Bus Scanner
+// ==========================================
+void scanI2CBus() {
+    Serial.println("[I2C SCANNER] Scanning I2C bus (SDA: D2, SCL: D1)...");
+    uint8_t devicesFound = 0;
+    
+    for (uint8_t addr = 1; addr < 127; addr++) {
+        Wire.beginTransmission(addr);
+        uint8_t error = Wire.endTransmission();
+        
+        if (error == 0) {
+            Serial.printf("[I2C SCANNER] -> Found active device at 0x%02X (0x%02X)\n", addr, addr << 1);
+            if (addr != OLED_I2C_ADDR) {
+                detectedPn532Addr = addr;
+                Serial.printf("[PN532] Auto-detected PN532 I2C address: 0x%02X\n", detectedPn532Addr);
+            }
+            devicesFound++;
+        }
+    }
+    
+    if (devicesFound == 0) {
+        Serial.println("[I2C SCANNER] WARNING: No I2C devices responded!");
+    } else {
+        Serial.printf("[I2C SCANNER] Total %d device(s) found.\n", devicesFound);
+    }
+}
+
+// ==========================================
+// Robust Self-Contained PN532 Driver over I2C
 // ==========================================
 bool pn532ReadAck() {
     delay(5);
-    uint8_t reqLen = Wire.requestFrom((int)PN532_I2C_ADDR, 7);
+    uint8_t reqLen = Wire.requestFrom((int)detectedPn532Addr, 7);
     if (reqLen < 6) return false;
     uint8_t ackBuf[7];
     for (uint8_t i = 0; i < reqLen; i++) ackBuf[i] = Wire.read();
     
-    // Check PN532 ACK frame signature: 0x00 0x00 0xFF 0x00 0xFF 0x00
     if (ackBuf[1] == 0x00 && ackBuf[2] == 0x00 && ackBuf[3] == 0xFF && ackBuf[4] == 0x00 && ackBuf[5] == 0xFF) {
         return true;
     }
@@ -212,31 +238,26 @@ bool pn532ReadAck() {
 }
 
 bool pn532Init() {
-    Wire.begin(OLED_SDA_PIN, OLED_SCL_PIN);
-    delay(50);
-    
-    Serial.println("[PN532] Initializing PN532 RFID reader at I2C address 0x24...");
+    Serial.printf("[PN532] Initializing PN532 RFID reader at I2C address 0x%02X...\n", detectedPn532Addr);
     
     // Send PN532 Wakeup Sequence
-    Wire.beginTransmission(PN532_I2C_ADDR);
+    Wire.beginTransmission(detectedPn532Addr);
     Wire.write(0x55); Wire.write(0x55); Wire.write(0x00); Wire.write(0x00); Wire.write(0x00);
     Wire.endTransmission();
     delay(20);
     
     // SAM Configuration Command (0xD4 0x14 0x01 0x14 0x01)
-    Wire.beginTransmission(PN532_I2C_ADDR);
+    Wire.beginTransmission(detectedPn532Addr);
     Wire.write(0x00); Wire.write(0x00); Wire.write(0xFF);
-    Wire.write(0x05); // Len
-    Wire.write(0xFB); // LCS
+    Wire.write(0x05); Wire.write(0xFB);
     Wire.write(0xD4); Wire.write(0x14); Wire.write(0x01); Wire.write(0x14); Wire.write(0x01);
-    Wire.write(0x18); // Checksum
-    Wire.write(0x00); // Postamble
+    Wire.write(0x18); Wire.write(0x00);
     uint8_t res = Wire.endTransmission();
     
     pn532ReadAck();
     
     if (res == 0) {
-        Serial.println("[PN532] SAM Configuration OK! Scanner ready.");
+        Serial.println("[PN532] SAM Configuration OK! Reader ready.");
         return true;
     } else {
         Serial.printf("[PN532] Init failed with I2C error code: %d\n", res);
@@ -246,7 +267,7 @@ bool pn532Init() {
 
 bool pn532ReadPassiveTarget(uint8_t* uid, uint8_t* uidLength) {
     // InListPassiveTarget (0xD4 0x4A 0x01 0x00)
-    Wire.beginTransmission(PN532_I2C_ADDR);
+    Wire.beginTransmission(detectedPn532Addr);
     Wire.write(0x00); Wire.write(0x00); Wire.write(0xFF);
     Wire.write(0x04); Wire.write(0xFC);
     Wire.write(0xD4); Wire.write(0x4A); Wire.write(0x01); Wire.write(0x00);
@@ -254,11 +275,9 @@ bool pn532ReadPassiveTarget(uint8_t* uid, uint8_t* uidLength) {
     if (Wire.endTransmission() != 0) return false;
     
     pn532ReadAck();
+    delay(40);
     
-    delay(40); // RF field target scan delay
-    
-    // Request 24 bytes (1st byte is 0x01 Ready status)
-    uint8_t reqLen = Wire.requestFrom((int)PN532_I2C_ADDR, 24);
+    uint8_t reqLen = Wire.requestFrom((int)detectedPn532Addr, 24);
     if (reqLen < 12) return false;
     
     uint8_t buf[24];
@@ -266,10 +285,8 @@ bool pn532ReadPassiveTarget(uint8_t* uid, uint8_t* uidLength) {
         buf[i] = Wire.read();
     }
     
-    // Check if 1st byte is PN532 Ready (0x01)
     if (buf[0] != 0x01) return false;
     
-    // Search for 0xD5 0x4B
     for (uint8_t i = 1; i < reqLen - 6; i++) {
         if (buf[i] == 0xD5 && buf[i+1] == 0x4B) {
             *uidLength = buf[i+7];
@@ -285,7 +302,7 @@ bool pn532ReadPassiveTarget(uint8_t* uid, uint8_t* uidLength) {
 
 String pn532ReadCardBlock4(uint8_t* uid, uint8_t uidLength) {
     // Auth Block 4 with Key A (0xFF 0xFF 0xFF 0xFF 0xFF 0xFF)
-    Wire.beginTransmission(PN532_I2C_ADDR);
+    Wire.beginTransmission(detectedPn532Addr);
     Wire.write(0x00); Wire.write(0x00); Wire.write(0xFF);
     Wire.write(0x0F); Wire.write(0xF1);
     Wire.write(0xD4); Wire.write(0x40); Wire.write(0x01); Wire.write(0x60); Wire.write(0x04);
@@ -298,7 +315,7 @@ String pn532ReadCardBlock4(uint8_t* uid, uint8_t uidLength) {
     delay(15);
     
     // Read Block 4 Data
-    Wire.beginTransmission(PN532_I2C_ADDR);
+    Wire.beginTransmission(detectedPn532Addr);
     Wire.write(0x00); Wire.write(0x00); Wire.write(0xFF);
     Wire.write(0x05); Wire.write(0xFB);
     Wire.write(0xD4); Wire.write(0x40); Wire.write(0x01); Wire.write(0x30); Wire.write(0x04);
@@ -308,7 +325,7 @@ String pn532ReadCardBlock4(uint8_t* uid, uint8_t uidLength) {
     pn532ReadAck();
     delay(15);
     
-    uint8_t reqLen = Wire.requestFrom((int)PN532_I2C_ADDR, 26);
+    uint8_t reqLen = Wire.requestFrom((int)detectedPn532Addr, 26);
     if (reqLen < 20) return String(currentConfig.device_code);
     
     uint8_t buf[26];
@@ -969,10 +986,15 @@ void setup() {
     Serial.println("NodeMCU Attendance Terminal Starting...");
     Serial.println("==========================================");
     
+    // Single I2C Bus Master Init (SDA: D2 / GPIO4, SCL: D1 / GPIO5)
+    Wire.begin(OLED_SDA_PIN, OLED_SCL_PIN);
+    Wire.setClock(100000); // 100kHz standard I2C clock speed
+    delay(100);
+    
     pinMode(BUZZER_PIN, OUTPUT);
     digitalWrite(BUZZER_PIN, LOW);
     
-    // Power-On Audio Feedback (Drives both Active & Passive buzzers on D7)
+    // Power-On Audio Feedback
     beepPowerOn();
     
     pinMode(BUTTON_PIN, INPUT_PULLUP);
@@ -985,10 +1007,14 @@ void setup() {
     oledClear();
     
     renderScreen("Initialising...");
-    delay(500);
+    delay(300);
     
-    // Self-Contained PN532 Init
+    // Perform Automatic I2C Bus Address Discovery
+    scanI2CBus();
+    
+    // Initialize PN532 with auto-detected address
     pn532Init();
+    
     connectWiFi();
 }
 
