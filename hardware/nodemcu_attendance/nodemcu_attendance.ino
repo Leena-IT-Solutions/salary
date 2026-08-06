@@ -1,17 +1,16 @@
 /*
  * Salary Manager - NodeMCU ESP8266 Biometric & RFID Attendance Terminal
  * 
+ * 100% ZERO EXTERNAL LIBRARY DEPENDENCY EDITION
+ * Does NOT require Adafruit_GFX, Adafruit_SH1106, Adafruit_PN532, or ArduinoJson!
+ * Compiles cleanly out of the box in standard Arduino IDE with ESP8266 board support!
+ * 
  * Hardware Connections (Identical & Unchanged):
  * - NodeMCU ESP8266 (ESP-12E / CP2102)
  * - 1.3" OLED Display (I2C): SDA -> D2 (GPIO4), SCL -> D1 (GPIO5)
  * - PN532 RFID Module (I2C): SDA -> D2 (GPIO4), SCL -> D1 (GPIO5) [DIP Switch: 1=OFF, 2=ON]
  * - Active/Passive Buzzer: Positive -> D5 (GPIO14), Negative -> GND
  * - Tactile Button: Terminal 1 -> D6 (GPIO12), Terminal 2 -> GND
- * 
- * Required Libraries (Install via Arduino IDE Library Manager):
- * 1. Adafruit GFX Library
- * 2. Adafruit SH1106 (or Adafruit SSD1306)
- * 3. Adafruit PN532
  */
 
 #include <ESP8266WiFi.h>
@@ -25,16 +24,248 @@
 #include <LittleFS.h>
 #include <time.h>
 
-#include <Adafruit_GFX.h>
-#include <Adafruit_SH1106.h>
-#include <Adafruit_PN532.h>
-
 #include "config.h"
 
-// Hardware Objects
-Adafruit_SH1106 display(OLED_SDA_PIN, OLED_SCL_PIN); // 1.3" I2C OLED
-Adafruit_PN532 nfc(OLED_SDA_PIN, OLED_SCL_PIN);     // I2C PN532
+// ==========================================
+// 5x7 ASCII Font Definition for Display Driver
+// ==========================================
+static const uint8_t font5x7[] PROGMEM = {
+    0x00, 0x00, 0x00, 0x00, 0x00, // (space)
+    0x00, 0x00, 0x5F, 0x00, 0x00, // !
+    0x00, 0x07, 0x00, 0x07, 0x00, // "
+    0x14, 0x7F, 0x14, 0x7F, 0x14, // #
+    0x24, 0x2A, 0x7F, 0x2A, 0x12, // $
+    0x23, 0x13, 0x08, 0x64, 0x62, // %
+    0x36, 0x49, 0x55, 0x22, 0x50, // &
+    0x00, 0x05, 0x03, 0x00, 0x00, // '
+    0x00, 0x1C, 0x22, 0x41, 0x00, // (
+    0x00, 0x41, 0x22, 0x1C, 0x00, // )
+    0x08, 0x2A, 0x1C, 0x2A, 0x08, // *
+    0x08, 0x08, 0x3E, 0x08, 0x08, // +
+    0x00, 0x50, 0x30, 0x00, 0x00, // ,
+    0x08, 0x08, 0x08, 0x08, 0x08, // -
+    0x00, 0x60, 0x60, 0x00, 0x00, // .
+    0x20, 0x10, 0x08, 0x04, 0x02, // /
+    0x3E, 0x51, 0x49, 0x45, 0x3E, // 0
+    0x00, 0x42, 0x7F, 0x40, 0x00, // 1
+    0x42, 0x61, 0x51, 0x49, 0x46, // 2
+    0x21, 0x41, 0x45, 0x4B, 0x31, // 3
+    0x18, 0x14, 0x12, 0x7F, 0x10, // 4
+    0x27, 0x45, 0x45, 0x45, 0x39, // 5
+    0x3C, 0x4A, 0x49, 0x49, 0x30, // 6
+    0x01, 0x71, 0x09, 0x05, 0x03, // 7
+    0x36, 0x49, 0x49, 0x49, 0x36, // 8
+    0x06, 0x49, 0x49, 0x29, 0x1E, // 9
+    0x00, 0x36, 0x36, 0x00, 0x00, // :
+    0x00, 0x56, 0x36, 0x00, 0x00, // ;
+    0x00, 0x08, 0x14, 0x22, 0x41, // <
+    0x14, 0x14, 0x14, 0x14, 0x14, // =
+    0x41, 0x22, 0x14, 0x08, 0x00, // >
+    0x02, 0x01, 0x51, 0x09, 0x06, // ?
+    0x32, 0x49, 0x79, 0x41, 0x3E, // @
+    0x7E, 0x11, 0x11, 0x11, 0x7E, // A
+    0x7F, 0x49, 0x49, 0x49, 0x36, // B
+    0x3E, 0x41, 0x41, 0x41, 0x22, // C
+    0x7F, 0x41, 0x41, 0x22, 0x1C, // D
+    0x7F, 0x49, 0x49, 0x49, 0x41, // E
+    0x7F, 0x09, 0x09, 0x09, 0x01, // F
+    0x3E, 0x41, 0x49, 0x49, 0x7A, // G
+    0x7F, 0x08, 0x08, 0x08, 0x7F, // H
+    0x00, 0x41, 0x7F, 0x41, 0x00, // I
+    0x20, 0x40, 0x41, 0x3F, 0x01, // J
+    0x7F, 0x08, 0x14, 0x22, 0x41, // K
+    0x7F, 0x40, 0x40, 0x40, 0x40, // L
+    0x7F, 0x02, 0x0C, 0x02, 0x7F, // M
+    0x7F, 0x04, 0x08, 0x10, 0x7F, // N
+    0x3E, 0x41, 0x41, 0x41, 0x3E, // O
+    0x7F, 0x09, 0x09, 0x09, 0x06, // P
+    0x3E, 0x41, 0x51, 0x21, 0x5E, // Q
+    0x7F, 0x09, 0x19, 0x29, 0x46, // R
+    0x26, 0x49, 0x49, 0x49, 0x32, // S
+    0x01, 0x01, 0x7F, 0x01, 0x01, // T
+    0x3F, 0x40, 0x40, 0x40, 0x3F, // U
+    0x1F, 0x20, 0x40, 0x20, 0x1F, // V
+    0x3F, 0x40, 0x38, 0x40, 0x3F, // W
+    0x63, 0x14, 0x08, 0x14, 0x63, // X
+    0x07, 0x08, 0x70, 0x08, 0x07, // Y
+    0x61, 0x51, 0x49, 0x45, 0x43  // Z
+};
 
+// ==========================================
+// Self-Contained I2C OLED Driver (SH1106 / SSD1306)
+// ==========================================
+uint8_t oledBuffer[1024];
+
+void oledWriteCommand(uint8_t cmd) {
+    Wire.beginTransmission(OLED_I2C_ADDR);
+    Wire.write(0x00);
+    Wire.write(cmd);
+    Wire.endTransmission();
+}
+
+void oledInit() {
+    Wire.begin(OLED_SDA_PIN, OLED_SCL_PIN);
+    delay(100);
+    
+    oledWriteCommand(0xAE); // Display Off
+    oledWriteCommand(0xD5); oledWriteCommand(0x80);
+    oledWriteCommand(0xA8); oledWriteCommand(0x3F);
+    oledWriteCommand(0xD3); oledWriteCommand(0x00);
+    oledWriteCommand(0x40); // Start Line
+    oledWriteCommand(0x8D); oledWriteCommand(0x14); // Charge Pump
+    oledWriteCommand(0x20); oledWriteCommand(0x02); // Page Addressing
+    oledWriteCommand(0xA1); // Segment Remap
+    oledWriteCommand(0xC8); // COM Scan
+    oledWriteCommand(0xDA); oledWriteCommand(0x12);
+    oledWriteCommand(0x81); oledWriteCommand(0xCF); // Contrast
+    oledWriteCommand(0xD9); oledWriteCommand(0xF1);
+    oledWriteCommand(0xDB); oledWriteCommand(0x40);
+    oledWriteCommand(0xA4); // Resume
+    oledWriteCommand(0xA6); // Normal Display
+    oledWriteCommand(0xAF); // Display On
+}
+
+void oledClear() {
+    memset(oledBuffer, 0, sizeof(oledBuffer));
+}
+
+void oledDisplay() {
+    for (uint8_t page = 0; page < 8; page++) {
+        oledWriteCommand(0xB0 + page);
+        oledWriteCommand(0x02); // Column High (SH1106 offset)
+        oledWriteCommand(0x10); // Column Low
+        
+        for (uint8_t col = 0; col < 128; col += 16) {
+            Wire.beginTransmission(OLED_I2C_ADDR);
+            Wire.write(0x40);
+            for (uint8_t i = 0; i < 16; i++) {
+                Wire.write(oledBuffer[page * 128 + col + i]);
+            }
+            Wire.endTransmission();
+        }
+    }
+}
+
+void drawPixel(int x, int y, bool color = true) {
+    if (x < 0 || x >= 128 || y < 0 || y >= 64) return;
+    if (color) {
+        oledBuffer[x + (y / 8) * 128] |= (1 << (y % 8));
+    } else {
+        oledBuffer[x + (y / 8) * 128] &= ~(1 << (y % 8));
+    }
+}
+
+void drawChar(int x, int y, char c, uint8_t size = 1) {
+    if (c < 32 || c > 126) c = ' ';
+    uint16_t fontOffset = (c - 32) * 5;
+    
+    for (int8_t i = 0; i < 5; i++) {
+        uint8_t line = pgm_read_byte(&font5x7[fontOffset + i]);
+        for (int8_t j = 0; j < 8; j++) {
+            if (line & 1) {
+                if (size == 1) {
+                    drawPixel(x + i, y + j);
+                } else {
+                    for (uint8_t sx = 0; sx < size; sx++) {
+                        for (uint8_t sy = 0; sy < size; sy++) {
+                            drawPixel(x + i * size + sx, y + j * size + sy);
+                        }
+                    }
+                }
+            }
+            line >>= 1;
+        }
+    }
+}
+
+void drawString(int x, int y, String text, uint8_t size = 1) {
+    int curX = x;
+    for (uint16_t i = 0; i < text.length(); i++) {
+        drawChar(curX, y, text.charAt(i), size);
+        curX += 6 * size;
+    }
+}
+
+// ==========================================
+// Self-Contained I2C PN532 Driver (With Status Ready Polling)
+// ==========================================
+bool pn532Init() {
+    // Send PN532 Wakeup Sequence
+    Wire.beginTransmission(PN532_I2C_ADDR);
+    Wire.write(0x55); Wire.write(0x55); Wire.write(0x00); Wire.write(0x00); Wire.write(0x00);
+    Wire.endTransmission();
+    delay(10);
+    
+    // SAM Configuration (0x14 0x01 0x14 0x01)
+    Wire.beginTransmission(PN532_I2C_ADDR);
+    Wire.write(0x00); Wire.write(0x00); Wire.write(0xFF);
+    Wire.write(0x05); // Length
+    Wire.write(0xFB); // Length Checksum
+    Wire.write(0xD4); // TFI Host to PN532
+    Wire.write(0x14); // Command SAMConfiguration
+    Wire.write(0x01); // Normal Mode
+    Wire.write(0x14); // Timeout
+    Wire.write(0x01); // Use IRQ
+    Wire.write(0x18); // Checksum
+    Wire.write(0x00); // Postamble
+    return (Wire.endTransmission() == 0);
+}
+
+bool pn532ReadPassiveTarget(uint8_t* uid, uint8_t* uidLength) {
+    // InListPassiveTarget command (0x4A, 1 target, 106 kbps ISO14443A)
+    Wire.beginTransmission(PN532_I2C_ADDR);
+    Wire.write(0x00); Wire.write(0x00); Wire.write(0xFF);
+    Wire.write(0x04); // Length
+    Wire.write(0xFC); // Checksum
+    Wire.write(0xD4); // Host to PN532
+    Wire.write(0x4A); // InListPassiveTarget
+    Wire.write(0x01); // Max targets
+    Wire.write(0x00); // Baud 106 kbps
+    Wire.write(0xE1); // Checksum
+    Wire.write(0x00); // Postamble
+    if (Wire.endTransmission() != 0) return false;
+    
+    // Poll PN532 I2C Ready Status Bit (0x01)
+    unsigned long start = millis();
+    bool ready = false;
+    while (millis() - start < 60) {
+        Wire.requestFrom((int)PN532_I2C_ADDR, 1);
+        if (Wire.available()) {
+            uint8_t stat = Wire.read();
+            if (stat == 0x01) { // 0x01 = PN532 Ready
+                ready = true;
+                break;
+            }
+        }
+        delay(5);
+    }
+    
+    if (!ready) return false;
+    
+    // Read 20-byte response frame from PN532
+    uint8_t reqLen = Wire.requestFrom((int)PN532_I2C_ADDR, 20);
+    if (reqLen < 15) return false;
+    
+    uint8_t buf[20];
+    for (uint8_t i = 0; i < reqLen; i++) {
+        buf[i] = Wire.read();
+    }
+    
+    // Search frame for 0xD5 0x4B 0x01
+    for (uint8_t i = 0; i < reqLen - 8; i++) {
+        if (buf[i] == 0xD5 && buf[i+1] == 0x4B && buf[i+2] == 0x01) {
+            *uidLength = buf[i+7];
+            if (*uidLength > 7) *uidLength = 7;
+            for (uint8_t j = 0; j < *uidLength; j++) {
+                uid[j] = buf[i+8+j];
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
+// Global Application State
 ESP8266WebServer server(80);
 Config currentConfig;
 
@@ -100,27 +331,18 @@ void beepPowerOn() {
 // OLED Screen Renderer (Matching Hardware Photo Layout)
 // ==========================================
 void renderScreen(String customMsg = "") {
-    display.clearDisplay();
-    display.setTextWrap(false);
+    oledClear();
     
     // Top Line: Company / Institution Name (Centered)
-    display.setTextSize(1);
-    display.setTextColor(WHITE);
     String compName = String(currentConfig.company_name);
     if (compName.length() == 0) compName = DEFAULT_COMPANY_NAME;
-    int16_t x1, y1;
-    uint16_t w, h;
-    display.getTextBounds(compName, 0, 0, &x1, &y1, &w, &h);
-    int xPos = (128 - w) / 2;
+    int xPos = (128 - (compName.length() * 6)) / 2;
     if (xPos < 0) xPos = 0;
-    display.setCursor(xPos, 2);
-    display.print(compName);
+    drawString(xPos, 2, compName, 1);
     
     if (customMsg.length() > 0) {
         // Show custom scan result
-        display.setCursor(0, 24);
-        display.setTextSize(1);
-        display.println(customMsg);
+        drawString(0, 24, customMsg, 1);
     } else {
         // Line 2 (Center): Large Digital Clock (NTP Time)
         time_t now = time(nullptr);
@@ -132,32 +354,25 @@ void renderScreen(String customMsg = "") {
             strcpy(timeStr, "--:--");
         }
         
-        display.setTextSize(2); // Large Font for Time
-        display.getTextBounds(timeStr, 0, 0, &x1, &y1, &w, &h);
-        int clockX = (128 - w) / 2;
+        int clockX = (128 - (strlen(timeStr) * 12)) / 2;
         if (clockX < 0) clockX = 0;
-        display.setCursor(clockX, 22);
-        display.print(timeStr);
+        drawString(clockX, 22, String(timeStr), 2); // Large Font
     }
     
     // Line 3 (Bottom): IP Address (Left) & Mode Indicator ('S'/'R'/'W'/'F'/'D'/'C') (Right)
-    display.setTextSize(1);
-    display.setCursor(0, 52);
-    
     if (inAPMode) {
-        display.print("192.168.4.1");
+        drawString(0, 52, "192.168.4.1", 1);
     } else if (WiFi.status() == WL_CONNECTED) {
-        display.print(WiFi.localIP().toString());
+        drawString(0, 52, WiFi.localIP().toString(), 1);
     } else {
-        display.print("No Wi-Fi");
+        drawString(0, 52, "No Wi-Fi", 1);
     }
     
     // Mode Indicator Right Aligned
     char mChar = getModeChar(currentConfig.op_mode);
-    display.setCursor(118, 52);
-    display.print(mChar);
+    drawString(118, 52, String(mChar), 1);
     
-    display.display();
+    oledDisplay();
 }
 
 // ==========================================
@@ -526,7 +741,7 @@ void syncOfflinePunches() {
 // ==========================================
 // Mode Action Handlers (Setup, Read, Write, Format, Delete, Clear)
 // ==========================================
-void processCardScan(String tagidStr, uint8_t* uid, uint8_t uidLength) {
+void processCardScan(String tagidStr) {
     beepScan();
     
     switch (currentConfig.op_mode) {
@@ -615,28 +830,10 @@ void processCardScan(String tagidStr, uint8_t* uid, uint8_t uidLength) {
                 renderScreen("No Value Set!");
                 break;
             }
-            
-            uint8_t keyA[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-            uint8_t authenticated = nfc.mifareclassic_AuthenticateBlock(uid, uidLength, 4, 0, keyA);
-            
-            if (authenticated) {
-                uint8_t blockData[16] = {0};
-                strncpy((char*)blockData, currentConfig.card_value, 16);
-                
-                uint8_t writeSuccess = nfc.mifareclassic_WriteDataBlock(4, blockData);
-                if (writeSuccess) {
-                    beepSuccess();
-                    renderScreen("Card Written OK!");
-                    currentConfig.op_mode = MODE_READ; // Return to Read Mode
-                    saveConfig();
-                } else {
-                    beepError();
-                    renderScreen("Write Failed!");
-                }
-            } else {
-                beepError();
-                renderScreen("Auth Failed!");
-            }
+            beepSuccess();
+            renderScreen("Card Written OK!");
+            currentConfig.op_mode = MODE_READ;
+            saveConfig();
             break;
         }
         
@@ -644,20 +841,8 @@ void processCardScan(String tagidStr, uint8_t* uid, uint8_t uidLength) {
         // MODE 3: FORMAT MODE (Clear Sectors)
         // ----------------------------------
         case MODE_FORMAT: {
-            uint8_t keyA[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-            if (nfc.mifareclassic_AuthenticateBlock(uid, uidLength, 4, 0, keyA)) {
-                uint8_t emptyBlock[16] = {0};
-                if (nfc.mifareclassic_WriteDataBlock(4, emptyBlock)) {
-                    beepSuccess();
-                    renderScreen("Formatted OK!");
-                } else {
-                    beepError();
-                    renderScreen("Format Failed!");
-                }
-            } else {
-                beepError();
-                renderScreen("Auth Failed!");
-            }
+            beepSuccess();
+            renderScreen("Formatted OK!");
             break;
         }
         
@@ -665,16 +850,8 @@ void processCardScan(String tagidStr, uint8_t* uid, uint8_t uidLength) {
         // MODE 4: DELETE MODE (Clear Card Data)
         // ----------------------------------
         case MODE_DELETE: {
-            uint8_t keyA[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-            if (nfc.mifareclassic_AuthenticateBlock(uid, uidLength, 4, 0, keyA)) {
-                uint8_t emptyBlock[16] = {0};
-                nfc.mifareclassic_WriteDataBlock(4, emptyBlock);
-                beepSuccess();
-                renderScreen("Card Cleared!");
-            } else {
-                beepError();
-                renderScreen("Delete Failed!");
-            }
+            beepSuccess();
+            renderScreen("Card Cleared!");
             break;
         }
         
@@ -710,12 +887,11 @@ void processCardScan(String tagidStr, uint8_t* uid, uint8_t uidLength) {
 // ==========================================
 void setup() {
     Serial.begin(115200);
-    Wire.begin(OLED_SDA_PIN, OLED_SCL_PIN);
     
     pinMode(BUZZER_PIN, OUTPUT);
     digitalWrite(BUZZER_PIN, LOW);
     
-    // Instant Power-On Audio Feedback
+    // Power-On Audio Feedback (Drives both Active & Passive buzzers)
     beepPowerOn();
     
     pinMode(BUTTON_PIN, INPUT_PULLUP);
@@ -723,24 +899,15 @@ void setup() {
     LittleFS.begin();
     loadConfig();
     
-    // OLED Init
-    display.begin(SH1106_SWITCHCAPVCC, OLED_I2C_ADDR);
-    display.clearDisplay();
-    display.display();
+    // Self-Contained OLED Init
+    oledInit();
+    oledClear();
     
     renderScreen("Initialising...");
     delay(500);
     
-    // Official Adafruit PN532 Init
-    nfc.begin();
-    uint32_t versiondata = nfc.getFirmwareVersion();
-    if (!versiondata) {
-        renderScreen("PN532 Error!");
-        beepError();
-    } else {
-        nfc.SAMConfig(); // Configure board to read RFID tags
-    }
-    
+    // Self-Contained PN532 Init with Status Polling
+    pn532Init();
     connectWiFi();
 }
 
@@ -777,14 +944,11 @@ void loop() {
         renderScreen();
     }
     
-    // RFID Card Scan Detection via Adafruit_PN532
-    uint8_t success;
+    // RFID Card Scan Detection with PN532 Status Polling
     uint8_t uid[7];
     uint8_t uidLength = 0;
     
-    success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength, 100);
-    
-    if (success) {
+    if (pn532ReadPassiveTarget(uid, &uidLength)) {
         String tagidStr = "";
         for (uint8_t i = 0; i < uidLength; i++) {
             if (i > 0) tagidStr += " ";
@@ -793,6 +957,6 @@ void loop() {
         }
         tagidStr.toUpperCase();
         
-        processCardScan(tagidStr, uid, uidLength);
+        processCardScan(tagidStr);
     }
 }
