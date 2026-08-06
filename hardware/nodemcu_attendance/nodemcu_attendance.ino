@@ -2,7 +2,7 @@
  * Salary Manager - NodeMCU ESP8266 Biometric & RFID Attendance Terminal
  * 
  * 100% ZERO EXTERNAL LIBRARY DEPENDENCY EDITION
- * Bundled with local Adafruit_PN532 driver for 100% rock-solid RFID card reading!
+ * Bundled with local Adafruit_PN532 driver + I2C Address Scanner!
  * 
  * Hardware Pinout:
  * - SCL -> NodeMCU D1 (GPIO5)
@@ -877,6 +877,26 @@ void setup() {
     Serial.println("NodeMCU Attendance Terminal Starting...");
     Serial.println("==========================================");
     
+    Wire.begin(OLED_SDA_PIN, OLED_SCL_PIN);
+    Wire.setClock(100000);
+    delay(100);
+    
+    // I2C Address Diagnostic Scanner
+    Serial.println("[I2C SCANNER] Scanning for active I2C devices...");
+    uint8_t found = 0;
+    for (uint8_t addr = 1; addr < 127; addr++) {
+        Wire.beginTransmission(addr);
+        if (Wire.endTransmission() == 0) {
+            Serial.printf(" -> Found I2C Device at Address 0x%02X\n", addr);
+            found++;
+        }
+    }
+    if (found == 0) {
+        Serial.println(" -> WARNING: No I2C devices responded on SDA(D2) / SCL(D1)!");
+    } else {
+        Serial.printf(" -> Total %d I2C device(s) found.\n", found);
+    }
+    
     pinMode(BUZZER_PIN, OUTPUT);
     digitalWrite(BUZZER_PIN, LOW);
     
@@ -888,7 +908,7 @@ void setup() {
     LittleFS.begin();
     loadConfig();
     
-    // Initialize Hardware Adafruit PN532 (Handles Wire.begin on SDA D2 & SCL D1)
+    // Initialize Hardware Adafruit PN532
     nfc.begin();
     
     // Self-Contained OLED Init
