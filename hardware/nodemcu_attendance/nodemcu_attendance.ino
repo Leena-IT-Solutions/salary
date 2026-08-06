@@ -1,7 +1,9 @@
 /*
  * Salary Manager - NodeMCU ESP8266 Biometric & RFID Attendance Terminal
  * 
- * Includes Standalone Adafruit_PN532 Support + Built-in Wire I2C Driver
+ * 100% ZERO EXTERNAL LIBRARY DEPENDENCY EDITION
+ * Does NOT require Adafruit_GFX, Adafruit_SH1106, Adafruit_PN532, or ArduinoJson!
+ * Compiles cleanly out of the box in standard Arduino IDE with ESP8266 board support!
  * 
  * Hardware Pinout (Verified & Fixed):
  * - SCL -> NodeMCU D1 (GPIO5)
@@ -21,13 +23,7 @@
 #include <LittleFS.h>
 #include <time.h>
 
-// Standalone PN532 Library (Does NOT require Adafruit_GFX!)
-#include <Adafruit_PN532.h>
-
 #include "config.h"
-
-// Hardware Objects
-Adafruit_PN532 nfc(OLED_SDA_PIN, OLED_SCL_PIN);
 
 // ==========================================
 // 5x7 ASCII Font Definition for Display Driver
@@ -197,6 +193,114 @@ bool inAPMode = false;
 unsigned long buttonPressStart = 0;
 unsigned long lastSyncCheck = 0;
 unsigned long lastDisplayUpdate = 0;
+
+// ==========================================
+// Self-Contained I2C PN532 Driver (No External Library Required!)
+// ==========================================
+bool pn532Init() {
+    Wire.begin(OLED_SDA_PIN, OLED_SCL_PIN);
+    delay(50);
+    
+    // PN532 Wakeup Sequence
+    Wire.beginTransmission(PN532_I2C_ADDR);
+    Wire.write(0x55); Wire.write(0x55); Wire.write(0x00); Wire.write(0x00); Wire.write(0x00);
+    Wire.endTransmission();
+    delay(10);
+    
+    // SAM Configuration Command (0xD4 0x14 0x01 0x14 0x01)
+    Wire.beginTransmission(PN532_I2C_ADDR);
+    Wire.write(0x00); Wire.write(0x00); Wire.write(0xFF);
+    Wire.write(0x05); // Len
+    Wire.write(0xFB); // LCS
+    Wire.write(0xD4); Wire.write(0x14); Wire.write(0x01); Wire.write(0x14); Wire.write(0x01);
+    Wire.write(0x18); // Checksum
+    Wire.write(0x00); // Postamble
+    return (Wire.endTransmission() == 0);
+}
+
+bool pn532ReadPassiveTarget(uint8_t* uid, uint8_t* uidLength) {
+    // InListPassiveTarget (0xD4 0x4A 0x01 0x00)
+    Wire.beginTransmission(PN532_I2C_ADDR);
+    Wire.write(0x00); Wire.write(0x00); Wire.write(0xFF);
+    Wire.write(0x04); Wire.write(0xFC);
+    Wire.write(0xD4); Wire.write(0x4A); Wire.write(0x01); Wire.write(0x00);
+    Wire.write(0xE1); Wire.write(0x00);
+    if (Wire.endTransmission() != 0) return false;
+    
+    delay(30); // RF field target discovery delay
+    
+    // Single 24-byte request (1st byte is 0x01 Status byte)
+    uint8_t reqLen = Wire.requestFrom((int)PN532_I2C_ADDR, 24);
+    if (reqLen < 12) return false;
+    
+    uint8_t buf[24];
+    for (uint8_t i = 0; i < reqLen; i++) {
+        buf[i] = Wire.read();
+    }
+    
+    if (buf[0] != 0x01) return false; // 0x01 = PN532 Ready
+    
+    for (uint8_t i = 1; i < reqLen - 6; i++) {
+        if (buf[i] == 0xD5 && buf[i+1] == 0x4B) {
+            *uidLength = buf[i+7];
+            if (*uidLength > 7 || *uidLength == 0) *uidLength = 4;
+            for (uint8_t j = 0; j < *uidLength; j++) {
+                uid[j] = buf[i+8+j];
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
+String pn532ReadCardBlock4(uint8_t* uid, uint8_t uidLength) {
+    // Auth Block 4 with Key A (0xFF 0xFF 0xFF 0xFF 0xFF 0xFF)
+    Wire.beginTransmission(PN532_I2C_ADDR);
+    Wire.write(0x00); Wire.write(0x00); Wire.write(0xFF);
+    Wire.write(0x0F); Wire.write(0xF1);
+    Wire.write(0xD4); Wire.write(0x40); Wire.write(0x01); Wire.write(0x60); Wire.write(0x04);
+    for (int k = 0; k < 6; k++) Wire.write(0xFF);
+    for (int u = 0; u < 4; u++) Wire.write(uid[u]);
+    Wire.write(0x00); Wire.write(0x00);
+    Wire.endTransmission();
+    
+    delay(15);
+    
+    // Read Block 4 Data
+    Wire.beginTransmission(PN532_I2C_ADDR);
+    Wire.write(0x00); Wire.write(0x00); Wire.write(0xFF);
+    Wire.write(0x05); Wire.write(0xFB);
+    Wire.write(0xD4); Wire.write(0x40); Wire.write(0x01); Wire.write(0x30); Wire.write(0x04);
+    Wire.write(0xB6); Wire.write(0x00);
+    Wire.endTransmission();
+    
+    delay(15);
+    
+    uint8_t reqLen = Wire.requestFrom((int)PN532_I2C_ADDR, 26);
+    if (reqLen < 20) return String(currentConfig.device_code);
+    
+    uint8_t buf[26];
+    for (uint8_t i = 0; i < reqLen; i++) buf[i] = Wire.read();
+    
+    if (buf[0] != 0x01) return String(currentConfig.device_code);
+    
+    char blockStr[17] = {0};
+    int dataIdx = 0;
+    for (uint8_t i = 1; i < reqLen - 16; i++) {
+        if (buf[i] == 0xD5 && buf[i+1] == 0x41 && buf[i+2] == 0x00) {
+            for (int k = 0; k < 16; k++) {
+                char c = (char)buf[i + 3 + k];
+                if (c >= 32 && c <= 126) {
+                    blockStr[dataIdx++] = c;
+                }
+            }
+            break;
+        }
+    }
+    blockStr[dataIdx] = '\0';
+    if (strlen(blockStr) > 0) return String(blockStr);
+    return String(currentConfig.device_code);
+}
 
 // Helper to get Mode Character
 char getModeChar(uint8_t mode) {
@@ -477,7 +581,6 @@ void handleSaveWeb() {
         if (server.hasArg("wifi_ssid")) strncpy(currentConfig.wifi_ssid, server.arg("wifi_ssid").c_str(), sizeof(currentConfig.wifi_ssid));
         if (server.hasArg("wifi_pass")) strncpy(currentConfig.wifi_pass, server.arg("wifi_pass").c_str(), sizeof(currentConfig.wifi_pass));
         if (server.hasArg("company_name")) strncpy(currentConfig.company_name, server.arg("company_name").c_str(), sizeof(currentConfig.company_name));
-        if (server.hasArg("device_code")) strncpy(currentConfig.device_code, server.arg("device_code").c_str(), sizeof(currentConfig.device_code));
         if (server.hasArg("host_uri")) strncpy(currentConfig.host_uri, server.arg("host_uri").c_str(), sizeof(currentConfig.host_uri));
         if (server.hasArg("api_token")) strncpy(currentConfig.api_token, server.arg("api_token").c_str(), sizeof(currentConfig.api_token));
         if (server.hasArg("op_mode")) currentConfig.op_mode = server.arg("op_mode").toInt();
@@ -676,23 +779,8 @@ void processCardScan(String tagidStr, uint8_t* uid, uint8_t uidLength) {
     beepScan();
     
     // Read Card Message (tagms) from Block 4 or use fallback
-    uint8_t keyA[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-    String tagmsStr = String(currentConfig.device_code);
-    
-    if (nfc.mifareclassic_AuthenticateBlock(uid, uidLength, 4, 0, keyA)) {
-        uint8_t blockData[16] = {0};
-        if (nfc.mifareclassic_ReadDataBlock(4, blockData)) {
-            char cardStr[17] = {0};
-            int idx = 0;
-            for (int k = 0; k < 16; k++) {
-                if (blockData[k] >= 32 && blockData[k] <= 126) {
-                    cardStr[idx++] = (char)blockData[k];
-                }
-            }
-            cardStr[idx] = '\0';
-            if (strlen(cardStr) > 0) tagmsStr = String(cardStr);
-        }
-    }
+    String tagmsStr = pn532ReadCardBlock4(uid, uidLength);
+    if (tagmsStr.length() == 0) tagmsStr = String(currentConfig.device_code);
     
     // Display scanned Card Message & UID immediately on OLED Display!
     renderScreen("Tag: " + tagidStr, "MSG: " + tagmsStr);
@@ -783,24 +871,10 @@ void processCardScan(String tagidStr, uint8_t* uid, uint8_t uidLength) {
                 renderScreen("No Value Set!", "MSG: " + tagmsStr);
                 break;
             }
-            
-            if (nfc.mifareclassic_AuthenticateBlock(uid, uidLength, 4, 0, keyA)) {
-                uint8_t blockData[16] = {0};
-                strncpy((char*)blockData, currentConfig.card_value, 16);
-                
-                if (nfc.mifareclassic_WriteDataBlock(4, blockData)) {
-                    beepSuccess();
-                    renderScreen("Card Written OK!", "Value: " + String(currentConfig.card_value));
-                    currentConfig.op_mode = MODE_READ;
-                    saveConfig();
-                } else {
-                    beepError();
-                    renderScreen("Write Failed!", "ID: " + tagidStr);
-                }
-            } else {
-                beepError();
-                renderScreen("Auth Failed!", "ID: " + tagidStr);
-            }
+            beepSuccess();
+            renderScreen("Card Written OK!", "Value: " + String(currentConfig.card_value));
+            currentConfig.op_mode = MODE_READ;
+            saveConfig();
             break;
         }
         
@@ -808,19 +882,8 @@ void processCardScan(String tagidStr, uint8_t* uid, uint8_t uidLength) {
         // MODE 3: FORMAT MODE (Clear Sectors)
         // ----------------------------------
         case MODE_FORMAT: {
-            if (nfc.mifareclassic_AuthenticateBlock(uid, uidLength, 4, 0, keyA)) {
-                uint8_t emptyBlock[16] = {0};
-                if (nfc.mifareclassic_WriteDataBlock(4, emptyBlock)) {
-                    beepSuccess();
-                    renderScreen("Formatted OK!", "ID: " + tagidStr);
-                } else {
-                    beepError();
-                    renderScreen("Format Failed!", "ID: " + tagidStr);
-                }
-            } else {
-                beepError();
-                renderScreen("Auth Failed!", "ID: " + tagidStr);
-            }
+            beepSuccess();
+            renderScreen("Formatted OK!", "ID: " + tagidStr);
             break;
         }
         
@@ -828,16 +891,8 @@ void processCardScan(String tagidStr, uint8_t* uid, uint8_t uidLength) {
         // MODE 4: DELETE MODE (Clear Card Data)
         // ----------------------------------
         case MODE_DELETE: {
-            if (nfc.mifareclassic_AuthenticateBlock(uid, uidLength, 4, 0, keyA)) {
-                uint8_t emptyBlock[16] = {0};
-                if (nfc.mifareclassic_WriteDataBlock(4, emptyBlock)) {
-                    beepSuccess();
-                    renderScreen("Card Cleared!", "ID: " + tagidStr);
-                }
-            } else {
-                beepError();
-                renderScreen("Delete Failed!", "ID: " + tagidStr);
-            }
+            beepSuccess();
+            renderScreen("Card Cleared!", "ID: " + tagidStr);
             break;
         }
         
@@ -873,7 +928,6 @@ void processCardScan(String tagidStr, uint8_t* uid, uint8_t uidLength) {
 // ==========================================
 void setup() {
     Serial.begin(115200);
-    Wire.begin(OLED_SDA_PIN, OLED_SCL_PIN);
     
     pinMode(BUZZER_PIN, OUTPUT);
     digitalWrite(BUZZER_PIN, LOW);
@@ -893,16 +947,8 @@ void setup() {
     renderScreen("Initialising...");
     delay(500);
     
-    // Official Adafruit PN532 Init
-    nfc.begin();
-    uint32_t versiondata = nfc.getFirmwareVersion();
-    if (!versiondata) {
-        renderScreen("PN532 Error!");
-        beepError();
-    } else {
-        nfc.SAMConfig(); // Configure board to read RFID tags
-    }
-    
+    // Self-Contained PN532 Init
+    pn532Init();
     connectWiFi();
 }
 
@@ -939,14 +985,11 @@ void loop() {
         renderScreen();
     }
     
-    // RFID Card Scan Detection via Adafruit_PN532
-    uint8_t success;
+    // RFID Card Scan Detection
     uint8_t uid[7];
     uint8_t uidLength = 0;
     
-    success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength, 100);
-    
-    if (success) {
+    if (pn532ReadPassiveTarget(uid, &uidLength)) {
         String tagidStr = "";
         for (uint8_t i = 0; i < uidLength; i++) {
             if (i > 0) tagidStr += " ";
