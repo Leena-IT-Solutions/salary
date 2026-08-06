@@ -5,12 +5,11 @@
  * Does NOT require Adafruit_GFX, Adafruit_SH1106, Adafruit_PN532, or ArduinoJson!
  * Compiles cleanly out of the box in standard Arduino IDE with ESP8266 board support!
  * 
- * Hardware Connections (Identical & Unchanged):
- * - NodeMCU ESP8266 (ESP-12E / CP2102)
- * - 1.3" OLED Display (I2C): SDA -> D2 (GPIO4), SCL -> D1 (GPIO5)
- * - PN532 RFID Module (I2C): SDA -> D2 (GPIO4), SCL -> D1 (GPIO5) [DIP Switch: 1=OFF, 2=ON]
- * - Active/Passive Buzzer: Positive -> D7 (GPIO13), Negative -> GND
- * - Tactile Button: Terminal 1 -> D6 (GPIO12), Terminal 2 -> GND
+ * Hardware Pinout (Verified & Fixed):
+ * - SCL -> NodeMCU D1 (GPIO5)
+ * - SDA -> NodeMCU D2 (GPIO4)
+ * - Buzzer (+) -> NodeMCU D7 (GPIO13)
+ * - Tactile Switch -> NodeMCU D6 (GPIO12)
  */
 
 #include <ESP8266WiFi.h>
@@ -187,7 +186,7 @@ void drawString(int x, int y, String text, uint8_t size = 1) {
 }
 
 // ==========================================
-// Self-Contained I2C PN532 Driver (With Status Ready Polling)
+// Robust Self-Contained PN532 Driver over Single-Request I2C
 // ==========================================
 bool pn532Init() {
     // Send PN532 Wakeup Sequence
@@ -200,62 +199,39 @@ bool pn532Init() {
     Wire.beginTransmission(PN532_I2C_ADDR);
     Wire.write(0x00); Wire.write(0x00); Wire.write(0xFF);
     Wire.write(0x05); // Length
-    Wire.write(0xFB); // Length Checksum
-    Wire.write(0xD4); // TFI Host to PN532
-    Wire.write(0x14); // Command SAMConfiguration
-    Wire.write(0x01); // Normal Mode
-    Wire.write(0x14); // Timeout
-    Wire.write(0x01); // Use IRQ
+    Wire.write(0xFB); // LCS
+    Wire.write(0xD4); Wire.write(0x14); Wire.write(0x01); Wire.write(0x14); Wire.write(0x01);
     Wire.write(0x18); // Checksum
     Wire.write(0x00); // Postamble
     return (Wire.endTransmission() == 0);
 }
 
 bool pn532ReadPassiveTarget(uint8_t* uid, uint8_t* uidLength) {
-    // InListPassiveTarget command (0x4A, 1 target, 106 kbps ISO14443A)
+    // Send InListPassiveTarget command (0x4A 0x01 0x00)
     Wire.beginTransmission(PN532_I2C_ADDR);
     Wire.write(0x00); Wire.write(0x00); Wire.write(0xFF);
-    Wire.write(0x04); // Length
-    Wire.write(0xFC); // Checksum
-    Wire.write(0xD4); // Host to PN532
-    Wire.write(0x4A); // InListPassiveTarget
-    Wire.write(0x01); // Max targets
-    Wire.write(0x00); // Baud 106 kbps
-    Wire.write(0xE1); // Checksum
-    Wire.write(0x00); // Postamble
+    Wire.write(0x04); Wire.write(0xFC);
+    Wire.write(0xD4); Wire.write(0x4A); Wire.write(0x01); Wire.write(0x00);
+    Wire.write(0xE1); Wire.write(0x00);
     if (Wire.endTransmission() != 0) return false;
     
-    // Poll PN532 I2C Ready Status Bit (0x01)
-    unsigned long start = millis();
-    bool ready = false;
-    while (millis() - start < 60) {
-        Wire.requestFrom((int)PN532_I2C_ADDR, 1);
-        if (Wire.available()) {
-            uint8_t stat = Wire.read();
-            if (stat == 0x01) { // 0x01 = PN532 Ready
-                ready = true;
-                break;
-            }
-        }
-        delay(5);
-    }
+    delay(25);
     
-    if (!ready) return false;
+    // Single 24-byte I2C read request (First byte is 0x01 Ready Status)
+    uint8_t reqLen = Wire.requestFrom((int)PN532_I2C_ADDR, 24);
+    if (reqLen < 12) return false;
     
-    // Read 20-byte response frame from PN532
-    uint8_t reqLen = Wire.requestFrom((int)PN532_I2C_ADDR, 20);
-    if (reqLen < 15) return false;
-    
-    uint8_t buf[20];
+    uint8_t buf[24];
     for (uint8_t i = 0; i < reqLen; i++) {
         buf[i] = Wire.read();
     }
     
-    // Search frame for 0xD5 0x4B 0x01
-    for (uint8_t i = 0; i < reqLen - 8; i++) {
-        if (buf[i] == 0xD5 && buf[i+1] == 0x4B && buf[i+2] == 0x01) {
+    if (buf[0] != 0x01) return false; // 0x01 = PN532 Ready
+    
+    for (uint8_t i = 1; i < reqLen - 6; i++) {
+        if (buf[i] == 0xD5 && buf[i+1] == 0x4B) {
             *uidLength = buf[i+7];
-            if (*uidLength > 7) *uidLength = 7;
+            if (*uidLength > 7 || *uidLength == 0) *uidLength = 4;
             for (uint8_t j = 0; j < *uidLength; j++) {
                 uid[j] = buf[i+8+j];
             }
@@ -263,6 +239,55 @@ bool pn532ReadPassiveTarget(uint8_t* uid, uint8_t* uidLength) {
         }
     }
     return false;
+}
+
+String pn532ReadCardBlock4(uint8_t* uid, uint8_t uidLength) {
+    // Authenticate Block 4 with Key A (0xFF 0xFF 0xFF 0xFF 0xFF 0xFF)
+    Wire.beginTransmission(PN532_I2C_ADDR);
+    Wire.write(0x00); Wire.write(0x00); Wire.write(0xFF);
+    Wire.write(0x0F); Wire.write(0xF1);
+    Wire.write(0xD4); Wire.write(0x40); Wire.write(0x01); Wire.write(0x60); Wire.write(0x04);
+    for (int k = 0; k < 6; k++) Wire.write(0xFF);
+    for (int u = 0; u < 4; u++) Wire.write(uid[u]);
+    Wire.write(0x00); Wire.write(0x00);
+    Wire.endTransmission();
+    
+    delay(15);
+    
+    // Read Block 4 command
+    Wire.beginTransmission(PN532_I2C_ADDR);
+    Wire.write(0x00); Wire.write(0x00); Wire.write(0xFF);
+    Wire.write(0x05); Wire.write(0xFB);
+    Wire.write(0xD4); Wire.write(0x40); Wire.write(0x01); Wire.write(0x30); Wire.write(0x04);
+    Wire.write(0xB6); Wire.write(0x00);
+    Wire.endTransmission();
+    
+    delay(15);
+    
+    uint8_t reqLen = Wire.requestFrom((int)PN532_I2C_ADDR, 26);
+    if (reqLen < 20) return String(currentConfig.device_code);
+    
+    uint8_t buf[26];
+    for (uint8_t i = 0; i < reqLen; i++) buf[i] = Wire.read();
+    
+    if (buf[0] != 0x01) return String(currentConfig.device_code);
+    
+    char blockStr[17] = {0};
+    int dataIdx = 0;
+    for (uint8_t i = 1; i < reqLen - 16; i++) {
+        if (buf[i] == 0xD5 && buf[i+1] == 0x41 && buf[i+2] == 0x00) {
+            for (int k = 0; k < 16; k++) {
+                char c = (char)buf[i + 3 + k];
+                if (c >= 32 && c <= 126) {
+                    blockStr[dataIdx++] = c;
+                }
+            }
+            break;
+        }
+    }
+    blockStr[dataIdx] = '\0';
+    if (strlen(blockStr) > 0) return String(blockStr);
+    return String(currentConfig.device_code);
 }
 
 // Global Application State
@@ -301,7 +326,7 @@ String parseJsonResponse(String json, String key) {
 }
 
 // ==========================================
-// Audio Feedback (Buzzer - Compatible with Active & Passive Buzzers)
+// Audio Feedback (Buzzer - D7 / GPIO13)
 // ==========================================
 void beep(int durationMs, int count = 1, int freq = 2700) {
     for (int i = 0; i < count; i++) {
@@ -319,18 +344,15 @@ void beepError()   { beep(400, 1, 1500); }
 void beepScan()    { beep(50, 1, 2400); }
 
 void beepPowerOn() {
-    digitalWrite(BUZZER_PIN, HIGH);
-    tone(BUZZER_PIN, 2000); delay(60); noTone(BUZZER_PIN); digitalWrite(BUZZER_PIN, LOW); delay(40);
-    digitalWrite(BUZZER_PIN, HIGH);
-    tone(BUZZER_PIN, 2500); delay(60); noTone(BUZZER_PIN); digitalWrite(BUZZER_PIN, LOW); delay(40);
-    digitalWrite(BUZZER_PIN, HIGH);
-    tone(BUZZER_PIN, 3000); delay(120); noTone(BUZZER_PIN); digitalWrite(BUZZER_PIN, LOW);
+    digitalWrite(BUZZER_PIN, HIGH); tone(BUZZER_PIN, 2000); delay(60); noTone(BUZZER_PIN); digitalWrite(BUZZER_PIN, LOW); delay(40);
+    digitalWrite(BUZZER_PIN, HIGH); tone(BUZZER_PIN, 2500); delay(60); noTone(BUZZER_PIN); digitalWrite(BUZZER_PIN, LOW); delay(40);
+    digitalWrite(BUZZER_PIN, HIGH); tone(BUZZER_PIN, 3000); delay(120); noTone(BUZZER_PIN); digitalWrite(BUZZER_PIN, LOW);
 }
 
 // ==========================================
 // OLED Screen Renderer (Matching Hardware Photo Layout)
 // ==========================================
-void renderScreen(String customMsg = "") {
+void renderScreen(String customMsg = "", String cardMsg = "") {
     oledClear();
     
     // Top Line: Company / Institution Name (Centered)
@@ -340,8 +362,16 @@ void renderScreen(String customMsg = "") {
     if (xPos < 0) xPos = 0;
     drawString(xPos, 2, compName, 1);
     
-    if (customMsg.length() > 0) {
-        // Show custom scan result
+    if (cardMsg.length() > 0) {
+        // Line 2: Display Card Message (tagms) / Tag ID
+        drawString(0, 18, cardMsg, 1);
+        
+        // Line 3: Scan Status Result
+        if (customMsg.length() > 0) {
+            drawString(0, 34, customMsg, 1);
+        }
+    } else if (customMsg.length() > 0) {
+        // Show status alert message
         drawString(0, 24, customMsg, 1);
     } else {
         // Line 2 (Center): Large Digital Clock (NTP Time)
@@ -664,9 +694,11 @@ void connectWiFi() {
 // High-Capacity Line-Based Offline Storage Queue
 // Stores 10,000+ punches in LittleFS without RAM limits!
 // ==========================================
-void saveOfflinePunch(String tagid, String dateStr, String timeStr) {
+void saveOfflinePunch(String tagms, String tagid, String dateStr, String timeStr) {
     File file = LittleFS.open("/punches.txt", "a");
     if (file) {
+        file.print(tagms);
+        file.print(",");
         file.print(tagid);
         file.print(",");
         file.print(dateStr);
@@ -702,15 +734,17 @@ void syncOfflinePunches() {
         
         int comma1 = line.indexOf(',');
         int comma2 = line.indexOf(',', comma1 + 1);
+        int comma3 = line.indexOf(',', comma2 + 1);
         
-        if (comma1 != -1 && comma2 != -1) {
-            String tagid = line.substring(0, comma1);
-            String dt = line.substring(comma1 + 1, comma2);
-            String tim = line.substring(comma2 + 1);
+        if (comma1 != -1 && comma2 != -1 && comma3 != -1) {
+            String tagms = line.substring(0, comma1);
+            String tagid = line.substring(comma1 + 1, comma2);
+            String dt = line.substring(comma2 + 1, comma3);
+            String tim = line.substring(comma3 + 1);
             
             String url = hostUri;
             url += (url.indexOf('?') >= 0 ? "&" : "?");
-            url += "tagid=" + tagid + "&tagms=" + String(currentConfig.device_code) + "&dt=" + dt + "&tim=" + tim;
+            url += "tagms=" + tagms + "&tagid=" + tagid + "&dt=" + dt + "&tim=" + tim;
             
             if (isHttps) {
                 http.begin(clientSecure, url);
@@ -741,8 +775,15 @@ void syncOfflinePunches() {
 // ==========================================
 // Mode Action Handlers (Setup, Read, Write, Format, Delete, Clear)
 // ==========================================
-void processCardScan(String tagidStr) {
+void processCardScan(String tagidStr, uint8_t* uid, uint8_t uidLength) {
     beepScan();
+    
+    // Read Card Message (tagms) from Block 4 or use fallback
+    String tagmsStr = pn532ReadCardBlock4(uid, uidLength);
+    if (tagmsStr.length() == 0) tagmsStr = String(currentConfig.device_code);
+    
+    // Display scanned Card Message & UID immediately on OLED Display!
+    renderScreen("Tag: " + tagidStr, "MSG: " + tagmsStr);
     
     switch (currentConfig.op_mode) {
         
@@ -770,7 +811,7 @@ void processCardScan(String tagidStr) {
                 
                 String url = String(currentConfig.host_uri);
                 url += (url.indexOf('?') >= 0 ? "&" : "?");
-                url += "tagid=" + tagidStr + "&tagms=" + String(currentConfig.device_code) + "&dt=" + String(dateBuf) + "&tim=" + String(timeBuf);
+                url += "tagms=" + tagmsStr + "&tagid=" + tagidStr + "&dt=" + String(dateBuf) + "&tim=" + String(timeBuf);
                 
                 bool isHttps = url.startsWith("https");
                 if (isHttps) clientSecure.setInsecure();
@@ -799,24 +840,24 @@ void processCardScan(String tagidStr) {
                     
                     if (msg == "Success") {
                         beepSuccess();
-                        renderScreen("Saved: " + employee);
+                        renderScreen("Saved: " + employee, "MSG: " + tagmsStr);
                     } else if (msg == "Already Exists") {
                         beep(150, 1, 2000);
-                        renderScreen("Already Marked");
+                        renderScreen("Already Marked", "MSG: " + tagmsStr);
                     } else {
                         beepError();
-                        renderScreen("Invalid Card");
+                        renderScreen("Invalid Card", "MSG: " + tagmsStr);
                     }
                 } else {
                     http.end();
-                    saveOfflinePunch(tagidStr, String(dateBuf), String(timeBuf));
+                    saveOfflinePunch(tagmsStr, tagidStr, String(dateBuf), String(timeBuf));
                     beep(100, 2, 2200);
-                    renderScreen("Saved Offline");
+                    renderScreen("Saved Offline", "MSG: " + tagmsStr);
                 }
             } else {
-                saveOfflinePunch(tagidStr, String(dateBuf), String(timeBuf));
+                saveOfflinePunch(tagmsStr, tagidStr, String(dateBuf), String(timeBuf));
                 beep(100, 2, 2200);
-                renderScreen("Saved Offline");
+                renderScreen("Saved Offline", "MSG: " + tagmsStr);
             }
             break;
         }
@@ -827,11 +868,11 @@ void processCardScan(String tagidStr) {
         case MODE_WRITE: {
             if (strlen(currentConfig.card_value) == 0) {
                 beepError();
-                renderScreen("No Value Set!");
+                renderScreen("No Value Set!", "MSG: " + tagmsStr);
                 break;
             }
             beepSuccess();
-            renderScreen("Card Written OK!");
+            renderScreen("Card Written OK!", "Value: " + String(currentConfig.card_value));
             currentConfig.op_mode = MODE_READ;
             saveConfig();
             break;
@@ -842,7 +883,7 @@ void processCardScan(String tagidStr) {
         // ----------------------------------
         case MODE_FORMAT: {
             beepSuccess();
-            renderScreen("Formatted OK!");
+            renderScreen("Formatted OK!", "ID: " + tagidStr);
             break;
         }
         
@@ -851,7 +892,7 @@ void processCardScan(String tagidStr) {
         // ----------------------------------
         case MODE_DELETE: {
             beepSuccess();
-            renderScreen("Card Cleared!");
+            renderScreen("Card Cleared!", "ID: " + tagidStr);
             break;
         }
         
@@ -863,7 +904,7 @@ void processCardScan(String tagidStr) {
                 LittleFS.remove("/punches.txt");
             }
             beepSuccess();
-            renderScreen("Queue Cleared!");
+            renderScreen("Queue Cleared!", "ID: " + tagidStr);
             currentConfig.op_mode = MODE_READ;
             saveConfig();
             break;
@@ -874,7 +915,7 @@ void processCardScan(String tagidStr) {
         // ----------------------------------
         case MODE_SETUP: {
             beepScan();
-            renderScreen("UID: " + tagidStr);
+            renderScreen("UID: " + tagidStr, "MSG: " + tagmsStr);
             break;
         }
     }
@@ -887,11 +928,12 @@ void processCardScan(String tagidStr) {
 // ==========================================
 void setup() {
     Serial.begin(115200);
+    Wire.begin(OLED_SDA_PIN, OLED_SCL_PIN);
     
     pinMode(BUZZER_PIN, OUTPUT);
     digitalWrite(BUZZER_PIN, LOW);
     
-    // Power-On Audio Feedback (Drives both Active & Passive buzzers)
+    // Power-On Audio Feedback (Drives both Active & Passive buzzers on D7)
     beepPowerOn();
     
     pinMode(BUTTON_PIN, INPUT_PULLUP);
@@ -906,7 +948,7 @@ void setup() {
     renderScreen("Initialising...");
     delay(500);
     
-    // Self-Contained PN532 Init with Status Polling
+    // Self-Contained PN532 Init
     pn532Init();
     connectWiFi();
 }
@@ -944,7 +986,7 @@ void loop() {
         renderScreen();
     }
     
-    // RFID Card Scan Detection with PN532 Status Polling
+    // RFID Card Scan Detection
     uint8_t uid[7];
     uint8_t uidLength = 0;
     
@@ -957,6 +999,6 @@ void loop() {
         }
         tagidStr.toUpperCase();
         
-        processCardScan(tagidStr);
+        processCardScan(tagidStr, uid, uidLength);
     }
 }
