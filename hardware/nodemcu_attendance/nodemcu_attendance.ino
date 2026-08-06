@@ -195,17 +195,33 @@ unsigned long lastSyncCheck = 0;
 unsigned long lastDisplayUpdate = 0;
 
 // ==========================================
-// Self-Contained I2C PN532 Driver (No External Library Required!)
+// Robust Self-Contained PN532 Driver over I2C (With ACK & Status Handshaking)
 // ==========================================
+bool pn532ReadAck() {
+    delay(5);
+    uint8_t reqLen = Wire.requestFrom((int)PN532_I2C_ADDR, 7);
+    if (reqLen < 6) return false;
+    uint8_t ackBuf[7];
+    for (uint8_t i = 0; i < reqLen; i++) ackBuf[i] = Wire.read();
+    
+    // Check PN532 ACK frame signature: 0x00 0x00 0xFF 0x00 0xFF 0x00
+    if (ackBuf[1] == 0x00 && ackBuf[2] == 0x00 && ackBuf[3] == 0xFF && ackBuf[4] == 0x00 && ackBuf[5] == 0xFF) {
+        return true;
+    }
+    return false;
+}
+
 bool pn532Init() {
     Wire.begin(OLED_SDA_PIN, OLED_SCL_PIN);
     delay(50);
     
-    // PN532 Wakeup Sequence
+    Serial.println("[PN532] Initializing PN532 RFID reader at I2C address 0x24...");
+    
+    // Send PN532 Wakeup Sequence
     Wire.beginTransmission(PN532_I2C_ADDR);
     Wire.write(0x55); Wire.write(0x55); Wire.write(0x00); Wire.write(0x00); Wire.write(0x00);
     Wire.endTransmission();
-    delay(10);
+    delay(20);
     
     // SAM Configuration Command (0xD4 0x14 0x01 0x14 0x01)
     Wire.beginTransmission(PN532_I2C_ADDR);
@@ -215,7 +231,17 @@ bool pn532Init() {
     Wire.write(0xD4); Wire.write(0x14); Wire.write(0x01); Wire.write(0x14); Wire.write(0x01);
     Wire.write(0x18); // Checksum
     Wire.write(0x00); // Postamble
-    return (Wire.endTransmission() == 0);
+    uint8_t res = Wire.endTransmission();
+    
+    pn532ReadAck();
+    
+    if (res == 0) {
+        Serial.println("[PN532] SAM Configuration OK! Scanner ready.");
+        return true;
+    } else {
+        Serial.printf("[PN532] Init failed with I2C error code: %d\n", res);
+        return false;
+    }
 }
 
 bool pn532ReadPassiveTarget(uint8_t* uid, uint8_t* uidLength) {
@@ -227,9 +253,11 @@ bool pn532ReadPassiveTarget(uint8_t* uid, uint8_t* uidLength) {
     Wire.write(0xE1); Wire.write(0x00);
     if (Wire.endTransmission() != 0) return false;
     
-    delay(30); // RF field target discovery delay
+    pn532ReadAck();
     
-    // Single 24-byte request (1st byte is 0x01 Status byte)
+    delay(40); // RF field target scan delay
+    
+    // Request 24 bytes (1st byte is 0x01 Ready status)
     uint8_t reqLen = Wire.requestFrom((int)PN532_I2C_ADDR, 24);
     if (reqLen < 12) return false;
     
@@ -238,8 +266,10 @@ bool pn532ReadPassiveTarget(uint8_t* uid, uint8_t* uidLength) {
         buf[i] = Wire.read();
     }
     
-    if (buf[0] != 0x01) return false; // 0x01 = PN532 Ready
+    // Check if 1st byte is PN532 Ready (0x01)
+    if (buf[0] != 0x01) return false;
     
+    // Search for 0xD5 0x4B
     for (uint8_t i = 1; i < reqLen - 6; i++) {
         if (buf[i] == 0xD5 && buf[i+1] == 0x4B) {
             *uidLength = buf[i+7];
@@ -264,6 +294,7 @@ String pn532ReadCardBlock4(uint8_t* uid, uint8_t uidLength) {
     Wire.write(0x00); Wire.write(0x00);
     Wire.endTransmission();
     
+    pn532ReadAck();
     delay(15);
     
     // Read Block 4 Data
@@ -274,6 +305,7 @@ String pn532ReadCardBlock4(uint8_t* uid, uint8_t uidLength) {
     Wire.write(0xB6); Wire.write(0x00);
     Wire.endTransmission();
     
+    pn532ReadAck();
     delay(15);
     
     uint8_t reqLen = Wire.requestFrom((int)PN532_I2C_ADDR, 26);
@@ -782,6 +814,8 @@ void processCardScan(String tagidStr, uint8_t* uid, uint8_t uidLength) {
     String tagmsStr = pn532ReadCardBlock4(uid, uidLength);
     if (tagmsStr.length() == 0) tagmsStr = String(currentConfig.device_code);
     
+    Serial.printf("[CARD SCAN] UID: %s | tagms: %s\n", tagidStr.c_str(), tagmsStr.c_str());
+    
     // Display scanned Card Message & UID immediately on OLED Display!
     renderScreen("Tag: " + tagidStr, "MSG: " + tagmsStr);
     
@@ -812,6 +846,8 @@ void processCardScan(String tagidStr, uint8_t* uid, uint8_t uidLength) {
                 String url = String(currentConfig.host_uri);
                 url += (url.indexOf('?') >= 0 ? "&" : "?");
                 url += "tagms=" + tagmsStr + "&tagid=" + tagidStr + "&dt=" + String(dateBuf) + "&tim=" + String(timeBuf);
+                
+                Serial.printf("[API REQUEST] Sending: %s\n", url.c_str());
                 
                 bool isHttps = url.startsWith("https");
                 if (isHttps) clientSecure.setInsecure();
@@ -928,6 +964,10 @@ void processCardScan(String tagidStr, uint8_t* uid, uint8_t uidLength) {
 // ==========================================
 void setup() {
     Serial.begin(115200);
+    delay(200);
+    Serial.println("\n\n==========================================");
+    Serial.println("NodeMCU Attendance Terminal Starting...");
+    Serial.println("==========================================");
     
     pinMode(BUZZER_PIN, OUTPUT);
     digitalWrite(BUZZER_PIN, LOW);
