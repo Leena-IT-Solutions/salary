@@ -9,7 +9,7 @@
  * - NodeMCU ESP8266 (ESP-12E / CP2102)
  * - 1.3" OLED Display (I2C): SDA -> D2 (GPIO4), SCL -> D1 (GPIO5)
  * - PN532 RFID Module (I2C): SDA -> D2 (GPIO4), SCL -> D1 (GPIO5) [DIP Switch: 1=OFF, 2=ON]
- * - Active/Passive Buzzer: Positive -> D5 (GPIO14), Negative -> GND
+ * - Active/Passive Buzzer: Positive -> D7 (GPIO13), Negative -> GND
  * - Tactile Button: Terminal 1 -> D6 (GPIO12), Terminal 2 -> GND
  */
 

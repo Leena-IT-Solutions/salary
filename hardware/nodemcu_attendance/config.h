@@ -12,7 +12,7 @@
 #define PN532_SDA_PIN   4   // NodeMCU D2 (GPIO4) - Shared I2C Bus
 #define PN532_SCL_PIN   5   // NodeMCU D1 (GPIO5) - Shared I2C Bus
 
-#define BUZZER_PIN      14  // NodeMCU D5 (GPIO14)
+#define BUZZER_PIN      13  // NodeMCU D7 (GPIO13)
 #define BUTTON_PIN      12  // NodeMCU D6 (GPIO12)
 
 // ==========================================

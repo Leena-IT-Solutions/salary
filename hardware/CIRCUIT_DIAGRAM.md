@@ -21,7 +21,7 @@ This document details the exact hardware schematic, PCB pinout, and wiring mappi
 |---|---|---|---|---|
 | **D1** | GPIO5 | OLED & PN532 | **I2C SCL** | Shared I2C Clock Line |
 | **D2** | GPIO4 | OLED & PN532 | **I2C SDA** | Shared I2C Data Line |
-| **D5** | GPIO14 | Buzzer | **Audio Output** | High = Beep On, Low = Off |
+| **D7** | GPIO13 | Buzzer | **Audio Output** | High = Beep On, Low = Off |
 | **D6** | GPIO12 | Tactile Switch | **Button Input** | Active LOW (INPUT_PULLUP) |
 | **3V3 / VIN** | - | Power Bus | **VCC (+3.3V / +5V)** | Power to OLED, PN532 & Buzzer |
 | **GND** | - | Ground Bus | **GND (0V)** | Common Ground Plane |
