@@ -2,7 +2,7 @@
  * Salary Manager - NodeMCU ESP8266 Biometric & RFID Attendance Terminal
  * 
  * 100% ZERO EXTERNAL LIBRARY DEPENDENCY EDITION
- * Bundled with local Adafruit_PN532 driver + I2C Address Scanner!
+ * Bundled with local Adafruit_PN532 driver + Watchdog & Yield Safety!
  * 
  * Hardware Pinout:
  * - SCL -> NodeMCU D1 (GPIO5)
@@ -193,6 +193,7 @@ bool inAPMode = false;
 unsigned long buttonPressStart = 0;
 unsigned long lastSyncCheck = 0;
 unsigned long lastDisplayUpdate = 0;
+unsigned long lastRfidScanTime = 0;
 
 // Helper to get Mode Character
 char getModeChar(uint8_t mode) {
@@ -566,6 +567,7 @@ void connectWiFi() {
     int attempts = 0;
     while (WiFi.status() != WL_CONNECTED && attempts < 20) {
         delay(500);
+        yield();
         attempts++;
     }
     
@@ -655,6 +657,7 @@ void syncOfflinePunches() {
                 tempFile.println(line);
             }
         }
+        yield();
     }
     
     file.close();
@@ -877,11 +880,23 @@ void setup() {
     Serial.println("NodeMCU Attendance Terminal Starting...");
     Serial.println("==========================================");
     
-    Wire.begin(OLED_SDA_PIN, OLED_SCL_PIN);
-    Wire.setClock(100000);
-    delay(100);
+    pinMode(BUZZER_PIN, OUTPUT);
+    digitalWrite(BUZZER_PIN, LOW);
     
-    // I2C Address Diagnostic Scanner
+    // 1. Power-On Audio Feedback FIRST!
+    beepPowerOn();
+    
+    pinMode(BUTTON_PIN, INPUT_PULLUP);
+    
+    LittleFS.begin();
+    loadConfig();
+    
+    // 2. Initialize Hardware Wire I2C
+    Wire.begin(OLED_SDA_PIN, OLED_SCL_PIN);
+    Wire.setClock(50000);
+    delay(50);
+    
+    // 3. Clean I2C Scanner
     Serial.println("[I2C SCANNER] Scanning for active I2C devices...");
     uint8_t found = 0;
     for (uint8_t addr = 1; addr < 127; addr++) {
@@ -891,33 +906,17 @@ void setup() {
             found++;
         }
     }
-    if (found == 0) {
-        Serial.println(" -> WARNING: No I2C devices responded on SDA(D2) / SCL(D1)!");
-    } else {
-        Serial.printf(" -> Total %d I2C device(s) found.\n", found);
-    }
+    Serial.printf(" -> Total %d I2C device(s) found.\n", found);
     
-    pinMode(BUZZER_PIN, OUTPUT);
-    digitalWrite(BUZZER_PIN, LOW);
-    
-    // Power-On Audio Feedback
-    beepPowerOn();
-    
-    pinMode(BUTTON_PIN, INPUT_PULLUP);
-    
-    LittleFS.begin();
-    loadConfig();
-    
-    // Initialize Hardware Adafruit PN532
-    nfc.begin();
-    
-    // Self-Contained OLED Init
+    // 4. Self-Contained OLED Init
     oledInit();
     oledClear();
     
     renderScreen("Initialising...");
-    delay(300);
+    delay(200);
     
+    // 5. Initialize PN532
+    nfc.begin();
     uint32_t versiondata = nfc.getFirmwareVersion();
     if (!versiondata) {
         Serial.println("[PN532] PN532 Board Not Responding!");
@@ -939,6 +938,7 @@ void setup() {
 void loop() {
     server.handleClient();
     MDNS.update();
+    yield();
     
     // Tactile Switch Reset Check (Hold >3s to reset Wi-Fi & enter AP Mode)
     if (digitalRead(BUTTON_PIN) == LOW) {
@@ -966,19 +966,23 @@ void loop() {
         renderScreen();
     }
     
-    // RFID Card Scan Detection
-    uint8_t uid[7];
-    uint8_t uidLength = 0;
-    
-    if (nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength, 100)) {
-        String tagidStr = "";
-        for (uint8_t i = 0; i < uidLength; i++) {
-            if (i > 0) tagidStr += " ";
-            if (uid[i] < 0x10) tagidStr += "0";
-            tagidStr += String(uid[i], HEX);
-        }
-        tagidStr.toUpperCase();
+    // Non-Blocking RFID Card Scan Detection (Throttled to 20Hz / 50ms)
+    if (millis() - lastRfidScanTime > 50) {
+        lastRfidScanTime = millis();
         
-        processCardScan(tagidStr, uid, uidLength);
+        uint8_t uid[7];
+        uint8_t uidLength = 0;
+        
+        if (nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength, 20)) {
+            String tagidStr = "";
+            for (uint8_t i = 0; i < uidLength; i++) {
+                if (i > 0) tagidStr += " ";
+                if (uid[i] < 0x10) tagidStr += "0";
+                tagidStr += String(uid[i], HEX);
+            }
+            tagidStr.toUpperCase();
+            
+            processCardScan(tagidStr, uid, uidLength);
+        }
     }
 }
