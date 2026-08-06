@@ -1,6 +1,8 @@
 /*
  * Salary Manager - Upgraded NodeMCU ESP8266 Biometric & RFID Attendance Terminal
  * 
+ * Dependency-Free Edition (No ArduinoJson library required!)
+ * 
  * Hardware Connections (Identical & Unchanged):
  * - NodeMCU ESP8266 (ESP-12E / CP2102)
  * - 1.3" OLED Display (I2C): SDA -> D2 (GPIO4), SCL -> D1 (GPIO5)
@@ -8,25 +10,13 @@
  * - Active Buzzer: Positive -> D5 (GPIO14), Negative -> GND
  * - Tactile Button: Terminal 1 -> D6 (GPIO12), Terminal 2 -> GND
  * 
- * Features & Specifications:
+ * Features:
  * 1. Default Access Point Mode:
- *    - IP: 192.168.4.1
- *    - SSID: attendance
- *    - Password: password
- * 2. Web Server & mDNS:
- *    - Accessible via IP (192.168.4.1 or local Wi-Fi IP) & http://attendance.local
- *    - Upgraded Modern Web Management Interface
- * 3. 6 Operation Modes & OLED Indicators:
- *    - Setup (S), Read (R - Default), Write (W), Format (F), Delete (D), Clear (C)
- * 4. OLED Display (Matching Machine Photo):
- *    - Top Line: Company Name (e.g. "Sarvodaya Vidyalay")
- *    - Center Line: Large Real-Time Clock ("01:16")
- *    - Bottom Line: IP Address (Left) & Mode Indicator ('S'/'R'/'W'/'F'/'D'/'C') (Right)
- * 5. Secure Endpoint Integration:
- *    - Endpoint: https://payroll.sarvodayavidyalay.com/attendance/save
- *    - Parameters: tagms, tagid, dt, tim
- *    - Authorization Header: Bearer <api_token>
- * 6. Resilient Offline Punch Storage & Auto-Sync (LittleFS)
+ *    - IP: 192.168.4.1 | SSID: attendance | Password: password
+ * 2. Web Server & mDNS (http://attendance.local & IP)
+ * 3. 6 Operation Modes: Setup (S), Read (R), Write (W), Format (F), Delete (D), Clear (C)
+ * 4. OLED Display matching Hardware Photo layout (Company Name, Large Clock, IP & Mode)
+ * 5. High-capacity Line-based Offline Queue (Stores 10,000+ punches in LittleFS without RAM limits)
  */
 
 #include <ESP8266WiFi.h>
@@ -38,7 +28,6 @@
 #include <Wire.h>
 #include <EEPROM.h>
 #include <LittleFS.h>
-#include <ArduinoJson.h>
 #include <time.h>
 
 #include <Adafruit_GFX.h>
@@ -58,9 +47,8 @@ bool inAPMode = false;
 unsigned long buttonPressStart = 0;
 unsigned long lastSyncCheck = 0;
 unsigned long lastDisplayUpdate = 0;
-String currentStatusText = "";
 
-// Mode Helper String
+// Helper to get Mode Character
 char getModeChar(uint8_t mode) {
     switch (mode) {
         case MODE_SETUP:  return 'S';
@@ -71,6 +59,19 @@ char getModeChar(uint8_t mode) {
         case MODE_CLEAR:  return 'C';
         default:          return 'R';
     }
+}
+
+// Lightweight JSON Key-Value Parser (No external library required!)
+String parseJsonResponse(String json, String key) {
+    int keyIndex = json.indexOf("\"" + key + "\"");
+    if (keyIndex == -1) return "";
+    int colonIndex = json.indexOf(":", keyIndex);
+    if (colonIndex == -1) return "";
+    int q1 = json.indexOf("\"", colonIndex);
+    if (q1 == -1) return "";
+    int q2 = json.indexOf("\"", q1 + 1);
+    if (q2 == -1) return "";
+    return json.substring(q1 + 1, q2);
 }
 
 // ==========================================
@@ -111,7 +112,7 @@ void renderScreen(String customMsg = "") {
     
     if (customMsg.length() > 0) {
         // Show scan result / custom alert message
-        display.setCursor(0, 22);
+        display.setCursor(0, 24);
         display.setTextSize(1);
         display.println(customMsg);
     } else {
@@ -190,7 +191,7 @@ void resetConfig() {
 }
 
 // ==========================================
-// Upgraded Modern Web Management Portal
+// Upgraded Web Management Portal
 // ==========================================
 void handleWebRoot() {
     String html = "<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'>";
@@ -389,44 +390,31 @@ void connectWiFi() {
 }
 
 // ==========================================
-// LittleFS Offline Punch Queue
+// High-Capacity Line-Based Offline Storage Queue
+// Stores 10,000+ punches in LittleFS without RAM limits!
 // ==========================================
 void saveOfflinePunch(String tagid, String dateStr, String timeStr) {
-    DynamicJsonDocument doc(4096);
-    if (LittleFS.exists("/punches.json")) {
-        File file = LittleFS.open("/punches.json", "r");
-        deserializeJson(doc, file);
+    File file = LittleFS.open("/punches.txt", "a");
+    if (file) {
+        file.print(tagid);
+        file.print(",");
+        file.print(dateStr);
+        file.print(",");
+        file.println(timeStr);
         file.close();
     }
-    
-    JsonArray array = doc.as<JsonArray>();
-    if (array.isNull()) array = doc.to<JsonArray>();
-    
-    JsonObject obj = array.createNestedObject();
-    obj["tagid"] = tagid;
-    obj["dt"] = dateStr;
-    obj["tim"] = timeStr;
-    
-    File file = LittleFS.open("/punches.json", "w");
-    serializeJson(doc, file);
-    file.close();
 }
 
 void syncOfflinePunches() {
-    if (WiFi.status() != WL_CONNECTED || !LittleFS.exists("/punches.json")) return;
+    if (WiFi.status() != WL_CONNECTED || !LittleFS.exists("/punches.txt")) return;
     
-    File file = LittleFS.open("/punches.json", "r");
-    DynamicJsonDocument doc(4096);
-    DeserializationError error = deserializeJson(doc, file);
-    file.close();
+    File file = LittleFS.open("/punches.txt", "r");
+    if (!file || file.size() == 0) {
+        if (file) file.close();
+        return;
+    }
     
-    if (error || !doc.is<JsonArray>()) return;
-    
-    JsonArray array = doc.as<JsonArray>();
-    if (array.size() == 0) return;
-    
-    DynamicJsonDocument remainingDoc(4096);
-    JsonArray remainingArray = remainingDoc.to<JsonArray>();
+    File tempFile = LittleFS.open("/punches_tmp.txt", "w");
     
     WiFiClientSecure clientSecure;
     WiFiClient clientPlain;
@@ -436,36 +424,48 @@ void syncOfflinePunches() {
     bool isHttps = hostUri.startsWith("https");
     if (isHttps) clientSecure.setInsecure();
     
-    for (JsonObject obj : array) {
-        String tagid = obj["tagid"].as<String>();
-        String dt = obj["dt"].as<String>();
-        String tim = obj["tim"].as<String>();
+    while (file.available()) {
+        String line = file.readStringUntil('\n');
+        line.trim();
+        if (line.length() == 0) continue;
         
-        String url = hostUri;
-        url += (url.indexOf('?') >= 0 ? "&" : "?");
-        url += "tagid=" + tagid + "&tagms=" + String(currentConfig.device_code) + "&dt=" + dt + "&tim=" + tim;
+        int comma1 = line.indexOf(',');
+        int comma2 = line.indexOf(',', comma1 + 1);
         
-        if (isHttps) {
-            http.begin(clientSecure, url);
-        } else {
-            http.begin(clientPlain, url);
-        }
-        
-        if (strlen(currentConfig.api_token) > 0) {
-            http.addHeader("Authorization", "Bearer " + String(currentConfig.api_token));
-        }
-        
-        int httpCode = http.GET();
-        http.end();
-        
-        if (httpCode != 200) {
-            remainingArray.add(obj);
+        if (comma1 != -1 && comma2 != -1) {
+            String tagid = line.substring(0, comma1);
+            String dt = line.substring(comma1 + 1, comma2);
+            String tim = line.substring(comma2 + 1);
+            
+            String url = hostUri;
+            url += (url.indexOf('?') >= 0 ? "&" : "?");
+            url += "tagid=" + tagid + "&tagms=" + String(currentConfig.device_code) + "&dt=" + dt + "&tim=" + tim;
+            
+            if (isHttps) {
+                http.begin(clientSecure, url);
+            } else {
+                http.begin(clientPlain, url);
+            }
+            
+            if (strlen(currentConfig.api_token) > 0) {
+                http.addHeader("Authorization", "Bearer " + String(currentConfig.api_token));
+            }
+            
+            int httpCode = http.GET();
+            http.end();
+            
+            if (httpCode != 200) {
+                // Save back un-sent line for next retry
+                tempFile.println(line);
+            }
         }
     }
     
-    File writeFile = LittleFS.open("/punches.json", "w");
-    serializeJson(remainingDoc, writeFile);
-    writeFile.close();
+    file.close();
+    tempFile.close();
+    
+    LittleFS.remove("/punches.txt");
+    LittleFS.rename("/punches_tmp.txt", "/punches.txt");
 }
 
 // ==========================================
@@ -521,11 +521,11 @@ void processCardScan(String tagidStr, uint8_t* uid, uint8_t uidLength) {
                     String payload = http.getString();
                     http.end();
                     
-                    DynamicJsonDocument doc(1024);
-                    deserializeJson(doc, payload);
+                    String employee = parseJsonResponse(payload, "employee");
+                    String msg = parseJsonResponse(payload, "message");
                     
-                    String employee = doc["employee"] | "Employee";
-                    String msg = doc["message"] | "Success";
+                    if (employee.length() == 0) employee = "Employee";
+                    if (msg.length() == 0) msg = "Success";
                     
                     if (msg == "Success") {
                         beepSuccess();
@@ -561,7 +561,6 @@ void processCardScan(String tagidStr, uint8_t* uid, uint8_t uidLength) {
                 break;
             }
             
-            // Authenticate & write data to Block 4
             uint8_t keyA[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
             uint8_t authenticated = nfc.mifareclassic_AuthenticateBlock(uid, uidLength, 4, 0, keyA);
             
@@ -628,8 +627,8 @@ void processCardScan(String tagidStr, uint8_t* uid, uint8_t uidLength) {
         // MODE 5: CLEAR MODE (Clear Queue)
         // ----------------------------------
         case MODE_CLEAR: {
-            if (LittleFS.exists("/punches.json")) {
-                LittleFS.remove("/punches.json");
+            if (LittleFS.exists("/punches.txt")) {
+                LittleFS.remove("/punches.txt");
             }
             beepSuccess();
             renderScreen("Queue Cleared!");
