@@ -31,6 +31,10 @@ JS;
         ->header('Pragma', 'no-cache');
 });
 
+// Public Biometric Machine Routes
+Route::match(['get', 'post'], '/attendance/save', [App\Http\Controllers\AttendanceMachineController::class, 'save']);
+Route::match(['get', 'post'], '/attendance/face_save', [App\Http\Controllers\AttendanceMachineController::class, 'faceSave']);
+
 Route::middleware(['auth', 'role'])->group(function () {
     /***********************************
     # Overview Routes 
