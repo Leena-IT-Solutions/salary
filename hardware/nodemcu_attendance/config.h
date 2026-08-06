@@ -24,7 +24,7 @@
 // ==========================================
 // Default Access Point & Config Settings
 // ==========================================
-#define DEFAULT_AP_SSID     "attendance"
+#define DEFAULT_AP_SSID     "Attendance Machine"
 #define DEFAULT_AP_PASS     "password"
 #define DEFAULT_AP_IP       "192.168.4.1"
 #define DEFAULT_MDNS_NAME   "attendance" // Accessible as http://attendance.local
@@ -54,7 +54,7 @@ enum OperationMode {
     MODE_CLEAR = 5
 };
 
-#define CONFIG_MAGIC 0x53414C59 // Magic Header Key 'SALY'
+#define CONFIG_MAGIC 0x53414C5B // Magic Header Key 'SALB'
 
 struct Config {
     uint32_t magic;  // Must equal CONFIG_MAGIC
