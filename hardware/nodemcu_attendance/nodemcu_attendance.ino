@@ -435,8 +435,6 @@ void handleWebRoot() {
     html += "<div class='card'><h2>Terminal & Company Settings</h2>";
     html += "<label>Company / Institution Name:</label>";
     html += "<input type='text' name='company_name' value='" + String(currentConfig.company_name) + "' placeholder='Sarvodaya Vidyalay'>";
-    html += "<label>Machine Code (tagms):</label>";
-    html += "<input type='text' name='device_code' value='" + String(currentConfig.device_code) + "' required>";
     html += "<label>Operation Mode:</label>";
     html += "<select name='op_mode'>";
     html += "<option value='0'" + String(currentConfig.op_mode == MODE_SETUP ? " selected" : "") + ">Setup (S)</option>";
