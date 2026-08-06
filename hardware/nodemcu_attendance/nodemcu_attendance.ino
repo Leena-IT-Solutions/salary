@@ -185,6 +185,15 @@ void drawString(int x, int y, String text, uint8_t size = 1) {
     }
 }
 
+// Global Application State
+ESP8266WebServer server(80);
+Config currentConfig;
+
+bool inAPMode = false;
+unsigned long buttonPressStart = 0;
+unsigned long lastSyncCheck = 0;
+unsigned long lastDisplayUpdate = 0;
+
 // ==========================================
 // Robust Self-Contained PN532 Driver over Single-Request I2C
 // ==========================================
@@ -289,15 +298,6 @@ String pn532ReadCardBlock4(uint8_t* uid, uint8_t uidLength) {
     if (strlen(blockStr) > 0) return String(blockStr);
     return String(currentConfig.device_code);
 }
-
-// Global Application State
-ESP8266WebServer server(80);
-Config currentConfig;
-
-bool inAPMode = false;
-unsigned long buttonPressStart = 0;
-unsigned long lastSyncCheck = 0;
-unsigned long lastDisplayUpdate = 0;
 
 // Helper to get Mode Character
 char getModeChar(uint8_t mode) {
