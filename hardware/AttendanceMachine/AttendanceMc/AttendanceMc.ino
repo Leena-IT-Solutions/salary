@@ -1457,11 +1457,17 @@ void readCard() {
 }
 
 void writeCard() {
+  drawScreenWithMiddleText("Writing..");
   NdefMessage message = NdefMessage();
   message.addTextRecord(card_value);
   bool success = nfc.write(message);
   if (success) {
     beep(2, 100, 100); // Double beep on card write success
+    drawScreenWithMiddleText("SUCCESS!");
+    delay(1000);
+  } else {
+    drawScreenWithMiddleText("FAILED!");
+    delay(1000);
   }
   delay(500);
 
@@ -1475,17 +1481,16 @@ void writeCard() {
 }
 
 void formatCard() {
+  drawScreenWithMiddleText("Formatting");
   bool success = nfc.format();
   if (success) {
     beep(2, 100, 100);
-    // Serial.println("\nThe card (tag) successfully formatted in the NTAG.");
-  } else {
-    // Serial.println("\nUnsuccessful formatting.");
   }
   delay(1000);
 }
 
 void deleteCardMessage() {
+  drawScreenWithMiddleText("Deleting..");
   bool success = nfc.clean();
   if (success) {
     beep(2, 100, 100);
@@ -1494,6 +1499,7 @@ void deleteCardMessage() {
 }
 
 void clearCard() {
+  drawScreenWithMiddleText("Clearing..");
   bool success = nfc.clean();
   if (success) {
     beep(2, 100, 100);
@@ -1530,7 +1536,7 @@ void drawScreenWithMiddleText(const String &middleText) {
   oled.setCursor(startCompX, 0);
   oled.println(compStr);
 
-  // Middle text (Time or Employee Code tagMs)
+  // Middle text (Time or Employee Code tagMs or Status)
   int textLength = middleText.length();
   int startX = (128 - (textLength * 12)) / 2;
   if (startX < 0)
@@ -1551,8 +1557,18 @@ void drawScreenWithMiddleText(const String &middleText) {
 }
 
 void writeCompanyName() {
-  String clockText = (tim.length() > 0) ? tim : "00:00:00";
-  drawScreenWithMiddleText(clockText);
+  if (op_mode == "Write") {
+    drawScreenWithMiddleText("Waiting..");
+  } else if (op_mode == "Format") {
+    drawScreenWithMiddleText("Format Tag");
+  } else if (op_mode == "Delete") {
+    drawScreenWithMiddleText("Delete Tag");
+  } else if (op_mode == "Clear") {
+    drawScreenWithMiddleText("Clear Tag");
+  } else {
+    String clockText = (tim.length() > 0) ? tim : "00:00:00";
+    drawScreenWithMiddleText(clockText);
+  }
 }
 
 void writeBrandName() {
