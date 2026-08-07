@@ -753,7 +753,6 @@ void setupMDNS() {
   }
   if (MDNS.begin(host.c_str())) {
     MDNS.addService("http", "tcp", 80);
-    Serial.println("[mDNS] Responder started: http://" + host + ".local");
   }
 }
 
@@ -761,9 +760,7 @@ void startSoftAP() {
   WiFi.mode(WIFI_AP);
   if (WiFi.softAP(ap_ssid.c_str(), ap_pswd.c_str())) {
     ipAddress = WiFi.softAPIP();
-    Serial.println("\n[AP MODE] Access Point Started");
-    Serial.print("[AP MODE] SSID: "); Serial.println(ap_ssid);
-    Serial.print("[AP MODE] IP Address: "); Serial.println(ipAddress);
+
     setupMDNS();
     startWebServer();
   }
@@ -771,7 +768,7 @@ void startSoftAP() {
 
 void startWiFi() {
   if (wf_ssid.length() == 0) {
-    Serial.println("\n[Wi-Fi] No Router SSID configured. Starting Access Point mode...");
+
     startSoftAP();
     return;
   }
@@ -781,21 +778,16 @@ void startWiFi() {
   delay(100);
   WiFi.begin(wf_ssid.c_str(), wf_pswd.c_str());
 
-  Serial.println("\n[Wi-Fi] Connecting to Router SSID: " + wf_ssid);
-  unsigned long startAttempt = millis();
-  while (WiFi.status() != WL_CONNECTED && (millis() - startAttempt < 15000)) {
-    delay(300);
-    Serial.print(".");
+  int timeout = 0;
+  while (WiFi.status() != WL_CONNECTED && timeout < 20) {
+    delay(500);
+    timeout++;
   }
-  Serial.println();
 
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("[Wi-Fi] Connection Failed / Timeout. Fallback to Access Point mode...");
     startSoftAP();
   } else {
     ipAddress = WiFi.localIP();
-    Serial.println("[Wi-Fi] Connected Successfully!");
-    Serial.print("[Wi-Fi] IP Address: "); Serial.println(ipAddress);
     configTime(gmtOffset, daylightOffset, ntpServer);
     printLocalTime();
     isNetwork = true;
@@ -1055,7 +1047,7 @@ void saveSettings(String msg) {
 
     server.send(200, "text/html", responseHtml);
     server.client().flush();
-    Serial.println("[SYSTEM] Settings Saved. Software Resetting ESP8266...");
+
     delay(2000);
     ESP.restart();
   } else {
@@ -1202,7 +1194,7 @@ bool enqueueRecord(String tId, String tMs, String d, String t) {
   JsonArray arr = doc.as<JsonArray>();
 
   if (arr.size() >= 200) {
-    Serial.println("[QUEUE] Queue full! Max 200 entries reached.");
+
     return false;
   }
 
@@ -1215,8 +1207,7 @@ bool enqueueRecord(String tId, String tMs, String d, String t) {
   String output;
   serializeJson(doc, output);
   writeQueueJSON(output);
-  Serial.print("[QUEUE] Enqueued offline record. Current Queue Count: ");
-  Serial.println(arr.size());
+
   return true;
 }
 
@@ -1235,30 +1226,29 @@ bool dequeueRecord() {
   String output;
   serializeJson(doc, output);
   writeQueueJSON(output);
-  Serial.print("[QUEUE] Dequeued 1 record. Remaining Queue Count: ");
-  Serial.println(arr.size());
+
   return true;
 }
 
 void clearQueue() {
   writeQueueJSON("[]");
-  Serial.println("[QUEUE] Queue cleared manually.");
+
 }
 
 SyncResult sendDataToServerParams(String tId, String tMs, String d, String t) {
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("[API] Cannot send data: Wi-Fi not connected.");
+
     return SYNC_SERVER_ERROR;
   }
 
   if (sr_host.length() == 0) {
-    Serial.println("[API] Cannot send data: Host URI is empty.");
+
     return SYNC_CLIENT_ERROR;
   }
 
   uint32_t freeHeap = ESP.getFreeHeap();
   if (freeHeap < 10000) {
-    Serial.println("[API] Warning: Low Heap RAM (" + String(freeHeap) + " B). Aborting network call to prevent OOM crash.");
+
     return SYNC_SERVER_ERROR;
   }
 
@@ -1274,15 +1264,7 @@ SyncResult sendDataToServerParams(String tId, String tMs, String d, String t) {
     uri += "?" + encodeduri;
   }
 
-  Serial.println("\n------------------------------------");
-  Serial.print("[API] Request URI: "); Serial.println(uri);
-  if (api_token.length() > 0) {
-    Serial.println("[API] Bearer Token Attached: YES");
-  } else {
-    Serial.println("[API] Bearer Token Attached: NO (token is empty)");
-  }
 
-  Serial.print("[RAM] Free Heap RAM: "); Serial.print(ESP.getFreeHeap()); Serial.println(" Bytes");
 
   HTTPClient http;
   bool isHttps = uri.startsWith("https://");
@@ -1310,21 +1292,21 @@ SyncResult sendDataToServerParams(String tId, String tMs, String d, String t) {
         int httpCode = http.GET();
         yield();
         ESP.wdtFeed();
-        Serial.print("[API] HTTPS Status Code: "); Serial.println(httpCode);
+
         if (httpCode >= 200 && httpCode < 300) {
           String payload = http.getString();
-          Serial.print("[API] Server Response: "); Serial.println(payload);
+
           result = SYNC_SUCCESS;
         } else if (httpCode >= 400 && httpCode < 500) {
-          Serial.print("[API] Client Error Code: "); Serial.println(httpCode);
+
           result = SYNC_CLIENT_ERROR;
         } else {
-          Serial.print("[API] HTTPS GET Server Error / Timeout Code: "); Serial.println(httpCode);
+
           result = SYNC_SERVER_ERROR;
         }
         http.end();
       } else {
-        Serial.println("[API] Unable to initialize HTTPS connection");
+
         result = SYNC_SERVER_ERROR;
       }
       delete client;
@@ -1348,27 +1330,27 @@ SyncResult sendDataToServerParams(String tId, String tMs, String d, String t) {
       int httpCode = http.GET();
       yield();
       ESP.wdtFeed();
-      Serial.print("[API] HTTP Status Code: "); Serial.println(httpCode);
+
       if (httpCode >= 200 && httpCode < 300) {
         String payload = http.getString();
-        Serial.print("[API] Server Response: "); Serial.println(payload);
+
         result = SYNC_SUCCESS;
       } else if (httpCode >= 400 && httpCode < 500) {
-        Serial.print("[API] Client Error Code: "); Serial.println(httpCode);
+
         result = SYNC_CLIENT_ERROR;
       } else {
-        Serial.print("[API] HTTP GET Server Error / Timeout Code: "); Serial.println(httpCode);
+
         result = SYNC_SERVER_ERROR;
       }
       http.end();
     } else {
-      Serial.println("[API] Unable to initialize HTTP connection");
+
       result = SYNC_SERVER_ERROR;
     }
   }
   yield();
   ESP.wdtFeed();
-  Serial.println("------------------------------------\n");
+
   return result;
 }
 
@@ -1404,7 +1386,7 @@ void processOfflineQueue() {
   String qDt = item["dt"].as<String>();
   String qTim = item["tim"].as<String>();
 
-  Serial.println("[QUEUE] Attempting background sync: " + qTagId + " / " + qTagMs);
+
   SyncResult res = sendDataToServerParams(qTagId, qTagMs, qDt, qTim);
 
   if (res == SYNC_SUCCESS) {
@@ -1415,7 +1397,7 @@ void processOfflineQueue() {
     static int clientErrorCount = 0;
     clientErrorCount++;
     if (clientErrorCount >= 3) {
-      Serial.println("[QUEUE] Client HTTP 4xx error persisted 3 times. Dropping corrupt record.");
+
       dequeueRecord();
       clientErrorCount = 0;
     }
@@ -1428,7 +1410,7 @@ void processOfflineQueue() {
       cooldownDuration = 300000; // 3rd+ error: 5 Minutes (300 seconds)!
     }
     serverErrorCooldownUntil = millis() + cooldownDuration;
-    Serial.println("[QUEUE] Server error/timeout #" + String(consecutiveServerErrors) + " detected. Entering " + String(cooldownDuration / 1000) + "s network cooldown penalty.");
+
   }
   isQueueSyncing = false;
 }
@@ -1630,7 +1612,7 @@ void readSwitch() {
     swiEnd = 0;
   }
   if (duration > 0) {
-    Serial.println(duration);
+
   }
   if (duration > 3000) {
     if (op_mode == "Setup") {
