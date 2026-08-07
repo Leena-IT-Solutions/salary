@@ -740,21 +740,36 @@ void accessCard(){
   }
 }
 
-void writeCompanyName(){
+void drawScreenWithMiddleText(const String &middleText) {
   oled.clearDisplay();
+  
+  // Header at top
   oled.setTextSize(1);
-  oled.setCursor(10,0);
+  oled.setCursor(10, 0);
   oled.println(F("Sarvodaya Vidyalay"));
+
+  // Middle text (Time or Employee Code tagMs)
+  int textLength = middleText.length();
+  int startX = (128 - (textLength * 12)) / 2;
+  if (startX < 0) startX = 0;
+
   oled.setTextSize(2);
-  oled.setCursor(16, 15);
-  oled.println(tim.length() > 0 ? tim : "00:00:00");
+  oled.setCursor(startX, 22);
+  oled.println(middleText);
+
+  // Footer status bar
   oled.setTextSize(1);
-  oled.setCursor(0,55);
+  oled.setCursor(0, 52);
   oled.println(ipAddress);
-  oled.setTextSize(1);
-  oled.setCursor(120,55);
-  oled.println(op_mode[0]);
+  oled.setCursor(118, 52);
+  oled.println(op_mode.length() > 0 ? String(op_mode[0]) : "R");
+
   oled.display();
+}
+
+void writeCompanyName(){
+  String clockText = (tim.length() > 0) ? tim : "00:00:00";
+  drawScreenWithMiddleText(clockText);
 }
 
 void writeBrandName(){
@@ -769,13 +784,7 @@ void writeBrandName(){
 }
 
 void showMessage(){
-  oled.clearDisplay();
-  int c = (10 - tagMs.length()) * 6;
-  if (c < 0) c = 0;
-  oled.setTextSize(2);
-  oled.setCursor(c, 25);
-  oled.println(tagMs);
-  oled.display();
+  drawScreenWithMiddleText(tagMs);
 }
 
 void readSwitch(){
