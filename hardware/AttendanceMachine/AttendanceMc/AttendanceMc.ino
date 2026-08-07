@@ -1292,9 +1292,9 @@ SyncResult sendDataToServerParams(String tId, String tMs, String d, String t) {
   if (isHttps) {
     BearSSL::WiFiClientSecure client;
     client.setInsecure();
-    client.setBufferSizes(2048, 1024);
-    client.setTimeout(6000);
-    http.setTimeout(6000);
+    client.setBufferSizes(4096, 512);
+    client.setTimeout(10000);
+    http.setTimeout(10000);
     http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
     http.setUserAgent("ESP8266-AttendanceMachine");
 
