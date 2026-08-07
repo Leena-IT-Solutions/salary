@@ -1285,6 +1285,8 @@ SyncResult sendDataToServerParams(String tId, String tMs, String d, String t) {
     Serial.println("[API] Bearer Token Attached: NO (token is empty)");
   }
 
+  Serial.print("[RAM] Free Heap RAM: "); Serial.print(ESP.getFreeHeap()); Serial.println(" Bytes");
+
   HTTPClient http;
   bool isHttps = uri.startsWith("https://");
   SyncResult result = SYNC_SERVER_ERROR;
@@ -1292,9 +1294,9 @@ SyncResult sendDataToServerParams(String tId, String tMs, String d, String t) {
   if (isHttps) {
     BearSSL::WiFiClientSecure client;
     client.setInsecure();
-    client.setBufferSizes(4096, 512);
-    client.setTimeout(10000);
-    http.setTimeout(10000);
+    client.setBufferSizes(2048, 512);
+    client.setTimeout(5000);
+    http.setTimeout(5000);
     http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
     http.setUserAgent("ESP8266-AttendanceMachine");
 
