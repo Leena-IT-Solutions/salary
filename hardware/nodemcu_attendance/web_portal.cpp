@@ -36,7 +36,9 @@ static bool requireAuth() {
 // Shared Modern Responsive Header & 6 Tab Bar
 // ==========================================
 static String renderHeader(const String &activeTab) {
-    String html = "<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'>";
+    String html;
+    html.reserve(3500);
+    html = "<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'>";
     html += "<meta name='viewport' content='width=device-width, initial-scale=1.0'>";
     html += "<title>Attendance System | Leena IT Solutions</title>";
     html += "<style>";

@@ -166,8 +166,8 @@ void processCardScan(String tagidStr, uint8_t *uid, uint8_t uidLength) {
                 if (isHttps) {
                     WiFiClientSecure *clientSec = new WiFiClientSecure();
                     clientSec->setInsecure();
-                    clientSec->setBufferSizes(2048, 1024);
-                    clientSec->setTimeout(8000);
+                    clientSec->setBufferSizes(1024, 512); // Reduced from 16KB to 1.5KB to save 15KB RAM!
+                    clientSec->setTimeout(5000);
                     http.begin(*clientSec, url);
                     if (strlen(currentConfig.api_token) > 0) {
                         http.addHeader("Authorization", "Bearer " + String(currentConfig.api_token));
