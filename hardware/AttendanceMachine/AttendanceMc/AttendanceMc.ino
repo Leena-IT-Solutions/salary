@@ -1292,42 +1292,45 @@ SyncResult sendDataToServerParams(String tId, String tMs, String d, String t) {
   SyncResult result = SYNC_SERVER_ERROR;
 
   if (isHttps) {
-    BearSSL::WiFiClientSecure client;
-    client.setInsecure();
-    client.setBufferSizes(3072, 512);
-    client.setTimeout(6000);
-    http.setTimeout(6000);
-    http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
-    http.setUserAgent("ESP8266-AttendanceMachine");
+    BearSSL::WiFiClientSecure *client = new BearSSL::WiFiClientSecure();
+    if (client) {
+      client->setInsecure();
+      client->setBufferSizes(2048, 512);
+      client->setTimeout(4000);
+      http.setTimeout(4000);
+      http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+      http.setUserAgent("ESP8266-AttendanceMachine");
 
-    yield();
-    ESP.wdtFeed();
-    if (http.begin(client, uri)) {
-      http.addHeader("Accept", "application/json");
-      if (api_token.length() > 0) {
-        http.addHeader("Authorization", "Bearer " + api_token);
-      }
       yield();
       ESP.wdtFeed();
-      int httpCode = http.GET();
-      yield();
-      ESP.wdtFeed();
-      Serial.print("[API] HTTPS Status Code: "); Serial.println(httpCode);
-      if (httpCode >= 200 && httpCode < 300) {
-        String payload = http.getString();
-        Serial.print("[API] Server Response: "); Serial.println(payload);
-        result = SYNC_SUCCESS;
-      } else if (httpCode >= 400 && httpCode < 500) {
-        Serial.print("[API] Client Error Code: "); Serial.println(httpCode);
-        result = SYNC_CLIENT_ERROR;
+      if (http.begin(*client, uri)) {
+        http.addHeader("Accept", "application/json");
+        if (api_token.length() > 0) {
+          http.addHeader("Authorization", "Bearer " + api_token);
+        }
+        yield();
+        ESP.wdtFeed();
+        int httpCode = http.GET();
+        yield();
+        ESP.wdtFeed();
+        Serial.print("[API] HTTPS Status Code: "); Serial.println(httpCode);
+        if (httpCode >= 200 && httpCode < 300) {
+          String payload = http.getString();
+          Serial.print("[API] Server Response: "); Serial.println(payload);
+          result = SYNC_SUCCESS;
+        } else if (httpCode >= 400 && httpCode < 500) {
+          Serial.print("[API] Client Error Code: "); Serial.println(httpCode);
+          result = SYNC_CLIENT_ERROR;
+        } else {
+          Serial.print("[API] HTTPS GET Server Error / Timeout Code: "); Serial.println(httpCode);
+          result = SYNC_SERVER_ERROR;
+        }
+        http.end();
       } else {
-        Serial.print("[API] HTTPS GET Server Error / Timeout Code: "); Serial.println(httpCode);
+        Serial.println("[API] Unable to initialize HTTPS connection");
         result = SYNC_SERVER_ERROR;
       }
-      http.end();
-    } else {
-      Serial.println("[API] Unable to initialize HTTPS connection");
-      result = SYNC_SERVER_ERROR;
+      delete client;
     }
   } else {
     WiFiClient client;
