@@ -551,15 +551,24 @@ void updateAndSaveSettings(){
 
 String getSettings(){
   String str = "";
-  File file = SPIFFS.open("/settings.json", "r");
-  if (!file){
-    //Serial.println("Failed to read file");
-    return str;
-  }
-  while (file.available()){
+  File file = SPIFFS.open(settings_filename, "r");
+  if (file){
     str = file.readString();
+    file.close();
+    str.trim();
   }
-  file.close();
+  if (str.length() == 0) {
+    StaticJsonDocument<1024> doc;
+    doc["ap_ssid"] = (ap_ssid.length() > 0) ? ap_ssid : "attendance";
+    doc["ap_pswd"] = (ap_pswd.length() > 0) ? ap_pswd : "123456789";
+    doc["wf_ssid"] = wf_ssid;
+    doc["wf_pswd"] = wf_pswd;
+    doc["op_mode"] = (op_mode.length() > 0) ? op_mode : "Read";
+    doc["sr_host"] = (sr_host.length() > 0) ? sr_host : "https://payroll.sarvodayavidyalay.com/attendance/save";
+    doc["card_value"] = card_value;
+    doc["api_token"] = api_token;
+    serializeJson(doc, str);
+  }
   return str;
 }
 
@@ -568,25 +577,19 @@ void setSettings(){
   DynamicJsonDocument doc(1024);
   DeserializationError error = deserializeJson(doc, str);
   if(error){
-    //Serial.print("Deserialization Failed: ");
-    //Serial.println(error.c_str());
     return;
   }
-  ap_ssid = String(doc["ap_ssid"]);
-  ap_pswd = String(doc["ap_pswd"]);
-  wf_ssid = String(doc["wf_ssid"]);
-  wf_pswd = String(doc["wf_pswd"]);
-  op_mode = String(doc["op_mode"]);
-  sr_host = String(doc["sr_host"]);
-  // localip = String(doc["localip"]);
-  // gateway = String(doc["gateway"]);
-  // subnet = String(doc["subnet"]);
-  // primarydns = String(doc["primarydns"]);
-  // secondarydns = String(doc["secondarydns"]);
-  card_value = String(doc["card_value"]);
-  if(doc.containsKey("api_token")) {
-    api_token = String(doc["api_token"]);
-  }
+  if (doc.containsKey("ap_ssid")) ap_ssid = String(doc["ap_ssid"]);
+  if (doc.containsKey("ap_pswd")) ap_pswd = String(doc["ap_pswd"]);
+  if (doc.containsKey("wf_ssid")) wf_ssid = String(doc["wf_ssid"]);
+  if (doc.containsKey("wf_pswd")) wf_pswd = String(doc["wf_pswd"]);
+  if (doc.containsKey("op_mode")) op_mode = String(doc["op_mode"]);
+  if (doc.containsKey("sr_host")) sr_host = String(doc["sr_host"]);
+  if (doc.containsKey("card_value")) card_value = String(doc["card_value"]);
+  if (doc.containsKey("api_token")) api_token = String(doc["api_token"]);
+
+  if (op_mode.length() == 0) op_mode = "Read";
+  if (sr_host.length() == 0) sr_host = "https://payroll.sarvodayavidyalay.com/attendance/save";
 }
 
 void sendDataToServer(){
