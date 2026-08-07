@@ -336,6 +336,8 @@ String tagId = "";
 String tagMs = "";
 String dt = "";
 String tim = "";
+String lastScannedCardKey = "";
+unsigned long lastScannedTimeMs = 0;
 
 #define swi D4
 #define buz D7
@@ -1201,22 +1203,24 @@ void readCard() {
   }
 
   if (tagId.length() > 0 || tagMs.length() > 0) {
-    beep(1, 120, 0); // Short single beep on card read
-    showMessage();
-    printLocalTime();
-    bool sent = sendDataToServer();
-    if (!sent) {
-      enqueueRecord(tagId, tagMs, dt, tim);
-      oled.clearDisplay();
-      oled.setCursor(0, 0);
-      oled.println(company_name);
-      oled.setCursor(0, 15);
-      oled.println("SAVED OFFLINE!");
-      oled.setCursor(0, 30);
-      oled.println("Queue Count: " + String(getQueueCount()));
-      oled.display();
+    String currentCardKey = tagId + "_" + tagMs;
+    if (currentCardKey == lastScannedCardKey && (millis() - lastScannedTimeMs < 2000)) {
+      return;
     }
-    delay(2000);
+    lastScannedCardKey = currentCardKey;
+    lastScannedTimeMs = millis();
+
+    beep(1, 100, 0); // Immediate instant feedback beep!
+    printLocalTime();
+
+    // Instantly save to SPIFFS queue (0ms network blocking delay!)
+    enqueueRecord(tagId, tagMs, dt, tim);
+
+    // Display scanned Employee Code / Tag ID on OLED
+    showMessage();
+
+    // Machine is available for next card tap after 1 second!
+    delay(1000);
   }
   writeCompanyName();
 }
@@ -1408,7 +1412,7 @@ void loop() {
   writeCompanyName();
   accessCard();
 
-  if (millis() - lastQueueSyncCheck > 10000) {
+  if (millis() - lastQueueSyncCheck > 2000) {
     lastQueueSyncCheck = millis();
     processOfflineQueue();
   }
