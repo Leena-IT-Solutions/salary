@@ -33,10 +33,10 @@
     <!-- Connection Mode Explainer Alert -->
     <div class="alert alert-info border-0 shadow-sm mb-4">
         <div class="d-flex align-items-center">
-            <div class="me-3 fs-3">ℹ️</div>
+            <div class="me-3 fs-3">⚡</div>
             <div>
-                <strong class="d-block">Cloud Server Notice (payroll.sarvodayavidyalay.com):</strong>
-                Because this website is hosted in the cloud, select <strong>Direct Browser Connection</strong> to configure NodeMCU terminals on your local network (e.g. <code>192.168.4.1</code> or <code>192.168.1.100</code>).
+                <strong class="d-block">1-Click SmartConfig Provisioner Built-In:</strong>
+                Use the <strong>SmartConfig (ESP-Touch)</strong> tab below to send Wi-Fi credentials over the air directly to NodeMCU terminals without changing your phone/laptop Wi-Fi network!
             </div>
         </div>
     </div>
@@ -69,7 +69,10 @@
     <!-- Main Navigation Tabs -->
     <ul class="nav nav-pills mb-4" id="configTabs" role="tablist">
         <li class="nav-item">
-            <button class="nav-link active font-weight-bold" id="tab-wifi-tab" data-bs-toggle="pill" data-bs-target="#tab-wifi" type="button">📶 Wi-Fi Credentials</button>
+            <button class="nav-link active font-weight-bold" id="tab-smartconfig-tab" data-bs-toggle="pill" data-bs-target="#tab-smartconfig" type="button">⚡ SmartConfig (ESP-Touch)</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link font-weight-bold" id="tab-wifi-tab" data-bs-toggle="pill" data-bs-target="#tab-wifi" type="button">📶 Wi-Fi Credentials</button>
         </li>
         <li class="nav-item">
             <button class="nav-link font-weight-bold" id="tab-settings-tab" data-bs-toggle="pill" data-bs-target="#tab-settings" type="button">⚙️ Terminal Settings</button>
@@ -84,11 +87,41 @@
 
     <div class="tab-content">
 
-        <!-- TAB 1: WI-FI CREDENTIALS -->
-        <div class="tab-pane fade show active" id="tab-wifi">
+        <!-- TAB 1: SMARTCONFIG (ESP-TOUCH) -->
+        <div class="tab-pane fade show active" id="tab-smartconfig">
             <div class="machine-card">
-                <h4>📶 Configure Wi-Fi Network Credentials</h4>
-                <p class="text-muted">Enter your local Wi-Fi SSID and Password to connect the NodeMCU terminal to the internet.</p>
+                <h4>⚡ 1-Click SmartConfig Provisioner (ESP-Touch)</h4>
+                <p class="text-muted">Broadcast Wi-Fi credentials over UDP multicast/broadcast directly to NodeMCU terminals in range without disconnecting from <strong>payroll.sarvodayavidyalay.com</strong>.</p>
+                <form id="smartConfigForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label font-weight-bold">Target Wi-Fi Network SSID:</label>
+                            <input type="text" id="sc_ssid" class="form-control" placeholder="Enter Wi-Fi Name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label font-weight-bold">Target Wi-Fi Network Password:</label>
+                            <input type="password" id="sc_pass" class="form-control" placeholder="Enter Wi-Fi Password" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label font-weight-bold">Target Broadcast IP (Default: 255.255.255.255):</label>
+                            <input type="text" id="sc_target" class="form-control" value="255.255.255.255">
+                        </div>
+                        <div class="col-md-12">
+                            <button type="submit" class="btn btn-warning font-weight-bold px-4 py-2 text-dark fs-6">
+                                ⚡ Start SmartConfig Provisioning
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                <div id="smartConfigStatus" class="mt-3"></div>
+            </div>
+        </div>
+
+        <!-- TAB 2: WI-FI CREDENTIALS -->
+        <div class="tab-pane fade" id="tab-wifi">
+            <div class="machine-card">
+                <h4>📶 Direct Wi-Fi Network Credentials</h4>
+                <p class="text-muted">Directly apply Wi-Fi SSID and Password to a connected NodeMCU terminal.</p>
                 <form id="wifiForm">
                     <div class="row g-3">
                         <div class="col-md-6">
@@ -118,7 +151,7 @@
             </div>
         </div>
 
-        <!-- TAB 2: TERMINAL SETTINGS -->
+        <!-- TAB 3: TERMINAL SETTINGS -->
         <div class="tab-pane fade" id="tab-settings">
             <div class="machine-card">
                 <h4>⚙️ Live Terminal Settings</h4>
@@ -164,7 +197,7 @@
             </div>
         </div>
 
-        <!-- TAB 3: WRITE RFID CARD -->
+        <!-- TAB 4: WRITE RFID CARD -->
         <div class="tab-pane fade" id="tab-write">
             <div class="machine-card">
                 <h4>💳 Write / Burn RFID Card</h4>
@@ -186,7 +219,7 @@
             </div>
         </div>
 
-        <!-- TAB 4: OFFLINE QUEUE -->
+        <!-- TAB 5: OFFLINE QUEUE -->
         <div class="tab-pane fade" id="tab-queue">
             <div class="machine-card">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -214,7 +247,6 @@ function makeRequest(endpoint, method, data = {}) {
     const user = document.getElementById('portal_user').value;
     const pass = document.getElementById('portal_pass').value;
 
-    // Try Direct Browser-to-NodeMCU Fetch First
     const directUrl = `http://${ip}/${endpoint.replace(/^\//, '')}`;
     const authHeader = 'Basic ' + btoa(user + ':' + pass);
 
@@ -233,7 +265,6 @@ function makeRequest(endpoint, method, data = {}) {
     return fetch(directUrl, fetchOptions)
         .then(r => r.json())
         .catch(err => {
-            // Fallback to Cloud Proxy if Direct Fetch is blocked by network
             return fetch('/application_settings/configure_machine/proxy_api', {
                 method: 'POST',
                 headers: {
@@ -265,7 +296,10 @@ function fetchStatus() {
                 document.getElementById('api_token').value = data.api_token || '';
                 document.getElementById('op_mode').value = data.op_mode;
                 document.getElementById('buzzer_enabled').value = data.buzzer_enabled;
-                if (data.wifi_ssid) document.getElementById('wifi_ssid').value = data.wifi_ssid;
+                if (data.wifi_ssid) {
+                    document.getElementById('wifi_ssid').value = data.wifi_ssid;
+                    document.getElementById('sc_ssid').value = data.wifi_ssid;
+                }
             } else {
                 box.innerHTML = `<span class="badge-offline">❌ Error: ${data.message || 'Connection failed'}</span>`;
             }
@@ -274,6 +308,40 @@ function fetchStatus() {
             box.innerHTML = `<span class="badge-offline">❌ Connection failed - Check IP address.</span>`;
         });
 }
+
+document.getElementById('smartConfigForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const ssid = document.getElementById('sc_ssid').value;
+    const pass = document.getElementById('sc_pass').value;
+    const target = document.getElementById('sc_target').value || '255.255.255.255';
+    const statusBox = document.getElementById('smartConfigStatus');
+
+    statusBox.innerHTML = '<div class="alert alert-info">⚡ Transmitting SmartConfig UDP bursts across local network... Keep terminal powered on!</div>';
+
+    fetch('/application_settings/configure_machine/smartconfig_provision', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': CSRF_TOKEN
+        },
+        body: JSON.stringify({
+            wifi_ssid: ssid,
+            wifi_pass: pass,
+            target_ip: target
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'success') {
+            statusBox.innerHTML = `<div class="alert alert-success">✓ ${data.message}<br><small>NodeMCU terminal will capture credentials, chime with a success tone, and connect to Wi-Fi!</small></div>`;
+        } else {
+            statusBox.innerHTML = `<div class="alert alert-danger">❌ ${data.message}</div>`;
+        }
+    })
+    .catch(() => {
+        statusBox.innerHTML = `<div class="alert alert-danger">❌ Failed to transmit SmartConfig.</div>`;
+    });
+});
 
 document.getElementById('wifiForm').addEventListener('submit', function(e) {
     e.preventDefault();

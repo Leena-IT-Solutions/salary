@@ -398,6 +398,7 @@ Route::middleware(['auth', 'role'])->group(function () {
     /* Configure Machine */
     Route::get('/application_settings/configure_machine', [App\Http\Controllers\MachineConfigController::class, 'index']);
     Route::post('/application_settings/configure_machine/udp_provision', [App\Http\Controllers\MachineConfigController::class, 'sendUdpConfig']);
+    Route::post('/application_settings/configure_machine/smartconfig_provision', [App\Http\Controllers\MachineConfigController::class, 'smartConfigProvision']);
     Route::post('/application_settings/configure_machine/proxy_api', [App\Http\Controllers\MachineConfigController::class, 'proxyApiCall']);
 });
 
