@@ -129,11 +129,26 @@ String storageGetOfflineQueueContents() {
     return contents;
 }
 
-void storageSyncOfflinePunches(const String &hostUri,
-                                const String &apiToken) {
-    if (WiFi.status() != WL_CONNECTED || !LittleFS.exists("/punches.txt")) {
-        return;
+static String urlEncode(const String &str) {
+    String encoded = "";
+    for (size_t i = 0; i < str.length(); i++) {
+        char c = str.charAt(i);
+        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+            encoded += c;
+        } else if (c == ' ') {
+            encoded += "%20";
+        } else {
+            char buf[4];
+            sprintf(buf, "%%%02X", (unsigned char)c);
+            encoded += buf;
+        }
     }
+    return encoded;
+}
+
+void storageSyncOfflinePunches(const String &hostUri, const String &apiToken) {
+    if (hostUri.length() == 0 || WiFi.status() != WL_CONNECTED) return;
+    if (!LittleFS.exists("/punches.txt")) return;
 
     File file = LittleFS.open("/punches.txt", "r");
     if (!file || file.size() == 0) {
@@ -144,7 +159,7 @@ void storageSyncOfflinePunches(const String &hostUri,
     File tempFile = LittleFS.open("/punches_tmp.txt", "w");
 
     bool isHttps = hostUri.startsWith("https");
-    const uint16_t kSyncTimeoutMs = 3000;
+    const uint16_t kSyncTimeoutMs = 5000;
     const int kMaxSyncPerCall = 3;
     int attempted = 0;
 
@@ -154,7 +169,7 @@ void storageSyncOfflinePunches(const String &hostUri,
         if (line.length() == 0) continue;
 
         if (attempted >= kMaxSyncPerCall) {
-            tempFile.println(line); // past this cycle's cap - keep queued
+            tempFile.println(line);
             continue;
         }
 
@@ -171,30 +186,37 @@ void storageSyncOfflinePunches(const String &hostUri,
 
             String url = hostUri;
             url += (url.indexOf('?') >= 0 ? "&" : "?");
-            url += "tagms=" + tagms + "&tagid=" + tagid + "&dt=" + dt + "&tim=" + tim;
+            url += "tagms=" + urlEncode(tagms) + "&tagid=" + urlEncode(tagid) + "&dt=" + urlEncode(dt) + "&tim=" + urlEncode(tim);
+
+            Serial.printf("[SYNC REQUEST] Syncing queued punch: %s\n", url.c_str());
 
             HTTPClient http;
             http.setTimeout(kSyncTimeoutMs);
 
+            int httpCode = 0;
             if (isHttps) {
                 WiFiClientSecure *clientSec = new WiFiClientSecure();
                 clientSec->setInsecure();
                 clientSec->setTimeout(kSyncTimeoutMs);
                 http.begin(*clientSec, url);
                 if (apiToken.length() > 0) http.addHeader("Authorization", "Bearer " + apiToken);
-                int httpCode = http.GET();
+                httpCode = http.GET();
                 http.end();
                 delete clientSec;
-                if (httpCode != 200) tempFile.println(line);
             } else {
                 WiFiClient *clientPln = new WiFiClient();
                 clientPln->setTimeout(kSyncTimeoutMs);
                 http.begin(*clientPln, url);
                 if (apiToken.length() > 0) http.addHeader("Authorization", "Bearer " + apiToken);
-                int httpCode = http.GET();
+                httpCode = http.GET();
                 http.end();
                 delete clientPln;
-                if (httpCode != 200) tempFile.println(line);
+            }
+
+            Serial.printf("[SYNC RESPONSE] HTTP Code: %d\n", httpCode);
+
+            if (httpCode != 200 && httpCode != 201) {
+                tempFile.println(line); // Failed - keep in queue
             }
         }
         yield();

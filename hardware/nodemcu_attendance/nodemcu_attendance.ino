@@ -146,13 +146,13 @@ void processCardScan(String tagidStr, uint8_t *uid, uint8_t uidLength) {
             if (WiFi.status() == WL_CONNECTED) {
                 String url = String(currentConfig.host_uri);
                 url += (url.indexOf('?') >= 0 ? "&" : "?");
-                url += "tagms=" + tagmsStr + "&tagid=" + tagidStr + "&dt=" + String(dateBuf) + "&tim=" + String(timeBuf);
+                url += "tagms=" + urlEncode(tagmsStr) + "&tagid=" + urlEncode(tagidStr) + "&dt=" + urlEncode(String(dateBuf)) + "&tim=" + urlEncode(String(timeBuf));
 
                 Serial.printf("[API REQUEST] Sending: %s\n", url.c_str());
 
                 bool isHttps = url.startsWith("https");
                 HTTPClient http;
-                http.setTimeout(4000);
+                http.setTimeout(5000);
 
                 int httpCode = 0;
                 String payload = "";
@@ -160,29 +160,32 @@ void processCardScan(String tagidStr, uint8_t *uid, uint8_t uidLength) {
                 if (isHttps) {
                     WiFiClientSecure *clientSec = new WiFiClientSecure();
                     clientSec->setInsecure();
-                    clientSec->setTimeout(4000);
+                    clientSec->setTimeout(5000);
                     http.begin(*clientSec, url);
                     if (strlen(currentConfig.api_token) > 0) {
                         http.addHeader("Authorization", "Bearer " + String(currentConfig.api_token));
                     }
                     httpCode = http.GET();
-                    if (httpCode == 200) payload = http.getString();
+                    if (httpCode > 0) payload = http.getString();
                     http.end();
                     delete clientSec;
                 } else {
                     WiFiClient *clientPln = new WiFiClient();
-                    clientPln->setTimeout(4000);
+                    clientPln->setTimeout(5000);
                     http.begin(*clientPln, url);
                     if (strlen(currentConfig.api_token) > 0) {
                         http.addHeader("Authorization", "Bearer " + String(currentConfig.api_token));
                     }
                     httpCode = http.GET();
-                    if (httpCode == 200) payload = http.getString();
+                    if (httpCode > 0) payload = http.getString();
                     http.end();
                     delete clientPln;
                 }
 
-                if (httpCode == 200) {
+                Serial.printf("[API RESPONSE] HTTP Code: %d\n", httpCode);
+
+                if (httpCode == 200 || httpCode == 201) {
+                    Serial.printf("[API RESPONSE] Payload: %s\n", payload.c_str());
                     JsonDocument doc;
                     DeserializationError jsonErr = deserializeJson(doc, payload);
 
@@ -200,10 +203,12 @@ void processCardScan(String tagidStr, uint8_t *uid, uint8_t uidLength) {
                         beepError();
                     }
                 } else {
+                    Serial.printf("[API ERROR] Request failed (Code %d). Queueing offline.\n", httpCode);
                     storageSaveOfflinePunch(tagmsStr, tagidStr, String(dateBuf), String(timeBuf));
                     beep(100, 2, 2200);
                 }
             } else {
+                Serial.println("[API ERROR] Wi-Fi Disconnected. Queueing offline.");
                 storageSaveOfflinePunch(tagmsStr, tagidStr, String(dateBuf), String(timeBuf));
                 beep(100, 2, 2200);
             }
