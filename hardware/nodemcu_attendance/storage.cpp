@@ -143,20 +143,6 @@ void storageSyncOfflinePunches(const String &hostUri,
 
     File tempFile = LittleFS.open("/punches_tmp.txt", "w");
 
-    WiFiClientSecure clientSecure;
-    WiFiClient clientPlain;
-    HTTPClient http;
-
-    bool isHttps = hostUri.startsWith("https");
-    if (isHttps) clientSecure.setInsecure();
-
-    // Each request blocks the whole device (display, button, web portal)
-    // for as long as it takes - a backlog of several queued punches with
-    // an unreachable/slow server could otherwise stall for the sum of
-    // every individual request's timeout. Cap both the per-request
-    // timeout and how many are attempted per call, so a large backlog
-    // drains gradually across multiple 30s cycles with only a short,
-    // bounded pause each time instead of one long freeze.
     const uint16_t kSyncTimeoutMs = 3000;
     const int kMaxSyncPerCall = 3;
     int attempted = 0;
@@ -186,24 +172,28 @@ void storageSyncOfflinePunches(const String &hostUri,
             url += (url.indexOf('?') >= 0 ? "&" : "?");
             url += "tagms=" + tagms + "&tagid=" + tagid + "&dt=" + dt + "&tim=" + tim;
 
-            clientSecure.setTimeout(kSyncTimeoutMs);
-            clientPlain.setTimeout(kSyncTimeoutMs);
-            if (isHttps) {
-                http.begin(clientSecure, url);
-            } else {
-                http.begin(clientPlain, url);
-            }
+            HTTPClient http;
             http.setTimeout(kSyncTimeoutMs);
 
-            if (apiToken.length() > 0) {
-                http.addHeader("Authorization", "Bearer " + apiToken);
-            }
-
-            int httpCode = http.GET();
-            http.end();
-
-            if (httpCode != 200) {
-                tempFile.println(line);
+            if (isHttps) {
+                WiFiClientSecure *clientSec = new WiFiClientSecure();
+                clientSec->setInsecure();
+                clientSec->setTimeout(kSyncTimeoutMs);
+                http.begin(*clientSec, url);
+                if (apiToken.length() > 0) http.addHeader("Authorization", "Bearer " + apiToken);
+                int httpCode = http.GET();
+                http.end();
+                delete clientSec;
+                if (httpCode != 200) tempFile.println(line);
+            } else {
+                WiFiClient *clientPln = new WiFiClient();
+                clientPln->setTimeout(kSyncTimeoutMs);
+                http.begin(*clientPln, url);
+                if (apiToken.length() > 0) http.addHeader("Authorization", "Bearer " + apiToken);
+                int httpCode = http.GET();
+                http.end();
+                delete clientPln;
+                if (httpCode != 200) tempFile.println(line);
             }
         }
         yield();

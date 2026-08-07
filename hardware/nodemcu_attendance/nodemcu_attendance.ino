@@ -144,10 +144,6 @@ void processCardScan(String tagidStr, uint8_t *uid, uint8_t uidLength) {
             strftime(timeBuf, sizeof(timeBuf), "%H:%M", timeinfo);
 
             if (WiFi.status() == WL_CONNECTED) {
-                WiFiClientSecure clientSecure;
-                WiFiClient clientPlain;
-                HTTPClient http;
-
                 String url = String(currentConfig.host_uri);
                 url += (url.indexOf('?') >= 0 ? "&" : "?");
                 url += "tagms=" + tagmsStr + "&tagid=" + tagidStr + "&dt=" + String(dateBuf) + "&tim=" + String(timeBuf);
@@ -155,24 +151,38 @@ void processCardScan(String tagidStr, uint8_t *uid, uint8_t uidLength) {
                 Serial.printf("[API REQUEST] Sending: %s\n", url.c_str());
 
                 bool isHttps = url.startsWith("https");
-                if (isHttps) clientSecure.setInsecure();
+                HTTPClient http;
+                http.setTimeout(4000);
+
+                int httpCode = 0;
+                String payload = "";
 
                 if (isHttps) {
-                    http.begin(clientSecure, url);
+                    WiFiClientSecure *clientSec = new WiFiClientSecure();
+                    clientSec->setInsecure();
+                    clientSec->setTimeout(4000);
+                    http.begin(*clientSec, url);
+                    if (strlen(currentConfig.api_token) > 0) {
+                        http.addHeader("Authorization", "Bearer " + String(currentConfig.api_token));
+                    }
+                    httpCode = http.GET();
+                    if (httpCode == 200) payload = http.getString();
+                    http.end();
+                    delete clientSec;
                 } else {
-                    http.begin(clientPlain, url);
+                    WiFiClient *clientPln = new WiFiClient();
+                    clientPln->setTimeout(4000);
+                    http.begin(*clientPln, url);
+                    if (strlen(currentConfig.api_token) > 0) {
+                        http.addHeader("Authorization", "Bearer " + String(currentConfig.api_token));
+                    }
+                    httpCode = http.GET();
+                    if (httpCode == 200) payload = http.getString();
+                    http.end();
+                    delete clientPln;
                 }
-
-                if (strlen(currentConfig.api_token) > 0) {
-                    http.addHeader("Authorization", "Bearer " + String(currentConfig.api_token));
-                }
-
-                int httpCode = http.GET();
 
                 if (httpCode == 200) {
-                    String payload = http.getString();
-                    http.end();
-
                     JsonDocument doc;
                     DeserializationError jsonErr = deserializeJson(doc, payload);
 
@@ -182,9 +192,6 @@ void processCardScan(String tagidStr, uint8_t *uid, uint8_t uidLength) {
                         if (strlen(m) > 0) msg = String(m);
                     }
 
-                    // Display already shows the employee code (tagms) from
-                    // the initial render above - the result is communicated
-                    // purely through the buzzer tone from here on.
                     if (msg == "Success") {
                         beepSuccess();
                     } else if (msg == "Already Exists") {
@@ -193,7 +200,6 @@ void processCardScan(String tagidStr, uint8_t *uid, uint8_t uidLength) {
                         beepError();
                     }
                 } else {
-                    http.end();
                     storageSaveOfflinePunch(tagmsStr, tagidStr, String(dateBuf), String(timeBuf));
                     beep(100, 2, 2200);
                 }
