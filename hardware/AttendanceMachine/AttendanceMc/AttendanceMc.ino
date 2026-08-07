@@ -336,20 +336,6 @@ int swiStart = 0;
 int swiEnd = 0;
 int duration = 0;
 
-const String settings_filename = "/settings.json";
-String ap_ssid = "attendance";
-String ap_pswd = "123456789";
-String wf_ssid = "";
-String wf_pswd = "";
-String op_mode = "";
-String sr_host = "";
-String card_value = "";
-String api_token = "";
-
-String webpage = "";
-IPAddress ipAddress;
-bool isNetwork = false;
-
 ESP8266WebServer server(80);
 
 void startWebServer();
