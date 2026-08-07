@@ -253,7 +253,7 @@ void processCardScan(String tagidStr, uint8_t *uid, uint8_t uidLength) {
 
         case MODE_FORMAT: {
             renderScreen("Formatting Card...", "Please wait");
-            bool ok = rfidFormatCard(uid, uidLength);
+            bool ok = rfidClearMessage(uid, uidLength);
             if (ok) {
                 renderScreen("Format Success!", "Clean Card");
                 beepSuccess();
@@ -266,7 +266,7 @@ void processCardScan(String tagidStr, uint8_t *uid, uint8_t uidLength) {
 
         case MODE_DELETE: {
             renderScreen("Deleting Data...", "Please wait");
-            bool ok = rfidDeleteMessage(uid, uidLength);
+            bool ok = rfidClearMessage(uid, uidLength);
             if (ok) {
                 renderScreen("Delete Success!", "Cleared Block 4");
                 beepSuccess();
