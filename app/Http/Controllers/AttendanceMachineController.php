@@ -33,6 +33,9 @@ class AttendanceMachineController extends Controller
         $tagid = $request->tagid;
         $punch_date = $request->dt;
         $punch_time = $request->tim;
+        if ($punch_time && strlen($punch_time) === 5) {
+            $punch_time .= ':00';
+        }
         $time_difference = null;
 
         $attendance_data = [

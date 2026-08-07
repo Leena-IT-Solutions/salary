@@ -158,7 +158,7 @@ void processCardScan(String tagidStr, uint8_t *uid, uint8_t uidLength) {
             char dateBuf[16];
             char timeBuf[16];
             strftime(dateBuf, sizeof(dateBuf), "%Y-%m-%d", timeinfo);
-            strftime(timeBuf, sizeof(timeBuf), "%H:%M", timeinfo);
+            strftime(timeBuf, sizeof(timeBuf), "%H:%M:%S", timeinfo);
 
             if (WiFi.status() == WL_CONNECTED) {
                 String url = String(currentConfig.host_uri);
