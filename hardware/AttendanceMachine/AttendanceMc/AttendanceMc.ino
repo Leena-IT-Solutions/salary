@@ -539,7 +539,11 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
             var xmlHttp = new XMLHttpRequest();
             xmlHttp.open("GET", save_url + "?q=" + encodeURIComponent(JSON.stringify(data)), false);
             xmlHttp.send(null);
-            if (!isWifiSave) {
+            if (xmlHttp.responseText && xmlHttp.responseText.indexOf("Rebooting") !== -1) {
+                document.open();
+                document.write(xmlHttp.responseText);
+                document.close();
+            } else if (!isWifiSave) {
                 window.showToast("✓ Settings Saved Successfully");
             }
         };
@@ -652,12 +656,12 @@ void startWebServer() {
     server.send(200, "application/json", message);
   });
   server.on("/save", HTTP_GET, []() {
-    String message = "";
     if (server.hasArg("q")) {
-      message = server.arg("q");
+      String message = server.arg("q");
       saveSettings(message);
+    } else {
+      server.send(200, "application/json", "{\"status\":\"ok\"}");
     }
-    server.send(200, "application/json", message);
   });
   server.onNotFound(notFound);
   server.begin();
@@ -672,6 +676,7 @@ void saveSettings(String msg) {
 
   File fl = SPIFFS.open(settings_filename, "w");
   if (!fl) {
+    server.send(200, "application/json", "{\"status\":\"error\"}");
     return;
   }
   fl.print(msg);
@@ -710,8 +715,10 @@ void saveSettings(String msg) {
                           "<script>setTimeout(function(){ window.location.href='" + redirectTarget + "'; }, 6000);</script></body></html>";
 
     server.send(200, "text/html", responseHtml);
-    delay(1000);
+    delay(2000);
     ESP.restart();
+  } else {
+    server.send(200, "application/json", "{\"status\":\"ok\"}");
   }
 }
 

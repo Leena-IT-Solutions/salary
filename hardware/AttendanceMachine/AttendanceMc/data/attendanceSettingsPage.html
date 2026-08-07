@@ -178,7 +178,11 @@
             var xmlHttp = new XMLHttpRequest();
             xmlHttp.open("GET", save_url + "?q=" + encodeURIComponent(JSON.stringify(data)), false);
             xmlHttp.send(null);
-            if (!isWifiSave) {
+            if (xmlHttp.responseText && xmlHttp.responseText.indexOf("Rebooting") !== -1) {
+                document.open();
+                document.write(xmlHttp.responseText);
+                document.close();
+            } else if (!isWifiSave) {
                 window.showToast("✓ Settings Saved Successfully");
             }
         };
