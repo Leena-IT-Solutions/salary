@@ -189,6 +189,52 @@ public:
 
 static NfcAdapterCompat nfc;
 
+Ticker timer1;
+Ticker timer2;
+
+const char* ntpServer = "in.pool.ntp.org";
+const long gmtOffset = 0;
+const int daylightOffset = 19800;
+
+#define i2c_Address 0x3c
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+
+class OledCompat {
+private:
+    U8G2_SH1106_128X64_NONAME_F_HW_I2C _u8g2;
+    int _cursorX = 0;
+    int _cursorY = 0;
+    int _textSize = 1;
+public:
+    OledCompat() : _u8g2(U8G2_R0, U8X8_PIN_NONE) {}
+
+    void begin(uint8_t addr, bool reset) {
+        _u8g2.setI2CAddress(addr << 1);
+        _u8g2.begin();
+        _u8g2.setFontMode(0);
+        _u8g2.setDrawColor(1);
+    }
+    void clearDisplay() { _u8g2.clearBuffer(); }
+    void setTextColor(int c) {}
+    void setTextSize(int s) { _textSize = s; }
+    void setCursor(int x, int y) { _cursorX = x; _cursorY = y; }
+
+    void println(const String &str) {
+        if (_textSize == 3)      _u8g2.setFont(u8g2_font_logisoso24_tf);
+        else if (_textSize == 2) _u8g2.setFont(u8g2_font_logisoso20_tf);
+        else                     _u8g2.setFont(u8g2_font_6x10_tf);
+        _u8g2.drawStr(_cursorX, _cursorY + (_textSize == 1 ? 8 : 16), str.c_str());
+    }
+
+    void println(IPAddress ip) { println(ip.toString()); }
+
+    void display() { _u8g2.sendBuffer(); }
+};
+
+static OledCompat oled;
+#define SH110X_WHITE 1
+
 String tagId = "";
 String tagMs = "";
 String dt = "";
