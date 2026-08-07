@@ -1,7 +1,21 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
-#include <WiFiClientSecureBearSSL.h>
-#include <UrlEncode.h>
+static String urlEncode(const String &str) {
+    String encoded = "";
+    for (size_t i = 0; i < str.length(); i++) {
+        char c = str.charAt(i);
+        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+            encoded += c;
+        } else if (c == ' ') {
+            encoded += "%20";
+        } else {
+            char buf[4];
+            sprintf(buf, "%%%02X", (unsigned char)c);
+            encoded += buf;
+        }
+    }
+    return encoded;
+}
 #include <Wire.h>
 #include <Adafruit_SH110X.h>
 #include <FS.h>
