@@ -340,8 +340,6 @@ int swiStart = 0;
 int swiEnd = 0;
 int duration = 0;
 
-ESP8266WebServer server(80);
-
 void startWebServer();
 void startSoftAP();
 void startWiFi();
