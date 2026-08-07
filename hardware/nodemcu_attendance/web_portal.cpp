@@ -123,7 +123,6 @@ static void handleHomeTab() {
     html += "<option value='2'" + String(config->op_mode == MODE_WRITE ? " selected" : "") + ">Write (W) - Card Burning</option>";
     html += "<option value='3'" + String(config->op_mode == MODE_FORMAT ? " selected" : "") + ">Format (F) - Format Card</option>";
     html += "<option value='4'" + String(config->op_mode == MODE_DELETE ? " selected" : "") + ">Delete (D) - Clear Card Data</option>";
-    html += "<option value='5'" + String(config->op_mode == MODE_CLEAR ? " selected" : "") + ">Clear (C) - Flush Offline Queue</option>";
     html += "</select>";
     html += "<label>Host URI Endpoint:</label>";
     html += "<input type='text' name='host_uri' value='" + String(config->host_uri) + "' required>";
