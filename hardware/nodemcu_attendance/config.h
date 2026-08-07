@@ -61,7 +61,7 @@ enum OperationMode {
     MODE_CLEAR = 5
 };
 
-#define CONFIG_MAGIC 0x53414C5E // Magic Header Key 'SALE'
+#define CONFIG_MAGIC 0x53414C5F // Magic Header Key 'SALF'
 
 struct Config {
     uint32_t magic;  // Must equal CONFIG_MAGIC
@@ -77,6 +77,7 @@ struct Config {
     char card_value[32];
     char portal_user[32];
     char portal_pass[32];
+    char mdns_name[32]; // Domain Name (accessible at http://<mdns_name>.local)
     uint8_t op_mode; // OperationMode enum
     uint8_t buzzer_enabled; // 1 = Enabled, 0 = Muted
     long tz_offset;  // Default 19800 for IST UTC+5:30

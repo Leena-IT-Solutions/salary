@@ -30,6 +30,7 @@ static void applyDefaults(Config &cfg) {
     strncpy(cfg.card_value, "", sizeof(cfg.card_value));
     strncpy(cfg.portal_user, DEFAULT_PORTAL_USER, sizeof(cfg.portal_user));
     strncpy(cfg.portal_pass, DEFAULT_PORTAL_PASS, sizeof(cfg.portal_pass));
+    strncpy(cfg.mdns_name, DEFAULT_MDNS_NAME, sizeof(cfg.mdns_name));
     cfg.op_mode = MODE_READ;
     cfg.buzzer_enabled = 1;
     cfg.tz_offset = 19800; // IST UTC+5:30
@@ -63,6 +64,7 @@ void storageLoadConfig(Config &cfg) {
     sanitizeString(cfg.card_value, sizeof(cfg.card_value));
     sanitizeString(cfg.portal_user, sizeof(cfg.portal_user));
     sanitizeString(cfg.portal_pass, sizeof(cfg.portal_pass));
+    sanitizeString(cfg.mdns_name, sizeof(cfg.mdns_name));
 
     if (strlen(cfg.ap_ssid) == 0) strncpy(cfg.ap_ssid, DEFAULT_AP_SSID, sizeof(cfg.ap_ssid));
     if (strlen(cfg.ap_pass) == 0) strncpy(cfg.ap_pass, DEFAULT_AP_PASS, sizeof(cfg.ap_pass));

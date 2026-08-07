@@ -14,10 +14,12 @@ static uint8_t reconnectFailures = 0;
 
 bool wifiIsAPMode() { return apMode; }
 
-static void startMDNSAndPortal() {
-    MDNS.begin(DEFAULT_MDNS_NAME);
+static void startMDNSAndPortal(Config &cfg) {
+    const char *domain = strlen(cfg.mdns_name) > 0 ? cfg.mdns_name : DEFAULT_MDNS_NAME;
+    MDNS.begin(domain);
     MDNS.addService("http", "tcp", 80);
     webPortalStart();
+    Serial.printf("[mDNS] Terminal accessible at http://%s.local\n", domain);
 }
 
 void wifiStartAPMode(Config &cfg) {
@@ -38,7 +40,7 @@ void wifiStartAPMode(Config &cfg) {
     WiFi.softAPConfig(local_IP, gateway, subnet);
     WiFi.softAP(apSsid.c_str(), apPass.c_str());
 
-    startMDNSAndPortal();
+    startMDNSAndPortal(cfg);
     beep(100, 3);
 }
 
@@ -64,7 +66,7 @@ void wifiConnect(Config &cfg) {
         apMode = false;
         reconnectFailures = 0;
         configTime(cfg.tz_offset, 0, "pool.ntp.org", "time.nist.gov");
-        startMDNSAndPortal();
+        startMDNSAndPortal(cfg);
         beepSuccess();
     } else {
         wifiStartAPMode(cfg);

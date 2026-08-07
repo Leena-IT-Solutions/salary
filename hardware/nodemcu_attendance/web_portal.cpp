@@ -108,17 +108,21 @@ static void handleHomeTab() {
         html += "<span class='status-badge'>Connected (" + WiFi.localIP().toString() + ")</span>";
     }
     html += "</div>";
+    String domainName = strlen(config->mdns_name) > 0 ? String(config->mdns_name) : DEFAULT_MDNS_NAME;
     html += "<div class='grid'>";
-    html += "<div><strong>mDNS Domain:</strong> http://attendance.local</div>";
+    html += "<div><strong>mDNS Domain:</strong> http://" + domainName + ".local</div>";
     html += "<div><strong>Signal Strength:</strong> " + String(WiFi.RSSI()) + " dBm</div>";
     html += "</div></div>";
 
     // Terminal & Organization Settings Form
     html += "<div class='card'><h2>Terminal & Company Settings</h2>";
-    html += "<div class='hint'>Updates settings live in real-time without rebooting the terminal.</div>";
+    html += "<div class='hint'>Updates settings live in real-time. Changing Domain Name reboots the terminal.</div>";
     html += "<form action='/save_home' method='POST'>";
     html += "<label>Company / Institution Name:</label>";
     html += "<input type='text' name='company_name' value='" + String(config->company_name) + "' placeholder='Sarvodaya Vidyalay'>";
+    html += "<label>Domain Name (mDNS Access URL):</label>";
+    html += "<input type='text' name='mdns_name' value='" + domainName + "' placeholder='attendance' required>";
+    html += "<div class='hint'>ℹ️ Terminal accessible on local Wi-Fi as <strong>http://&lt;domain_name&gt;.local</strong></div>";
     html += "<label>Operation Mode:</label>";
     html += "<select name='op_mode'>";
     html += "<option value='0'" + String(config->op_mode == MODE_SETUP ? " selected" : "") + ">Setup (S)</option>";
@@ -137,7 +141,7 @@ static void handleHomeTab() {
     html += "<input type='text' name='host_uri' value='" + String(config->host_uri) + "' required>";
     html += "<label>Bearer API Access Token (Optional):</label>";
     html += "<input type='password' name='api_token' value='" + String(config->api_token) + "' placeholder='Bearer Token'>";
-    html += "<input type='submit' class='btn' value='Save Settings (Live)'>";
+    html += "<input type='submit' class='btn' value='Save Settings'>";
     html += "</form></div>";
 
     html += renderFooter();
@@ -393,11 +397,52 @@ static void handleSaveHomeWeb() {
             config->buzzer_enabled = newBuzzer;
             changed = true;
         }
+    bool mdnsChanged = false;
+    if (server.hasArg("mdns_name")) {
+        String newVal = server.arg("mdns_name");
+        newVal.trim();
+        if (newVal.length() > 0 && String(config->mdns_name) != newVal) {
+            strncpy(config->mdns_name, newVal.c_str(), sizeof(config->mdns_name));
+            mdnsChanged = true;
+            changed = true;
+        }
     }
 
     if (changed) {
         storageSaveConfig(*config);
         if (savedCallback) savedCallback();
+    }
+
+    if (mdnsChanged) {
+        String newDomain = String(config->mdns_name);
+        String html = "<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'>";
+        html += "<meta name='viewport' content='width=device-width, initial-scale=1.0'>";
+        html += "<title>Rebooting Terminal | Attendance System</title>";
+        html += "<style>";
+        html += ":root{--primary:#1e3a5f;--accent:#10b981;--bg:#f4f6f9;--card:#ffffff;--text:#1f2937}";
+        html += "body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);text-align:center;padding:40px 15px;margin:0}";
+        html += ".card{background:var(--card);border-radius:12px;padding:30px;max-width:500px;margin:auto;box-shadow:0 4px 15px rgba(0,0,0,0.08)}";
+        html += "h2{color:#dc2626;margin-top:0;font-size:22px}";
+        html += ".btn-group{margin-top:25px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}";
+        html += ".btn{background:var(--primary);color:#fff;border:0;padding:12px 20px;border-radius:6px;font-weight:bold;cursor:pointer;text-decoration:none;font-size:14px;transition:background 0.2s}";
+        html += ".btn:hover{background:#0f2744}";
+        html += ".status{margin:20px 0;font-size:14px;color:var(--primary);font-weight:bold;padding:10px;background:#edf2f7;border-radius:8px}";
+        html += "</style></head><body><div class='card'>";
+        html += "<h2>🔄 Rebooting Terminal...</h2>";
+        html += "<p>Domain name updated to <strong>http://" + newDomain + ".local</strong>. Machine is restarting now...</p>";
+        html += "<div id='status' class='status'>⏳ Waiting for machine to restart...</div>";
+        html += "<div class='btn-group'>";
+        html += "<a href='http://" + newDomain + ".local/' class='btn'>Go to http://" + newDomain + ".local</a>";
+        html += "</div></div>";
+
+        html += "<script>";
+        html += "setTimeout(function(){ window.location.href = 'http://" + newDomain + ".local/'; }, 5000);";
+        html += "</script></body></html>";
+
+        server.send(200, "text/html", html);
+        delay(1000);
+        ESP.restart();
+        return;
     }
 
     String msgHtml = changed ? "<h2>✓ Home Settings Updated Live!</h2><p>Changes saved and applied in real-time.</p>" 
