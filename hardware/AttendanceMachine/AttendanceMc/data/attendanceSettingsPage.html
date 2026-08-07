@@ -67,11 +67,11 @@
             </div>
             <div class="mb-3">
                 <div class="mb-1">Company Name</div>
-                <input id="company_name" name="company_name" type="text" placeholder="Company">
+                <input id="company_name" name="company_name" type="text" value="Company" placeholder="Company">
             </div>
             <div class="mb-3">
                 <div class="mb-1">Domain Name (mDNS)</div>
-                <input id="domain_name" name="domain_name" type="text" placeholder="attendance.local">
+                <input id="domain_name" name="domain_name" type="text" value="attendance.local" placeholder="attendance.local">
             </div>
             <div class="mb-3">
                 <div class="mb-1">Host URI</div>
@@ -145,8 +145,8 @@
                     if(data.sr_host) document.getElementById("sr_host").value = data.sr_host;
                     if(data.card_value != undefined) document.getElementById("card_value").value = data.card_value;
                     if(data.api_token) document.getElementById("api_token").value = data.api_token;
-                    if(data.company_name) document.getElementById("company_name").value = data.company_name;
-                    if(data.domain_name) document.getElementById("domain_name").value = data.domain_name;
+                    document.getElementById("company_name").value = data.company_name || "Company";
+                    document.getElementById("domain_name").value = data.domain_name || "attendance.local";
                 } catch(e){}
             }
         };

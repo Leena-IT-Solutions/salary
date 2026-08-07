@@ -506,8 +506,8 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
                     if(data.sr_host) document.getElementById("sr_host").value = data.sr_host;
                     if(data.card_value != undefined) document.getElementById("card_value").value = data.card_value;
                     if(data.api_token) document.getElementById("api_token").value = data.api_token;
-                    if(data.company_name) document.getElementById("company_name").value = data.company_name;
-                    if(data.domain_name) document.getElementById("domain_name").value = data.domain_name;
+                    document.getElementById("company_name").value = data.company_name || "Company";
+                    document.getElementById("domain_name").value = data.domain_name || "attendance.local";
                 } catch(e){}
             }
         };
@@ -737,24 +737,26 @@ String getSettings() {
     file.close();
     str.trim();
   }
-  if (str.length() == 0) {
-    StaticJsonDocument<1024> doc;
-    doc["ap_ssid"] = (ap_ssid.length() > 0) ? ap_ssid : "attendance";
-    doc["ap_pswd"] = (ap_pswd.length() > 0) ? ap_pswd : "123456789";
-    doc["wf_ssid"] = wf_ssid;
-    doc["wf_pswd"] = wf_pswd;
-    doc["op_mode"] = (op_mode.length() > 0) ? op_mode : "Read";
-    doc["sr_host"] =
-        (sr_host.length() > 0)
-            ? sr_host
-            : "https://payroll.sarvodayavidyalay.com/attendance/save";
-    doc["card_value"] = card_value;
-    doc["api_token"] = api_token;
-    doc["company_name"] = (company_name.length() > 0) ? company_name : "Company";
-    doc["domain_name"] = (domain_name.length() > 0) ? domain_name : "attendance.local";
-    serializeJson(doc, str);
+
+  DynamicJsonDocument doc(1024);
+  if (str.length() > 0) {
+    deserializeJson(doc, str);
   }
-  return str;
+
+  if (!doc.containsKey("ap_ssid") || doc["ap_ssid"].as<String>().length() == 0) doc["ap_ssid"] = (ap_ssid.length() > 0) ? ap_ssid : "attendance";
+  if (!doc.containsKey("ap_pswd") || doc["ap_pswd"].as<String>().length() == 0) doc["ap_pswd"] = (ap_pswd.length() > 0) ? ap_pswd : "123456789";
+  if (!doc.containsKey("wf_ssid")) doc["wf_ssid"] = wf_ssid;
+  if (!doc.containsKey("wf_pswd")) doc["wf_pswd"] = wf_pswd;
+  if (!doc.containsKey("op_mode") || doc["op_mode"].as<String>().length() == 0) doc["op_mode"] = (op_mode.length() > 0) ? op_mode : "Read";
+  if (!doc.containsKey("sr_host") || doc["sr_host"].as<String>().length() == 0) doc["sr_host"] = (sr_host.length() > 0) ? sr_host : "https://payroll.sarvodayavidyalay.com/attendance/save";
+  if (!doc.containsKey("card_value")) doc["card_value"] = card_value;
+  if (!doc.containsKey("api_token")) doc["api_token"] = api_token;
+  if (!doc.containsKey("company_name") || doc["company_name"].as<String>().length() == 0) doc["company_name"] = (company_name.length() > 0) ? company_name : "Company";
+  if (!doc.containsKey("domain_name") || doc["domain_name"].as<String>().length() == 0) doc["domain_name"] = (domain_name.length() > 0) ? domain_name : "attendance.local";
+
+  String result = "";
+  serializeJson(doc, result);
+  return result;
 }
 
 void setSettings() {
