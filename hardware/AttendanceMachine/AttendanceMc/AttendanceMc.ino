@@ -364,6 +364,7 @@ void formatCard();
 void deleteCardMessage();
 void clearCard();
 void accessCard();
+void beep(int count = 1, int durationMs = 80, int delayMs = 80);
 
 String getQueueJSON();
 void writeQueueJSON(const String &jsonStr);
@@ -1189,6 +1190,7 @@ void readCard() {
   }
 
   if (tagId.length() > 0 || tagMs.length() > 0) {
+    beep(1, 120, 0); // Short single beep on card read
     showMessage();
     printLocalTime();
     bool sent = sendDataToServer();
@@ -1212,6 +1214,9 @@ void writeCard() {
   NdefMessage message = NdefMessage();
   message.addTextRecord(card_value);
   bool success = nfc.write(message);
+  if (success) {
+    beep(2, 100, 100); // Double beep on card write success
+  }
   delay(500);
 
   // Always reset mode to Read and clear card_value to reset web form input
@@ -1226,6 +1231,7 @@ void writeCard() {
 void formatCard() {
   bool success = nfc.format();
   if (success) {
+    beep(2, 100, 100);
     // Serial.println("\nThe card (tag) successfully formatted in the NTAG.");
   } else {
     // Serial.println("\nUnsuccessful formatting.");
@@ -1234,11 +1240,9 @@ void formatCard() {
 }
 
 void deleteCardMessage() {
-  bool success = nfc.erase();
+  bool success = nfc.clean();
   if (success) {
-    // Serial.println("\nDeleted");
-  } else {
-    // Serial.println("\nDelete Unsuccessful.");
+    beep(2, 100, 100);
   }
   delay(1000);
 }
@@ -1246,32 +1250,24 @@ void deleteCardMessage() {
 void clearCard() {
   bool success = nfc.clean();
   if (success) {
-    // Serial.println("\nCard Cleared");
-  } else {
-    // Serial.println("\nClear Unsuccessful.");
+    beep(2, 100, 100);
   }
   delay(1000);
 }
 
 void accessCard() {
-  while (nfc.tagPresent()) {
-    digitalWrite(buz, HIGH);
+  if (nfc.tagPresent()) {
     if (op_mode == "Read") {
       readCard();
-    }
-    if (op_mode == "Write") {
+    } else if (op_mode == "Write") {
       writeCard();
-    }
-    if (op_mode == "Format") {
+    } else if (op_mode == "Format") {
       formatCard();
-    }
-    if (op_mode == "Delete") {
+    } else if (op_mode == "Delete") {
       deleteCardMessage();
-    }
-    if (op_mode == "Clear") {
+    } else if (op_mode == "Clear") {
       clearCard();
     }
-    digitalWrite(buz, LOW);
   }
 }
 
@@ -1315,11 +1311,11 @@ void writeCompanyName() {
 
 void writeBrandName() {
   oled.clearDisplay();
-  oled.setTextSize(3);
-  oled.setCursor(30, 15);
-  oled.println(F("LITS"));
   oled.setTextSize(1);
-  oled.setCursor(11, 44);
+  oled.setCursor(0, 0);
+  oled.println(F("Attendance Machine"));
+  oled.println(F("-----------------"));
+  oled.println(F("Powered By"));
   oled.println(F("Leena IT Solutions"));
   oled.display();
 }
@@ -1390,6 +1386,9 @@ void setup() {
 
   timer1.attach(0.1, readSwitch);
   timer2.attach(1, hello);
+
+  // Machine Startup Beep Sequence: 3 quick short beeps!
+  beep(3, 80, 80);
 }
 
 void loop() {
