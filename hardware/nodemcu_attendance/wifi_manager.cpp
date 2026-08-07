@@ -8,8 +8,8 @@
 
 static bool apMode = false;
 static unsigned long lastReconnectAttempt = 0;
-static const unsigned long RECONNECT_INTERVAL_MS = 20000; // retry every 20s
-static const uint8_t MAX_RECONNECT_FAILURES_BEFORE_AP = 6;
+static const unsigned long RECONNECT_INTERVAL_MS = 30000; // retry every 30s
+static const uint8_t MAX_RECONNECT_FAILURES_BEFORE_AP = 10;
 static uint8_t reconnectFailures = 0;
 
 bool wifiIsAPMode() { return apMode; }
@@ -62,7 +62,7 @@ void wifiConnect(Config &cfg) {
     WiFi.begin(cfg.wifi_ssid, cfg.wifi_pass);
 
     int attempts = 0;
-    while (WiFi.status() != WL_CONNECTED && attempts < 35) { // 35 * 500ms = 17.5 seconds
+    while (WiFi.status() != WL_CONNECTED && attempts < 40) { // 40 * 500ms = 20 seconds
         delay(500);
         yield();
         attempts++;
@@ -72,8 +72,9 @@ void wifiConnect(Config &cfg) {
 
     if (WiFi.status() == WL_CONNECTED) {
         apMode = false;
+        WiFi.enableAP(false); // Explicitly shut down SoftAP radio!
         reconnectFailures = 0;
-        lastReconnectAttempt = millis(); // Reset reconnect timer!
+        lastReconnectAttempt = millis();
         Serial.printf("[WIFI] Connected cleanly! IP Address: %s | RSSI: %d dBm\n", 
                       WiFi.localIP().toString().c_str(), WiFi.RSSI());
         configTime(cfg.tz_offset, 0, "pool.ntp.org", "time.nist.gov");
