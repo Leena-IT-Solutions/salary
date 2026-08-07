@@ -1171,6 +1171,17 @@ void processOfflineQueue() {
   isQueueSyncing = false;
 }
 
+void beep(int count, int durationMs, int delayMs) {
+  for (int i = 0; i < count; i++) {
+    digitalWrite(buz, HIGH);
+    delay(durationMs);
+    digitalWrite(buz, LOW);
+    if (i < count - 1) {
+      delay(delayMs);
+    }
+  }
+}
+
 void readCard() {
   NfcTag tag = nfc.read();
   tagId = tag.getUidString();
