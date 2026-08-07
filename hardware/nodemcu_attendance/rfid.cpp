@@ -209,40 +209,85 @@ static bool writeNtagPages(uint8_t *data, size_t len) {
         } else {
             Serial.printf("[RFID] NTAG: Write Page %u FAILED\n", 4 + p);
             allOk = false;
+    if (out == nullptr || outSize == 0) return false;
+    out[0] = '\0';
+
+    if (!authenticateCardBlock(uid, uidLength, kMessageBlocks[0])) {
+        return false;
+    }
+
+    uint8_t buf[32];
+    memset(buf, 0, sizeof(buf));
+
+    if (!nfc.mifareclassic_ReadDataBlock(kMessageBlocks[0], &buf[0])) {
+        return false;
+    }
+    nfc.mifareclassic_ReadDataBlock(kMessageBlocks[1], &buf[16]);
+
+    logHex("[RFID] Read raw bytes: ", buf, sizeof(buf));
+
+    size_t textStart = 0;
+    bool foundNDEFHeader = false;
+
+    // Standard NDEF Text Record check (header 0x02 'e' 'n')
+    if (buf[0] == 0x03 && buf[1] > 0) { // NDEF TLV payload
+        for (size_t i = 2; i < 28; i++) {
+            if (buf[i] == 0x02 && buf[i+1] == 'e' && buf[i+2] == 'n') {
+                textStart = i + 3;
+                foundNDEFHeader = true;
+                break;
+            }
         }
     }
-    return allOk;
+
+    if (!foundNDEFHeader) {
+        // Fallback ASCII scan across blocks
+        for (size_t i = 0; i < sizeof(buf); i++) {
+            if (isalnum((char)buf[i])) {
+                textStart = i;
+                break;
+            }
+        }
+    }
+
+    size_t outIdx = 0;
+    for (size_t i = textStart; i < sizeof(buf) && outIdx < outSize - 1; i++) {
+        char c = (char)buf[i];
+        if (c == 0xFE || c == '\0' || (uint8_t)c < 32 || (uint8_t)c > 126) break;
+        out[outIdx++] = c;
+    }
+    out[outIdx] = '\0';
+
+    Serial.printf("[RFID] Decoded card text: '%s'\n", out);
+    return (outIdx > 0);
 }
 
-// Write Message (Supports Mifare Classic 1K AND NTAG213/215/216/Ultralight)
+static void ensureNdefFormatAndMAD(uint8_t *uid, uint8_t uidLength) {
+    // 1. Format Sector 0 MAD1 table if accessible
+    if (authenticateBlockWithKey(uid, uidLength, 1, 0, kMADKeyA) ||
+        authenticateBlockWithKey(uid, uidLength, 1, 0, kDefaultKey)) {
+        
+        uint8_t mad1[16] = {0x14, 0x01, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1};
+        uint8_t mad2[16] = {0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1};
+        
+        nfc.mifareclassic_WriteDataBlock(1, mad1);
+        nfc.mifareclassic_WriteDataBlock(2, mad2);
+    }
+
+    // 2. Format Sector 1 Trailer (Block 7) with Key A = D3F7D3F7D3F7, Key B = F7D3F7D3F7D3, Access Bits = 7F 07 88 40
+    if (authenticateBlockWithKey(uid, uidLength, 7, 0, kDefaultKey) ||
+        authenticateBlockWithKey(uid, uidLength, 7, 0, kMADKeyA)) {
+        
+        uint8_t trailer[16] = {
+            0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7, // Key A = D3F7D3F7D3F7
+            0x7F, 0x07, 0x88, 0x40,             // Access Bits
+            0xF7, 0xD3, 0xF7, 0xD3, 0xF7, 0xD3  // Key B = F7D3F7D3F7D3
+        };
+        nfc.mifareclassic_WriteDataBlock(7, trailer);
+    }
+}
+
 bool rfidWriteMessage(uint8_t *uid, uint8_t uidLength, const char *value) {
-    uint8_t raw[32] = {0};
-    uint8_t textLen = strlen(value);
-    if (textLen > RFID_MESSAGE_MAX_LEN) textLen = RFID_MESSAGE_MAX_LEN;
-
-    // NDEF Text Record TLV Structure (NFC Forum Spec)
-    raw[0] = 0x03; // NDEF TLV Tag
-    raw[1] = textLen + 7; // NDEF Message Length
-    raw[2] = 0xD1; // Header
-    raw[3] = 0x01; // Type Length ('T')
-    raw[4] = textLen + 3; // Payload Length
-    raw[5] = 0x54; // Record Type: 'T'
-    raw[6] = 0x02; // UTF-8, 2-byte lang
-    raw[7] = 'e';  // 'e'
-    raw[8] = 'n';  // 'n'
-
-    memcpy(raw + 9, value, textLen);
-    raw[9 + textLen] = 0xFE; // NDEF Terminator
-
-    logHex("[RFID] Write NDEF: intended raw = ", raw, sizeof(raw));
-
-    // Try Mifare Classic 1K authentication first
-    if (authenticateCardBlock(uid, uidLength, kMessageBlocks[0])) {
-        return writeAndVerifyBlocks(raw);
-    } else {
-        // Fallback to NTAG / Mifare Ultralight page write (Pages 4..11)
-        Serial.println("[RFID] Mifare auth failed - attempting NTAG / Ultralight Page Write...");
-        return writeNtagPages(raw, sizeof(raw));
     }
 }
 

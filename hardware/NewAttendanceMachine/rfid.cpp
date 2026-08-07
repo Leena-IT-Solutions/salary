@@ -55,18 +55,35 @@ static void logHex(const char *label, const uint8_t *data, size_t len) {
 #endif
 }
 
+static const uint8_t kNDEFKeyA[6] = {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7};
+static const uint8_t kNDEFKeyB[6] = {0xF7, 0xD3, 0xF7, 0xD3, 0xF7, 0xD3};
+static const uint8_t kMADKeyA[6]  = {0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5};
+static const uint8_t kDefaultKey[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+
+static bool authenticateBlockWithKey(uint8_t *uid, uint8_t uidLength, uint8_t blockNum, uint8_t keyType, const uint8_t *key) {
+    uint8_t keyCopy[6];
+    memcpy(keyCopy, key, 6);
+    if (nfc.mifareclassic_AuthenticateBlock(uid, uidLength, blockNum, keyType, keyCopy)) {
+        return true;
+    }
+    nfc.inListPassiveTarget();
+    return false;
+}
+
 static bool authenticateCardBlock(uint8_t *uid, uint8_t uidLength, uint8_t blockNum) {
+    // Try NDEF Sector Key A first (D3F7D3F7D3F7) - used by old machines!
+    if (authenticateBlockWithKey(uid, uidLength, blockNum, 0, kNDEFKeyA)) return true;
+    // Try Factory Default Key A (FFFFFFFFFFFF)
+    if (authenticateBlockWithKey(uid, uidLength, blockNum, 0, kDefaultKey)) return true;
+    // Try NDEF Sector Key B (F7D3F7D3F7D3)
+    if (authenticateBlockWithKey(uid, uidLength, blockNum, 1, kNDEFKeyB)) return true;
+    // Try MAD Sector Key A (A0A1A2A3A4A5)
+    if (authenticateBlockWithKey(uid, uidLength, blockNum, 0, kMADKeyA)) return true;
+
+    // Try all other known candidate keys
     for (uint8_t k = 0; k < sizeof(kKnownKeys) / sizeof(kKnownKeys[0]); k++) {
-        uint8_t key[6];
-        memcpy(key, kKnownKeys[k].key, 6);
-        if (nfc.mifareclassic_AuthenticateBlock(uid, uidLength, blockNum, 0, key)) {
-            return true;
-        }
-        nfc.inListPassiveTarget();
-        if (nfc.mifareclassic_AuthenticateBlock(uid, uidLength, blockNum, 1, key)) {
-            return true;
-        }
-        nfc.inListPassiveTarget();
+        if (authenticateBlockWithKey(uid, uidLength, blockNum, 0, kKnownKeys[k].key)) return true;
+        if (authenticateBlockWithKey(uid, uidLength, blockNum, 1, kKnownKeys[k].key)) return true;
     }
     return false;
 }
@@ -125,8 +142,36 @@ bool rfidReadMessage(uint8_t *uid, uint8_t uidLength, char *out, size_t outSize)
     return (outIdx > 0);
 }
 
+static void ensureNdefFormatAndMAD(uint8_t *uid, uint8_t uidLength) {
+    // 1. Format Sector 0 MAD1 table if accessible
+    if (authenticateBlockWithKey(uid, uidLength, 1, 0, kMADKeyA) ||
+        authenticateBlockWithKey(uid, uidLength, 1, 0, kDefaultKey)) {
+        
+        uint8_t mad1[16] = {0x14, 0x01, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1};
+        uint8_t mad2[16] = {0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1};
+        
+        nfc.mifareclassic_WriteDataBlock(1, mad1);
+        nfc.mifareclassic_WriteDataBlock(2, mad2);
+    }
+
+    // 2. Format Sector 1 Trailer (Block 7) with Key A = D3F7D3F7D3F7, Key B = F7D3F7D3F7D3, Access Bits = 7F 07 88 40
+    if (authenticateBlockWithKey(uid, uidLength, 7, 0, kDefaultKey) ||
+        authenticateBlockWithKey(uid, uidLength, 7, 0, kMADKeyA)) {
+        
+        uint8_t trailer[16] = {
+            0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7, // Key A = D3F7D3F7D3F7
+            0x7F, 0x07, 0x88, 0x40,             // Access Bits
+            0xF7, 0xD3, 0xF7, 0xD3, 0xF7, 0xD3  // Key B = F7D3F7D3F7D3
+        };
+        nfc.mifareclassic_WriteDataBlock(7, trailer);
+    }
+}
+
 bool rfidWriteMessage(uint8_t *uid, uint8_t uidLength, const char *value) {
     if (value == nullptr) return false;
+
+    // Ensure MAD directory and Sector 1 NDEF trailer key (D3F7D3F7D3F7) are written for old machine compatibility!
+    ensureNdefFormatAndMAD(uid, uidLength);
 
     if (!authenticateCardBlock(uid, uidLength, kMessageBlocks[0])) {
         return false;
@@ -138,7 +183,7 @@ bool rfidWriteMessage(uint8_t *uid, uint8_t uidLength, const char *value) {
     uint8_t buf[32];
     memset(buf, 0, sizeof(buf));
 
-    // NDEF Text Record Header
+    // NDEF Text Record Header (Exact format produced by NfcAdapter on old machines)
     buf[0] = 0x03; // TLV Type = NDEF Message
     buf[1] = len + 7; // TLV Length
     buf[2] = 0xD1; // Record Header (MB/ME/SR/TNF=Well-Known)
