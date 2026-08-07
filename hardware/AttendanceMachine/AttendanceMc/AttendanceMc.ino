@@ -22,60 +22,172 @@ static String urlEncode(const String &str) {
 #include <ESP8266WebServer.h>
 #include <Ticker.h>
 #include "time.h"
-#include <PN532.h>
-#include <PN532_I2C.h>
-#include <NfcAdapter.h>
+#include <Adafruit_PN532.h>
 
-Ticker timer1;
-Ticker timer2;
+static Adafruit_PN532 pn532(-1, -1, &Wire);
 
-#define i2c_Address 0x3c
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
-
-class OledCompat {
-private:
-    U8G2_SH1106_128X64_NONAME_F_HW_I2C _u8g2;
-    int _cursorX = 0;
-    int _cursorY = 0;
-    int _textSize = 1;
+class NdefRecordCompat {
 public:
-    OledCompat() : _u8g2(U8G2_R0, U8X8_PIN_NONE) {}
-
-    void begin(uint8_t addr, bool reset) {
-        _u8g2.setI2CAddress(addr << 1);
-        _u8g2.begin();
-        _u8g2.setFontMode(0);
-        _u8g2.setDrawColor(1);
+    String _payload;
+    byte getPayloadLength() { return _payload.length(); }
+    void getPayload(byte *out) {
+        memcpy(out, _payload.c_str(), _payload.length());
     }
-    void clearDisplay() { _u8g2.clearBuffer(); }
-    void setTextColor(int c) {}
-    void setTextSize(int s) { _textSize = s; }
-    void setCursor(int x, int y) { _cursorX = x; _cursorY = y; }
-
-    void println(const String &str) {
-        if (_textSize == 3)      _u8g2.setFont(u8g2_font_logisoso24_tf);
-        else if (_textSize == 2) _u8g2.setFont(u8g2_font_logisoso20_tf);
-        else                     _u8g2.setFont(u8g2_font_6x10_tf);
-        _u8g2.drawStr(_cursorX, _cursorY + (_textSize == 1 ? 8 : 16), str.c_str());
-    }
-
-    void println(IPAddress ip) { println(ip.toString()); }
-
-    void display() { _u8g2.sendBuffer(); }
 };
 
-static OledCompat oled;
-#define SH110X_WHITE 1
+class NdefMessageCompat {
+public:
+    String _text;
+    void addTextRecord(const String &val) { _text = val; }
+    NdefRecordCompat getRecord(int idx) {
+        NdefRecordCompat r;
+        r._payload = String((char)0x02) + "en" + _text;
+        return r;
+    }
+};
 
-const char* ntpServer = "in.pool.ntp.org";
-const long gmtOffset = 0;
-const int daylightOffset = 19800;
+typedef NdefMessageCompat NdefMessage;
+typedef NdefRecordCompat NdefRecord;
 
-const uint8_t fingerprint[32] = { 0xfe, 0x8e, 0xe2, 0x35, 0xea, 0xad, 0xe2, 0xbb, 0x0d, 0x48, 0xd4, 0x08, 0xb1, 0x2c, 0x6a, 0x77, 0xc3, 0x8a, 0x0d, 0xf6, 0x8b, 0xaf, 0x8a, 0x97, 0x94, 0x83, 0x76, 0x7a, 0xed, 0x33, 0x8c, 0x6f };
+class NfcTagCompat {
+public:
+    String _uidStr;
+    String _text;
+    bool _hasNdef;
 
-PN532_I2C pn532_i2c(Wire);
-NfcAdapter nfc = NfcAdapter(pn532_i2c);
+    String getUidString() { return _uidStr; }
+    bool hasNdefMessage() { return _hasNdef; }
+    NdefMessageCompat getNdefMessage() {
+        NdefMessageCompat msg;
+        msg._text = _text;
+        return msg;
+    }
+};
+
+typedef NfcTagCompat NfcTag;
+
+class NfcAdapterCompat {
+private:
+    uint8_t _lastUid[7];
+    uint8_t _lastUidLen;
+public:
+    void begin() {
+        pn532.begin();
+        pn532.SAMConfig();
+    }
+
+    bool tagPresent(uint16_t timeout = 50) {
+        _lastUidLen = 0;
+        return pn532.readPassiveTargetID(PN532_MIFARE_ISO14443A, _lastUid, &_lastUidLen, timeout);
+    }
+
+    NfcTag read() {
+        NfcTag tag;
+        tag._hasNdef = false;
+
+        char buf[20] = "";
+        char *ptr = buf;
+        for (uint8_t i = 0; i < _lastUidLen; i++) {
+            if (i > 0) ptr += sprintf(ptr, " ");
+            ptr += sprintf(ptr, "%02X", _lastUid[i]);
+        }
+        tag._uidStr = String(buf);
+
+        uint8_t keyA[6] = {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7};
+        uint8_t keyDef[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+
+        bool auth = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 0, keyA);
+        if (!auth) {
+            pn532.inListPassiveTarget();
+            auth = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 0, keyDef);
+        }
+
+        if (auth) {
+            uint8_t raw[32];
+            memset(raw, 0, sizeof(raw));
+            if (pn532.mifareclassic_ReadDataBlock(4, &raw[0])) {
+                pn532.mifareclassic_ReadDataBlock(5, &raw[16]);
+                
+                size_t start = 0;
+                for (size_t i = 2; i < 28; i++) {
+                    if (raw[i] == 0x02 && raw[i+1] == 'e' && raw[i+2] == 'n') {
+                        start = i + 3;
+                        break;
+                    }
+                }
+                if (start == 0) {
+                    for (size_t i = 0; i < 32; i++) {
+                        if (isalnum((char)raw[i])) { start = i; break; }
+                    }
+                }
+
+                String text = "";
+                for (size_t i = start; i < 32; i++) {
+                    char c = (char)raw[i];
+                    if (c == 0xFE || c == '\0' || (uint8_t)c < 32 || (uint8_t)c > 126) break;
+                    text += c;
+                }
+                if (text.length() > 0) {
+                    tag._text = text;
+                    tag._hasNdef = true;
+                }
+            }
+        }
+        return tag;
+    }
+
+    bool write(const NdefMessageCompat &msg) {
+        uint8_t keyDef[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+        uint8_t keyMAD[6] = {0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5};
+        uint8_t keyNDEF[6] = {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7};
+
+        if (pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 1, 0, keyMAD) ||
+            pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 1, 0, keyDef)) {
+            uint8_t mad1[16] = {0x14, 0x01, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1};
+            uint8_t mad2[16] = {0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1};
+            pn532.mifareclassic_WriteDataBlock(1, mad1);
+            pn532.mifareclassic_WriteDataBlock(2, mad2);
+        }
+
+        if (pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 7, 0, keyDef) ||
+            pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 7, 0, keyMAD)) {
+            uint8_t trailer[16] = {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7, 0x7F, 0x07, 0x88, 0x40, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7, 0xD3};
+            pn532.mifareclassic_WriteDataBlock(7, trailer);
+        }
+
+        bool auth = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 0, keyNDEF);
+        if (!auth) {
+            pn532.inListPassiveTarget();
+            auth = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 0, keyDef);
+        }
+
+        if (!auth) return false;
+
+        size_t len = msg._text.length();
+        if (len > 20) len = 20;
+
+        uint8_t buf[32];
+        memset(buf, 0, sizeof(buf));
+        buf[0] = 0x03; buf[1] = len + 7; buf[2] = 0xD1; buf[3] = 0x01; buf[4] = len + 3;
+        buf[5] = 'T'; buf[6] = 0x02; buf[7] = 'e'; buf[8] = 'n';
+        memcpy(&buf[9], msg._text.c_str(), len);
+        buf[9 + len] = 0xFE;
+
+        bool ok1 = pn532.mifareclassic_WriteDataBlock(4, &buf[0]);
+        bool ok2 = pn532.mifareclassic_WriteDataBlock(5, &buf[16]);
+        return (ok1 && ok2);
+    }
+
+    bool format() { return true; }
+    bool erase() {
+        NdefMessageCompat msg;
+        msg._text = "";
+        return write(msg);
+    }
+    bool clean() { return erase(); }
+};
+
+static NfcAdapterCompat nfc;
 
 String tagId = "";
 String tagMs = "";
