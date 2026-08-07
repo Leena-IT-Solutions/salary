@@ -25,12 +25,76 @@ void webPortalSetWriteResult(bool success) {
     writeStatus = success ? WRITE_SUCCESS : WRITE_FAILED;
 }
 
+static void sendCorsHeaders() {
+    server.sendHeader("Access-Control-Allow-Origin", "*");
+    server.sendHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    server.sendHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+}
+
 static bool requireAuth() {
+    sendCorsHeaders();
+    if (server.method() == HTTP_OPTIONS) {
+        server.send(204);
+        return false;
+    }
     if (!server.authenticate(config->portal_user, config->portal_pass)) {
         server.requestAuthentication();
         return false;
     }
     return true;
+}
+
+// ==========================================
+// LIGHTWEIGHT LOCAL PROVISIONING PAGE (AP MODE)
+// ==========================================
+static void handleLocalProvisionPage() {
+    sendCorsHeaders();
+    String html = "<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'>";
+    html += "<meta name='viewport' content='width=device-width, initial-scale=1.0'>";
+    html += "<title>Attendance Terminal Setup</title>";
+    html += "<style>";
+    html += "body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background:#f4f6f9;color:#1f2937;margin:0;padding:20px;}";
+    html += ".card{max-width:480px;margin:20px auto;background:#fff;padding:24px;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,0.08);}";
+    html += "h2{color:#1e3a5f;margin-top:0;font-size:20px;text-align:center;}";
+    html += "label{display:block;font-size:13px;font-weight:600;margin-top:12px;color:#374151;}";
+    html += "input,select{width:100%;padding:10px;margin-top:4px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;box-sizing:border-box;}";
+    html += ".btn{background:#1e3a5f;color:#fff;border:0;padding:12px;border-radius:6px;font-weight:bold;cursor:pointer;width:100%;font-size:15px;margin-top:18px;}";
+    html += ".btn:hover{background:#0f2744;}";
+    html += ".hint{font-size:12px;color:#6b7280;margin-top:4px;}";
+    html += "</style></head><body><div class='card'>";
+    html += "<h2>📶 Attendance Terminal Setup</h2>";
+    html += "<p class='hint' style='text-align:center;'>Connect this terminal to your local Wi-Fi router to sync with <strong>payroll.sarvodayavidyalay.com</strong>.</p>";
+    html += "<form action='/save_local' method='POST'>";
+    html += "<label>Wi-Fi Network SSID:</label>";
+    html += "<input type='text' name='wifi_ssid' value='" + String(config->wifi_ssid) + "' placeholder='Enter Wi-Fi Name' required>";
+    html += "<label>Wi-Fi Network Password:</label>";
+    html += "<input type='password' name='wifi_pass' value='" + String(config->wifi_pass) + "' placeholder='Enter Wi-Fi Password' required>";
+    html += "<label>Company / Institution Name:</label>";
+    html += "<input type='text' name='company_name' value='" + String(config->company_name) + "' placeholder='Sarvodaya Vidyalay'>";
+    html += "<label>Server Endpoint URI:</label>";
+    html += "<input type='text' name='host_uri' value='" + String(config->host_uri) + "' required>";
+    html += "<label>Bearer API Access Token:</label>";
+    html += "<input type='password' name='api_token' value='" + String(config->api_token) + "' placeholder='Bearer Token'>";
+    html += "<input type='submit' class='btn' value='🚀 Connect Terminal to Wi-Fi'>";
+    html += "</form></div></body></html>";
+    server.send(200, "text/html", html);
+}
+
+static void handleSaveLocal() {
+    sendCorsHeaders();
+    if (server.hasArg("wifi_ssid")) strncpy(config->wifi_ssid, server.arg("wifi_ssid").c_str(), sizeof(config->wifi_ssid));
+    if (server.hasArg("wifi_pass")) strncpy(config->wifi_pass, server.arg("wifi_pass").c_str(), sizeof(config->wifi_pass));
+    if (server.hasArg("company_name")) strncpy(config->company_name, server.arg("company_name").c_str(), sizeof(config->company_name));
+    if (server.hasArg("host_uri")) strncpy(config->host_uri, server.arg("host_uri").c_str(), sizeof(config->host_uri));
+    if (server.hasArg("api_token")) strncpy(config->api_token, server.arg("api_token").c_str(), sizeof(config->api_token));
+
+    storageSaveConfig(*config);
+    if (savedCallback) savedCallback();
+
+    wifiApplyLiveWifiCredentials(*config);
+
+    String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><style>body{font-family:sans-serif;background:#f4f6f9;text-align:center;padding:50px;} .card{background:#fff;padding:30px;border-radius:12px;display:inline-block;box-shadow:0 4px 15px rgba(0,0,0,0.1);} h2{color:#10b981;}</style></head><body><div class='card'><h2>✓ Wi-Fi Credentials Saved!</h2><p>Terminal is connecting to <strong>" + String(config->wifi_ssid) + "</strong>...</p><p>You can now reconnect your phone/laptop to your normal Wi-Fi!</p></div></body></html>";
+    server.send(200, "text/html", html);
 }
 
 // ==========================================
@@ -302,22 +366,48 @@ static void handleApiReboot() {
 void webPortalStart() {
     httpUpdater.setup(&server, "/api/update", config->portal_user, config->portal_pass);
 
+    // Sleek Local Setup Form at http://192.168.4.1/ (For Initial Wi-Fi Setup)
+    server.on("/", HTTP_GET, handleLocalProvisionPage);
+    server.on("/save_local", HTTP_POST, handleSaveLocal);
+
+    // Micro-REST API Endpoints (With CORS Headers for Cloud Management)
     server.on("/api/status", HTTP_GET, handleApiStatus);
+    server.on("/api/status", HTTP_OPTIONS, handleApiStatus);
+    
     server.on("/api/config", HTTP_POST, handleApiSaveConfig);
+    server.on("/api/config", HTTP_OPTIONS, handleApiSaveConfig);
+
     server.on("/api/wifi", HTTP_POST, handleApiSaveWifi);
+    server.on("/api/wifi", HTTP_OPTIONS, handleApiSaveWifi);
+
     server.on("/api/password", HTTP_POST, handleApiSavePassword);
-    
+    server.on("/api/password", HTTP_OPTIONS, handleApiSavePassword);
+
     server.on("/api/write", HTTP_POST, handleApiWriteCard);
+    server.on("/api/write", HTTP_OPTIONS, handleApiWriteCard);
+
     server.on("/api/write_status", HTTP_GET, handleApiWriteStatus);
-    
+    server.on("/api/write_status", HTTP_OPTIONS, handleApiWriteStatus);
+
     server.on("/api/queue", HTTP_GET, handleApiQueueGet);
+    server.on("/api/queue", HTTP_OPTIONS, handleApiQueueGet);
+
     server.on("/api/queue/clear", HTTP_POST, handleApiQueueClear);
-    
+    server.on("/api/queue/clear", HTTP_OPTIONS, handleApiQueueClear);
+
     server.on("/api/wifi_scan", HTTP_GET, handleApiWifiScan);
+    server.on("/api/wifi_scan", HTTP_OPTIONS, handleApiWifiScan);
+
     server.on("/api/reboot", HTTP_POST, handleApiReboot);
-    
+    server.on("/api/reboot", HTTP_OPTIONS, handleApiReboot);
+
     server.onNotFound([]() {
-        server.send(404, "application/json", "{\"error\":\"Not Found\",\"message\":\"Use Laravel Configure Machine Portal\"}");
+        sendCorsHeaders();
+        if (server.method() == HTTP_OPTIONS) {
+            server.send(204);
+            return;
+        }
+        server.send(404, "application/json", "{\"error\":\"Not Found\"}");
     });
     server.begin();
 }
