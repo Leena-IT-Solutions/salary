@@ -30,7 +30,7 @@ static Adafruit_PN532 pn532(-1, -1, &Wire);
 
 const String settings_filename = "/settings.json";
 String ap_ssid = "attendance";
-String ap_pswd = "123456789";
+String ap_pswd = "password";
 String wf_ssid = "";
 String wf_pswd = "";
 String op_mode = "";
@@ -531,7 +531,7 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
             </div>
             <div class="mb-3">
                 <div class="mb-1">AP Accesspoint Password</div>
-                <input id="ap_pswd" name="ap_pswd" type="password" placeholder="123456789">
+                <input id="ap_pswd" name="ap_pswd" type="password" placeholder="password">
             </div>
             <button onclick="window.saveData(true)" class="btn btn-save"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px;"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg> Save & Restart Machine</button>
         </div>
@@ -973,7 +973,7 @@ void factoryReset() {
     SPIFFS.remove(queue_filename);
   }
   ap_ssid = "attendance";
-  ap_pswd = "123456789";
+  ap_pswd = "password";
   wf_ssid = "";
   wf_pswd = "";
   op_mode = "Read";
