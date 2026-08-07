@@ -54,13 +54,61 @@ static bool authenticateCardBlock(uint8_t *uid, uint8_t uidLength, uint8_t block
                               blockNum, keyType == 0 ? "A" : "B", kKnownKeys[k].name);
                 return true;
             }
-            // If auth failed, card enters HALT state - re-select target to reset RF state machine
             uint8_t dumpUid[7]; uint8_t dumpLen = 0;
             nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, dumpUid, &dumpLen, 10);
         }
     }
     Serial.printf("[RFID] Auth FAILED on Block %u (all candidate keys rejected)\n", blockNum);
     return false;
+}
+
+// Extract clean string from raw block bytes (Supports both NDEF Text Records & Plain ASCII)
+static void extractMessageString(const uint8_t *raw, size_t rawLen, char *out, size_t outSize) {
+    out[0] = '\0';
+    
+    // Check if block contains NDEF TLV (0x03 Tag or 0xD1 NDEF Record Header)
+    int textStart = -1;
+    int textLen = 0;
+
+    for (size_t i = 0; i < rawLen - 4; i++) {
+        // Look for NDEF Text Record Header 'T' (0x54) preceded by NDEF header 0xD1 0x01
+        if (raw[i] == 0xD1 && raw[i+1] == 0x01 && raw[i+3] == 0x54) {
+            uint8_t statusByte = raw[i+4];
+            uint8_t langLen = statusByte & 0x1F;
+            textStart = i + 5 + langLen;
+            textLen = raw[i+2] - 1 - langLen;
+            break;
+        }
+        // Direct NDEF Text Record payload check
+        if (raw[i] == 0x54 && (raw[i+1] == 0x02 || raw[i+1] == 0x05) && (raw[i+2] == 'e' || raw[i+2] == 'E')) {
+            textStart = i + 4;
+            textLen = 16;
+            break;
+        }
+    }
+
+    if (textStart >= 0 && (size_t)textStart < rawLen) {
+        size_t idx = 0;
+        for (int k = 0; k < textLen && (textStart + k) < (int)rawLen && idx + 1 < outSize; k++) {
+            char c = (char)raw[textStart + k];
+            if (c < 32 || c > 126) break;
+            out[idx++] = c;
+        }
+        out[idx] = '\0';
+        if (idx > 0) return;
+    }
+
+    // Fallback: Read plain ASCII string starting at first printable byte
+    size_t idx = 0;
+    for (size_t k = 0; k < rawLen && idx + 1 < outSize; k++) {
+        char c = (char)raw[k];
+        if (c >= 32 && c <= 126) {
+            out[idx++] = c;
+        } else if (idx > 0) {
+            break;
+        }
+    }
+    out[idx] = '\0';
 }
 
 bool rfidReadMessage(uint8_t *uid, uint8_t uidLength, char *out, size_t outSize) {
@@ -77,14 +125,9 @@ bool rfidReadMessage(uint8_t *uid, uint8_t uidLength, char *out, size_t outSize)
     }
     logHex("[RFID] Read: raw = ", raw, sizeof(raw));
 
-    size_t idx = 0;
-    for (int k = 0; k < RFID_MESSAGE_MAX_LEN && idx + 1 < outSize; k++) {
-        if (raw[k] < 32 || raw[k] > 126) break;
-        out[idx++] = (char)raw[k];
-    }
-    out[idx] = '\0';
+    extractMessageString(raw, sizeof(raw), out, outSize);
     Serial.printf("[RFID] Read: decoded = \"%s\"\n", out);
-    return idx > 0;
+    return strlen(out) > 0;
 }
 
 static const uint16_t kWriteSettleMs = 10;
@@ -114,14 +157,42 @@ static bool writeAndVerifyBlocks(uint8_t *data) {
     return true;
 }
 
+// Writes text as a Universal NFC Forum NDEF Text Record (Compatible with Android & iPhone!)
 bool rfidWriteMessage(uint8_t *uid, uint8_t uidLength, const char *value) {
     if (!authenticateCardBlock(uid, uidLength, kMessageBlocks[0])) {
         return false;
     }
 
     uint8_t raw[32] = {0};
-    strncpy((char *)raw, value, RFID_MESSAGE_MAX_LEN);
-    logHex("[RFID] Write: intended raw = ", raw, sizeof(raw));
+    uint8_t textLen = strlen(value);
+    if (textLen > RFID_MESSAGE_MAX_LEN) textLen = RFID_MESSAGE_MAX_LEN;
+
+    // NDEF Text Record TLV Structure (NFC Forum Spec)
+    // 0x03 = NDEF TLV Tag
+    // [len] = NDEF Record Length
+    // 0xD1 = Header (MB=1, ME=1, CF=0, SR=1, IL=0, TNF=1)
+    // 0x01 = Type Length (1 byte: 'T')
+    // [payload_len] = Language len (3) + Text len
+    // 'T' = Text Record Type
+    // 0x02 = UTF-8, 2-byte language code ("en")
+    // 'e', 'n' = Language
+    // [text] = Employee Code
+    // 0xFE = NDEF Terminator TLV
+
+    raw[0] = 0x03; // NDEF TLV Tag
+    raw[1] = textLen + 7; // NDEF Message Length
+    raw[2] = 0xD1; // Header
+    raw[3] = 0x01; // Type Length ('T')
+    raw[4] = textLen + 3; // Payload Length
+    raw[5] = 0x54; // Record Type: 'T'
+    raw[6] = 0x02; // UTF-8, 2-byte lang
+    raw[7] = 'e';  // 'e'
+    raw[8] = 'n';  // 'n'
+
+    memcpy(raw + 9, value, textLen);
+    raw[9 + textLen] = 0xFE; // NDEF Terminator
+
+    logHex("[RFID] Write NDEF: intended raw = ", raw, sizeof(raw));
 
     return writeAndVerifyBlocks(raw);
 }
