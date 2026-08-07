@@ -93,14 +93,15 @@ public:
         }
         tag._uidStr = String(buf);
 
-        uint8_t keyA[6] = {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7};
-        uint8_t keyDef[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+        uint8_t keyNDEF[6] = {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7};
+        uint8_t keyDef[6]  = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+        uint8_t keyMAD[6]  = {0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5};
+        uint8_t keyNDEFB[6] = {0xF7, 0xD3, 0xF7, 0xD3, 0xF7, 0xD3};
 
-        bool auth = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 0, keyA);
-        if (!auth) {
-            pn532.inListPassiveTarget();
-            auth = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 0, keyDef);
-        }
+        bool auth = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 0, keyNDEF);
+        if (!auth) { pn532.inListPassiveTarget(); auth = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 0, keyDef); }
+        if (!auth) { pn532.inListPassiveTarget(); auth = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 1, keyNDEFB); }
+        if (!auth) { pn532.inListPassiveTarget(); auth = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 0, keyMAD); }
 
         if (auth) {
             uint8_t raw[32];
@@ -137,31 +138,39 @@ public:
     }
 
     bool write(const NdefMessageCompat &msg) {
-        uint8_t keyDef[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-        uint8_t keyMAD[6] = {0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5};
-        uint8_t keyNDEF[6] = {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7};
+        uint8_t keyDef[6]   = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+        uint8_t keyMAD[6]   = {0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5};
+        uint8_t keyNDEF[6]  = {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7};
+        uint8_t keyNDEFB[6] = {0xF7, 0xD3, 0xF7, 0xD3, 0xF7, 0xD3};
 
-        if (pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 1, 0, keyMAD) ||
-            pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 1, 0, keyDef)) {
+        // Format Sector 0 MAD
+        bool authMAD = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 1, 0, keyMAD);
+        if (!authMAD) { pn532.inListPassiveTarget(); authMAD = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 1, 0, keyDef); }
+        if (authMAD) {
             uint8_t mad1[16] = {0x14, 0x01, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1};
             uint8_t mad2[16] = {0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1};
             pn532.mifareclassic_WriteDataBlock(1, mad1);
             pn532.mifareclassic_WriteDataBlock(2, mad2);
         }
 
-        if (pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 7, 0, keyDef) ||
-            pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 7, 0, keyMAD)) {
+        // Format Sector 1 Trailer
+        pn532.inListPassiveTarget();
+        bool authTrailer = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 7, 0, keyDef);
+        if (!authTrailer) { pn532.inListPassiveTarget(); authTrailer = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 7, 0, keyNDEF); }
+        if (!authTrailer) { pn532.inListPassiveTarget(); authTrailer = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 7, 0, keyMAD); }
+
+        if (authTrailer) {
             uint8_t trailer[16] = {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7, 0x7F, 0x07, 0x88, 0x40, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7, 0xD3};
             pn532.mifareclassic_WriteDataBlock(7, trailer);
         }
 
-        bool auth = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 0, keyNDEF);
-        if (!auth) {
-            pn532.inListPassiveTarget();
-            auth = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 0, keyDef);
-        }
+        // Authenticate Block 4 for Writing NDEF Payload
+        pn532.inListPassiveTarget();
+        bool auth4 = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 0, keyNDEF);
+        if (!auth4) { pn532.inListPassiveTarget(); auth4 = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 0, keyDef); }
+        if (!auth4) { pn532.inListPassiveTarget(); auth4 = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 1, keyNDEFB); }
 
-        if (!auth) return false;
+        if (!auth4) return false;
 
         size_t len = msg._text.length();
         if (len > 20) len = 20;
@@ -660,9 +669,10 @@ void readCard(){
     byte payload[length];
     record.getPayload(payload);
     tagMs = String((char *)payload);
+    if (tagMs.length() >= 3) {
+      tagMs = tagMs.substring(3);
+    }
     tagMs.trim();
-    tagMs.remove(length, -4);
-    tagMs.remove(0,3);
     showMessage();
     //Serial.println(tagMs);
     printLocalTime();
