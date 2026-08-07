@@ -39,14 +39,10 @@ void displayShowScreen(const String &companyName, const String &cardMsg,
     drawCentered(9, companyName.c_str(), u8g2_font_6x10_tf);
 
     if (cardMsg.length() > 0) {
-        u8g2.setFont(u8g2_font_6x10_tf);
-        u8g2.drawStr(0, 27, cardMsg.c_str());
-        if (customMsg.length() > 0) {
-            u8g2.drawStr(0, 43, customMsg.c_str());
-        }
+        // Large centered display for employee code (same 20pt font as digital clock)
+        drawCentered(48, cardMsg.c_str(), u8g2_font_logisoso20_tf);
     } else if (customMsg.length() > 0) {
-        u8g2.setFont(u8g2_font_6x10_tf);
-        u8g2.drawStr(0, 34, customMsg.c_str());
+        drawCentered(34, customMsg.c_str(), u8g2_font_6x10_tf);
     } else {
         drawCentered(48, clockStr.c_str(), u8g2_font_logisoso20_tf);
     }

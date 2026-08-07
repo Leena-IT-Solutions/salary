@@ -134,9 +134,7 @@ void processCardScan(String tagidStr, uint8_t *uid, uint8_t uidLength) {
         }
     }
 
-    LOG_PRINTF("[CARD SCAN] UID: %s | tagms: %s\n", tagidStr.c_str(), tagmsStr.c_str());
-
-    renderScreen("Card Scanned", "ID: " + tagmsStr);
+    renderScreen(tagmsStr);
 
     switch (currentConfig.op_mode) {
         case MODE_READ: {
