@@ -183,8 +183,10 @@ public:
         buf[9 + len] = 0xFE;
 
         bool ok1 = pn532.mifareclassic_WriteDataBlock(4, &buf[0]);
-        bool ok2 = pn532.mifareclassic_WriteDataBlock(5, &buf[16]);
-        return (ok1 && ok2);
+        if (len > 7) {
+            pn532.mifareclassic_WriteDataBlock(5, &buf[16]);
+        }
+        return ok1;
     }
 
     bool format() { return true; }
@@ -743,17 +745,15 @@ void readCard(){
 void writeCard(){
     NdefMessage message = NdefMessage();
     message.addTextRecord(card_value);
-    //message.addUriRecord("http://leenaitsolutions.com");
     bool success = nfc.write(message);
-    delay(1000);
-    if (success) {
-      op_mode = "Read";
-      card_value = "";
-      updateAndSaveSettings();
-      //Serial.println("\nCard Written");
-    } else {
-      //Serial.println("\nUnsuccessful Write.");
-    }
+    delay(500);
+
+    // Always reset mode to Read and clear card_value to reset web form input
+    op_mode = "Read";
+    card_value = "";
+    updateAndSaveSettings();
+    writeCompanyName();
+
     delay(1000);
 }
 
