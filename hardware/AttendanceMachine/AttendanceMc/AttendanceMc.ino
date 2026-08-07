@@ -603,29 +603,49 @@ void setupMDNS() {
   }
   if (MDNS.begin(host.c_str())) {
     MDNS.addService("http", "tcp", 80);
+    Serial.println("[mDNS] Responder started: http://" + host + ".local");
   }
 }
 
 void startSoftAP() {
-  if (WiFi.softAP(ap_ssid, ap_pswd)) {
+  WiFi.mode(WIFI_AP);
+  if (WiFi.softAP(ap_ssid.c_str(), ap_pswd.c_str())) {
     ipAddress = WiFi.softAPIP();
+    Serial.println("\n[AP MODE] Access Point Started");
+    Serial.print("[AP MODE] SSID: "); Serial.println(ap_ssid);
+    Serial.print("[AP MODE] IP Address: "); Serial.println(ipAddress);
     setupMDNS();
     startWebServer();
   }
 }
 
 void startWiFi() {
-  WiFi.begin(wf_ssid, wf_pswd);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(200);
-    if (millis() > 20000) {
-      break;
-    }
+  if (wf_ssid.length() == 0) {
+    Serial.println("\n[Wi-Fi] No Router SSID configured. Starting Access Point mode...");
+    startSoftAP();
+    return;
   }
+
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect();
+  delay(100);
+  WiFi.begin(wf_ssid.c_str(), wf_pswd.c_str());
+
+  Serial.println("\n[Wi-Fi] Connecting to Router SSID: " + wf_ssid);
+  unsigned long startAttempt = millis();
+  while (WiFi.status() != WL_CONNECTED && (millis() - startAttempt < 15000)) {
+    delay(300);
+    Serial.print(".");
+  }
+  Serial.println();
+
   if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("[Wi-Fi] Connection Failed / Timeout. Fallback to Access Point mode...");
     startSoftAP();
   } else {
     ipAddress = WiFi.localIP();
+    Serial.println("[Wi-Fi] Connected Successfully!");
+    Serial.print("[Wi-Fi] IP Address: "); Serial.println(ipAddress);
     configTime(gmtOffset, daylightOffset, ntpServer);
     printLocalTime();
     isNetwork = true;
@@ -715,6 +735,8 @@ void saveSettings(String msg) {
                           "<script>setTimeout(function(){ window.location.href='" + redirectTarget + "'; }, 6000);</script></body></html>";
 
     server.send(200, "text/html", responseHtml);
+    server.client().flush();
+    Serial.println("[SYSTEM] Settings Saved. Software Resetting ESP8266...");
     delay(2000);
     ESP.restart();
   } else {
