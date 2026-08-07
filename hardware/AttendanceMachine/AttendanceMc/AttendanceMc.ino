@@ -266,16 +266,178 @@ void notFound(){
   server.send(404, "text/html", "<h1>Page Not Found</h1>");
 }
 
+static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Attendance System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f6f9; color: #333; padding: 15px; }
+        .max-500 { margin: 0 auto; max-width: 500px; width: 100%; background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .text-center { text-align: center; }
+        .mb-1 { margin-bottom: 5px; }
+        .mb-3 { margin-bottom: 20px; }
+        .mb-5 { margin-bottom: 30px; }
+        .p-2 { padding: 10px; }
+        .w-full { width: 100%; }
+        h1 { color: #1e3a5f; font-size: 24px; margin-bottom: 5px; }
+        h3 { color: #1e3a5f; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 15px; font-size: 16px; }
+        label, div.mb-1 { font-size: 13px; font-weight: 600; color: #475569; }
+        input[type=text], input[type=password], select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; margin-top: 4px; }
+        button, .btn { background: #1e3a5f; color: #fff; border: 0; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; margin-top: 10px; }
+        button:hover { background: #0f2744; }
+    </style>
+</head>
+<body>
+    <div class="max-500">
+        <div class="mb-3 p-2 text-center">
+            <h1>Attendance System</h1>
+            <p>Powered By Leena IT Solutions</p>
+        </div>
+
+        <div id="ap">
+            <h3 class="mb-3">Access Point Setup</h3>
+            <div class="mb-3">
+                <div class="mb-1">Accesspoint SSID</div>
+                <input id="ap_ssid" name="ap_ssid" type="text">
+            </div>
+            <div class="mb-3">
+                <div class="mb-1">Accesspoint Password</div>
+                <input id="ap_pswd" name="ap_pswd" type="password">
+            </div>
+        </div>
+
+        <div id="wifi">
+            <h3 class="mb-3">WiFi Setup</h3>
+            <div class="mb-3">
+                <div class="mb-1">WiFi SSID</div>
+                <input id="wf_ssid" name="wf_ssid" type="text">
+            </div>
+            <div class="mb-3">
+                <div class="mb-1">WiFi Password</div>
+                <input id="wf_pswd" name="wf_pswd" type="password">
+            </div>
+        </div>
+
+        <div id="home">
+            <h3 class="mb-3">Terminal Settings</h3>
+            <div class="mb-3">
+                <div class="mb-1">Operation Mode</div>
+                <select name="op_mode" id="op_mode">
+                    <option value="Setup">Setup</option>
+                    <option value="Read">Read</option>
+                    <option value="Write">Write</option>
+                    <option value="Format">Format</option>
+                    <option value="Delete">Delete</option>
+                    <option value="Clear">Clear</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <div class="mb-1">Host URI</div>
+                <input id="sr_host" name="sr_host" type="text">
+            </div>
+            <div class="mb-3">
+                <div class="mb-1">Bearer API Token</div>
+                <input id="api_token" name="api_token" type="password" placeholder="API Token">
+            </div>
+        </div>
+
+        <div class="mb-5">
+            <button onclick="saveData()">Save Settings</button>
+        </div>
+
+        <div id="write">
+            <h3 class="mb-3">Write Card</h3>
+            <div class="mb-3">
+                <div class="mb-1">Card Value / Employee Code</div>
+                <input id="card_value" name="card_value" type="text">
+            </div>
+            <div class="mb-3">
+                <button onclick="writeCard()" id="cardButton">Write Card</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var url = "/settings";
+        var save_url = "/save";
+        setData();
+
+        function setData() {
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("GET", url, false);
+            xmlHttp.send(null);
+            if (xmlHttp.responseText && xmlHttp.responseText.length > 0) {
+                try {
+                    let data = JSON.parse(xmlHttp.responseText);
+                    if(data.ap_ssid) document.getElementById("ap_ssid").value = data.ap_ssid;
+                    if(data.ap_pswd) document.getElementById("ap_pswd").value = data.ap_pswd;
+                    if(data.wf_ssid) document.getElementById("wf_ssid").value = data.wf_ssid;
+                    if(data.wf_pswd) document.getElementById("wf_pswd").value = data.wf_pswd;
+                    if(data.op_mode) document.getElementById("op_mode").value = data.op_mode;
+                    if(data.sr_host) document.getElementById("sr_host").value = data.sr_host;
+                    if(data.card_value) document.getElementById("card_value").value = data.card_value;
+                    if(data.api_token) document.getElementById("api_token").value = data.api_token;
+                } catch(e){}
+            }
+        }
+
+        function saveData() {
+            let data = {
+                ap_ssid: document.getElementById("ap_ssid").value,
+                ap_pswd: document.getElementById("ap_pswd").value,
+                wf_ssid: document.getElementById("wf_ssid").value,
+                wf_pswd: document.getElementById("wf_pswd").value,
+                op_mode: document.getElementById("op_mode").value,
+                sr_host: document.getElementById("sr_host").value,
+                card_value: document.getElementById("card_value").value,
+                api_token: document.getElementById("api_token").value
+            };
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("GET", save_url + "?q=" + encodeURIComponent(JSON.stringify(data)), false);
+            xmlHttp.send(null);
+            alert("Settings Saved Successfully!");
+        }
+
+        function writeCard() {
+            document.getElementById("cardButton").innerHTML = "⌛ Waiting for Card Tap...";
+            document.getElementById("op_mode").value = "Write";
+            saveData();
+            setTimeout(checkStatus, 1000);
+        }
+
+        function checkStatus() {
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("GET", url, false);
+            xmlHttp.send(null);
+            if (xmlHttp.responseText) {
+                let data = JSON.parse(xmlHttp.responseText);
+                if (data.op_mode == "Write") {
+                    setTimeout(checkStatus, 1000);
+                } else {
+                    setData();
+                    document.getElementById("cardButton").innerHTML = "Write Card";
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+)rawliteral";
+
 void getWebpage(){
   File file = SPIFFS.open("/attendanceSettingsPage.html", "r");
-  if (!file){
-    //Serial.println("Failed to read file");
+  if (file){
+    while (file.available()){
+      webpage = file.readString();
+    }
+    file.close();
   }
-  while (file.available()){
-    webpage = file.readString();
+  if (webpage.length() == 0) {
+    webpage = FPSTR(DEFAULT_WEBPAGE_HTML);
   }
-  // Serial.println(webpage);
-  file.close();
 }
 
 void startSoftAP(){
