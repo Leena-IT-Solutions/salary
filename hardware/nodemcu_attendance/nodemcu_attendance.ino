@@ -94,6 +94,23 @@ void onConfigSaved() {
     beepSuccess();
 }
 
+static String urlEncode(const String &str) {
+    String encoded = "";
+    for (size_t i = 0; i < str.length(); i++) {
+        char c = str.charAt(i);
+        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+            encoded += c;
+        } else if (c == ' ') {
+            encoded += "%20";
+        } else {
+            char buf[4];
+            sprintf(buf, "%%%02X", (unsigned char)c);
+            encoded += buf;
+        }
+    }
+    return encoded;
+}
+
 // ==========================================
 // Mode Action Handlers (Setup, Read, Write, Format, Delete, Clear)
 // ==========================================
