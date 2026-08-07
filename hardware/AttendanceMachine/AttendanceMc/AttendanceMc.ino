@@ -734,7 +734,14 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
 void serveWebpage() {
   File file = SPIFFS.open("/attendanceSettingsPage.html", "r");
   if (file) {
-    server.streamFile(file, "text/html");
+    server.setContentLength(file.size());
+    server.send(200, "text/html", "");
+    const size_t bufSize = 1024;
+    uint8_t buf[bufSize];
+    while (file.available()) {
+      size_t len = file.read(buf, bufSize);
+      server.sendContent((const char*)buf, len);
+    }
     file.close();
   } else {
     server.send(200, "text/html", FPSTR(DEFAULT_WEBPAGE_HTML));
