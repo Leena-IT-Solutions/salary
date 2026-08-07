@@ -42,7 +42,7 @@ String domain_name = "attendance.local";
 String admin_user = "admin";
 String admin_pass = "password";
 
-String webpage = "";
+
 IPAddress ipAddress;
 bool isNetwork = false;
 
@@ -359,7 +359,7 @@ void startWebServer();
 void startSoftAP();
 void startWiFi();
 void printLocalTime();
-void getWebpage();
+void serveWebpage();
 String getSettings();
 void setSettings();
 void saveSettings(String msg);
@@ -731,16 +731,13 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
 </html>
 )rawliteral";
 
-void getWebpage() {
+void serveWebpage() {
   File file = SPIFFS.open("/attendanceSettingsPage.html", "r");
   if (file) {
-    while (file.available()) {
-      webpage = file.readString();
-    }
+    server.streamFile(file, "text/html");
     file.close();
-  }
-  if (webpage.length() == 0) {
-    webpage = FPSTR(DEFAULT_WEBPAGE_HTML);
+  } else {
+    server.send(200, "text/html", FPSTR(DEFAULT_WEBPAGE_HTML));
   }
 }
 
@@ -900,7 +897,7 @@ void startWebServer() {
       server.send(302, "text/plain", "");
       return;
     }
-    server.send(200, "text/html", webpage);
+    serveWebpage();
   });
 
   server.on("/settings", HTTP_GET, []() {
@@ -1295,9 +1292,9 @@ SyncResult sendDataToServerParams(String tId, String tMs, String d, String t) {
     BearSSL::WiFiClientSecure *client = new BearSSL::WiFiClientSecure();
     if (client) {
       client->setInsecure();
-      client->setBufferSizes(2048, 512);
-      client->setTimeout(4000);
-      http.setTimeout(4000);
+      client->setBufferSizes(4096, 512);
+      client->setTimeout(6000);
+      http.setTimeout(6000);
       http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
       http.setUserAgent("ESP8266-AttendanceMachine");
 
@@ -1668,7 +1665,7 @@ void setup() {
   digitalWrite(buz, LOW);
 
   setSettings();
-  getWebpage();
+
 
   if (op_mode == "Setup") {
     startSoftAP();
