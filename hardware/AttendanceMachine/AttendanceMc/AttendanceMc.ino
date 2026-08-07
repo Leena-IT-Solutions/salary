@@ -431,10 +431,6 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
                 <input id="company_name" name="company_name" type="text" placeholder="Company">
             </div>
             <div class="mb-3">
-                <div class="mb-1">Domain Name (mDNS)</div>
-                <input id="domain_name" name="domain_name" type="text" placeholder="attendance.local">
-            </div>
-            <div class="mb-3">
                 <div class="mb-1">Host URI</div>
                 <input id="sr_host" name="sr_host" type="text" placeholder="https://domain.com/attendance/save">
             </div>
@@ -457,7 +453,13 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
 
         <!-- Page 3: Wi-Fi & AP Setup -->
         <div id="tab-wifi" class="tab-content">
-            <h3 class="mb-3">Wi-Fi Connection</h3>
+            <h3 class="mb-3">Domain Name (mDNS)</h3>
+            <div class="mb-3">
+                <div class="mb-1">Domain Name (mDNS)</div>
+                <input id="domain_name" name="domain_name" type="text" placeholder="attendance.local">
+            </div>
+
+            <h3 class="mb-3" style="margin-top: 25px;">Wi-Fi Connection</h3>
             <div class="mb-3">
                 <div class="mb-1">Wi-Fi Router SSID</div>
                 <input id="wf_ssid" name="wf_ssid" type="text" placeholder="Router SSID">
