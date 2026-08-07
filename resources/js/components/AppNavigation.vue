@@ -188,10 +188,7 @@
                         <i class="bi bi-sliders" style="color: #22d3ee;"></i>
                         <span>Preference</span>
                     </a>
-                    <a href="/application_settings/configure_machine" class="nav-item-link" :class="{ 'active': cpath == '/application_settings/configure_machine' }">
-                        <i class="bi bi-cpu" style="color: #10b981;"></i>
-                        <span>Configure Machine</span>
-                    </a>
+
                 </div>
             </div>
         </div>
