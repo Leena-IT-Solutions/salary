@@ -19,7 +19,7 @@ static String urlEncode(const String &str) {
 #include <U8g2lib.h>
 #include <FS.h>
 #include <ArduinoJson.h>
-#include <ESPAsyncWebServer.h>
+#include <ESP8266WebServer.h>
 #include <Ticker.h>
 #include "time.h"
 #include <PN532.h>
@@ -102,10 +102,10 @@ String webpage = "";
 IPAddress ipAddress;
 bool isNetwork = false;
 
-AsyncWebServer server(80);
+ESP8266WebServer server(80);
 
-void notFound(AsyncWebServerRequest *request){
-  request->send(404, "text/html", "<h1>Page Not Found</h1>");
+void notFound(){
+  server.send(404, "text/html", "<h1>Page Not Found</h1>");
 }
 
 void getWebpage(){
@@ -181,21 +181,20 @@ void printLocalTime(){
 }
 
 void startWebServer(){
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(200, "text/html", webpage);
+  server.on("/", HTTP_GET, [](){
+    server.send(200, "text/html", webpage);
   });
-  server.on("/settings", HTTP_GET, [](AsyncWebServerRequest *request){
+  server.on("/settings", HTTP_GET, [](){
     String message = getSettings();
-    request->send(200, "text/json", message);
+    server.send(200, "application/json", message);
   });
-  server.on("/save", HTTP_GET, [](AsyncWebServerRequest *request){
+  server.on("/save", HTTP_GET, [](){
     String message = "";
-    if(request->hasParam("q")){
-      message = request->getParam("q")->value();
+    if(server.hasArg("q")){
+      message = server.arg("q");
       saveSettings(message);
-      //Serial.println(message);
     }
-    request->send(200, "text/json", message);
+    server.send(200, "application/json", message);
   });
   server.onNotFound(notFound);
   server.begin();
@@ -496,6 +495,7 @@ void setup() {
 }
 
 void loop() {
+  server.handleClient();
   writeCompanyName();
   accessCard();
 }
