@@ -331,6 +331,7 @@ void setup() {
         LOG_PRINTLN("[PN532] Found and initialized.");
     }
 
+    pinMode(BUTTON_PIN, INPUT_PULLUP);
     webPortalInit(&currentConfig, onConfigSaved);
     wifiConnect(currentConfig);
     beepReady();
@@ -366,12 +367,13 @@ void loop() {
         nonReadModeStartTime = 0;
     }
 
-    // Hardware Push Button Handler (Cycles mode / resets config)
+    // Hardware Push Button Handler (Cycles mode on short press; 15s hold required for Factory Reset)
     int btnState = digitalRead(BUTTON_PIN);
     if (btnState == LOW) {
         if (buttonPressStart == 0) buttonPressStart = millis();
         unsigned long held = millis() - buttonPressStart;
-        if (held >= 5000) {
+        if (held >= 15000) { // 15 seconds continuous hold required to prevent false triggers
+            buttonPressStart = 0;
             renderScreen("Resetting...", "Factory Reset");
             beep(200, 5, 3000);
             storageResetConfig(currentConfig);
@@ -381,7 +383,7 @@ void loop() {
         if (buttonPressStart > 0) {
             unsigned long held = millis() - buttonPressStart;
             buttonPressStart = 0;
-            if (held > 50 && held < 3000) {
+            if (held > 100 && held < 3000) {
                 cycleOperationMode();
             }
         }

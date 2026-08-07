@@ -47,6 +47,7 @@ void storageSaveConfig(Config &cfg) {
 }
 
 void storageLoadConfig(Config &cfg) {
+    memset(&cfg, 0, sizeof(Config));
     EEPROM.begin(EEPROM_SIZE);
     EEPROM.get(0, cfg);
     EEPROM.end();
