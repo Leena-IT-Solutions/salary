@@ -5,6 +5,7 @@
 
 // Sets up the buzzer pin. Call once from setup() before any beep*() call.
 void audioInit();
+void audioSetMute(bool muted);
 
 void beep(int durationMs, int count = 1, int freq = 2700);
 void beepSuccess();

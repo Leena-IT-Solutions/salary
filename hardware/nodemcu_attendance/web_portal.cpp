@@ -4,8 +4,10 @@
 #include "audio.h"
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
+#include <ESP8266HTTPUpdateServer.h>
 
 static ESP8266WebServer server(80);
+static ESP8266HTTPUpdateServer httpUpdater;
 static Config *config = nullptr;
 static void (*savedCallback)() = nullptr;
 
@@ -31,7 +33,7 @@ static bool requireAuth() {
 }
 
 // ==========================================
-// Shared Modern Responsive Header & Tab Bar
+// Shared Modern Responsive Header & 6 Tab Bar
 // ==========================================
 static String renderHeader(const String &activeTab) {
     String html = "<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'>";
@@ -45,16 +47,16 @@ static String renderHeader(const String &activeTab) {
     html += ".header h1{margin:0;font-size:22px;color:var(--primary)}";
     html += ".header p{margin:4px 0 0;font-size:12px;color:#6b7280}";
     
-    // 5 Navigation Tabs Styling
+    // 6 Navigation Tabs Styling
     html += ".nav-tabs{display:flex;background:#e2e8f0;border-radius:10px;padding:4px;margin-bottom:20px;overflow-x:auto;gap:4px}";
-    html += ".nav-tab{flex:1;text-align:center;padding:10px 8px;font-size:13px;font-weight:600;color:#475569;text-decoration:none;border-radius:7px;white-space:nowrap;transition:all 0.2s}";
+    html += ".nav-tab{flex:1;text-align:center;padding:10px 6px;font-size:12px;font-weight:600;color:#475569;text-decoration:none;border-radius:7px;white-space:nowrap;transition:all 0.2s}";
     html += ".nav-tab:hover{background:#cbd5e1;color:var(--primary)}";
     html += ".nav-tab.active{background:var(--primary);color:#ffffff;box-shadow:0 2px 4px rgba(0,0,0,0.1)}";
     
     html += ".card{background:var(--card);border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 4px 15px rgba(0,0,0,0.05)}";
     html += ".card h2{margin-top:0;font-size:16px;color:var(--primary);border-bottom:1px solid #f3f4f6;padding-bottom:8px}";
     html += "label{display:block;font-size:13px;font-weight:600;margin-top:12px;color:#374151}";
-    html += "input[type=text],input[type=password],select{width:100%;padding:10px 12px;margin-top:4px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;box-sizing:border-box}";
+    html += "input[type=text],input[type=password],input[type=file],select{width:100%;padding:10px 12px;margin-top:4px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;box-sizing:border-box}";
     html += ".btn{background:var(--primary);color:#fff;border:0;padding:12px 20px;border-radius:6px;font-weight:bold;cursor:pointer;width:100%;font-size:15px;margin-top:15px;transition:background 0.2s}";
     html += ".btn:hover{background:#0f2744}";
     html += ".btn-success{background:var(--accent)}";
@@ -72,13 +74,14 @@ static String renderHeader(const String &activeTab) {
     
     html += "<div class='header'><h1>Attendance System</h1><p>Powered By Leena IT Solutions</p></div>";
     
-    // 5 Navigation Tabs
+    // 6 Navigation Tabs
     html += "<div class='nav-tabs'>";
     html += "<a href='/' class='nav-tab" + String(activeTab == "home" ? " active" : "") + "'>Home</a>";
     html += "<a href='/write' class='nav-tab" + String(activeTab == "write" ? " active" : "") + "'>Write Card</a>";
     html += "<a href='/queue' class='nav-tab" + String(activeTab == "queue" ? " active" : "") + "'>Offline Queue</a>";
     html += "<a href='/wifi' class='nav-tab" + String(activeTab == "wifi" ? " active" : "") + "'>AP & Wifi</a>";
     html += "<a href='/password' class='nav-tab" + String(activeTab == "password" ? " active" : "") + "'>Password</a>";
+    html += "<a href='/update' class='nav-tab" + String(activeTab == "update" ? " active" : "") + "'>Update</a>";
     html += "</div>";
     
     return html;
@@ -89,7 +92,7 @@ static String renderFooter() {
 }
 
 // ==========================================
-// TAB 1: HOME PAGE (Diagnostics & Company Settings - Live Update)
+// TAB 1: HOME PAGE (Diagnostics, Recent Scans & Settings)
 // ==========================================
 static void handleHomeTab() {
     if (!requireAuth()) return;
@@ -110,6 +113,9 @@ static void handleHomeTab() {
     html += "<div><strong>Signal Strength:</strong> " + String(WiFi.RSSI()) + " dBm</div>";
     html += "</div></div>";
 
+    // Recent Scans Activity Log Table
+    html += getRecentScansHtml();
+
     // Terminal & Organization Settings Form
     html += "<div class='card'><h2>Terminal & Company Settings</h2>";
     html += "<div class='hint'>Updates settings live in real-time without rebooting the terminal.</div>";
@@ -124,6 +130,12 @@ static void handleHomeTab() {
     html += "<option value='3'" + String(config->op_mode == MODE_FORMAT ? " selected" : "") + ">Format (F) - Format Card</option>";
     html += "<option value='4'" + String(config->op_mode == MODE_DELETE ? " selected" : "") + ">Delete (D) - Clear Card Data</option>";
     html += "</select>";
+    html += "<div class='hint'>ℹ️ If set to non-Read mode, the terminal auto-reverts to Read mode after 15 minutes of inactivity.</div>";
+    html += "<label>Buzzer Sound Effects:</label>";
+    html += "<select name='buzzer_enabled'>";
+    html += "<option value='1'" + String(config->buzzer_enabled == 1 ? " selected" : "") + ">Enabled (Sound On)</option>";
+    html += "<option value='0'" + String(config->buzzer_enabled == 0 ? " selected" : "") + ">Muted (Silent Mode)</option>";
+    html += "</select>";
     html += "<label>Host URI Endpoint:</label>";
     html += "<input type='text' name='host_uri' value='" + String(config->host_uri) + "' required>";
     html += "<label>Bearer API Access Token (Optional):</label>";
@@ -136,7 +148,7 @@ static void handleHomeTab() {
 }
 
 // ==========================================
-// TAB 2: WRITE CARD PAGE (Totally Separate Page)
+// TAB 2: WRITE CARD PAGE
 // ==========================================
 static void handleWriteTab() {
     if (!requireAuth()) return;
@@ -153,7 +165,6 @@ static void handleWriteTab() {
     html += "<div id='writeStatusMsg' style='margin-top:15px;font-weight:bold;font-size:14px;color:var(--primary);'></div>";
     html += "</div>";
 
-    // AJAX Live Polling Script
     html += "<script>";
     html += "(function(){";
     html += "var form=document.getElementById('writeCardForm');";
@@ -233,7 +244,7 @@ static void handleQueueTab() {
 }
 
 // ==========================================
-// TAB 4: AP & WIFI PAGE (Live Update)
+// TAB 4: AP & WIFI PAGE (With Live Network Scanner)
 // ==========================================
 static void handleWifiTab() {
     if (!requireAuth()) return;
@@ -252,20 +263,56 @@ static void handleWifiTab() {
 
     // WiFi Setup Card
     html += "<div class='card'><h2>Wi-Fi Network Setup</h2>";
+    html += "<button type='button' class='btn btn-success' onclick='scanWifi()'>📶 Scan Nearby Wi-Fi Networks</button>";
+    html += "<div id='scanResults' style='margin-top:10px;'></div>";
+
     html += "<label>Wi-Fi Network SSID:</label>";
-    html += "<input type='text' name='wifi_ssid' value='" + String(config->wifi_ssid) + "' placeholder='Enter Wi-Fi Name'>";
+    html += "<input type='text' id='wifi_ssid' name='wifi_ssid' value='" + String(config->wifi_ssid) + "' placeholder='Enter Wi-Fi Name'>";
     html += "<label>Wi-Fi Network Password:</label>";
     html += "<input type='password' name='wifi_pass' value='" + String(config->wifi_pass) + "' placeholder='Enter Wi-Fi Password'>";
     html += "<input type='submit' class='btn' value='Save Wi-Fi Settings (Live)'>";
     html += "</div>";
     html += "</form>";
 
+    // Live Scanner JS
+    html += "<script>";
+    html += "function selectSsid(name){ document.getElementById('wifi_ssid').value = name; }";
+    html += "function scanWifi(){";
+    html += "var box = document.getElementById('scanResults');";
+    html += "box.innerHTML = '<p style=\"color:var(--primary);font-weight:bold;\">⏳ Scanning Wi-Fi networks...</p>';";
+    html += "fetch('/wifi_scan').then(function(r){return r.json();}).then(function(list){";
+    html += "if(list.length===0){ box.innerHTML='<p style=\"color:#dc2626;\">No Wi-Fi networks found.</p>'; return; }";
+    html += "var h='<div style=\"max-height:150px;overflow-y:auto;background:#edf2f7;border-radius:6px;padding:8px;\">';";
+    html += "list.forEach(function(item){";
+    html += "h += '<div style=\"padding:6px;border-bottom:1px solid #cbd5e1;cursor:pointer;display:flex;justify-content:space-between;\" onclick=\"selectSsid(\\''+item.ssid+'\\')\">';";
+    html += "h += '<span><strong>'+item.ssid+'</strong></span>';";
+    html += "h += '<span style=\"color:#6b7280;font-size:12px;\">'+item.rssi+' dBm '+(item.secure?'🔒':'')+'</span></div>';";
+    html += "});";
+    html += "h += '</div>'; box.innerHTML = h;";
+    html += "}).catch(function(){ box.innerHTML='<p style=\"color:#dc2626;\">Scan failed - try again.</p>'; });";
+    html += "}";
+    html += "</script>";
+
     html += renderFooter();
     server.send(200, "text/html", html);
 }
 
+// Live Wi-Fi Scanner API Handler
+static void handleWifiScanApi() {
+    if (!requireAuth()) return;
+
+    int n = WiFi.scanNetworks();
+    String json = "[";
+    for (int i = 0; i < n; ++i) {
+        if (i > 0) json += ",";
+        json += "{\"ssid\":\"" + WiFi.SSID(i) + "\",\"rssi\":" + String(WiFi.RSSI(i)) + ",\"secure\":" + String(WiFi.encryptionType(i) != ENC_TYPE_NONE ? "true" : "false") + "}";
+    }
+    json += "]";
+    server.send(200, "application/json", json);
+}
+
 // ==========================================
-// TAB 5: PASSWORD PAGE (Saves & Resets Machine)
+// TAB 5: PASSWORD PAGE
 // ==========================================
 static void handlePasswordTab() {
     if (!requireAuth()) return;
@@ -287,10 +334,29 @@ static void handlePasswordTab() {
 }
 
 // ==========================================
+// TAB 6: FIRMWARE UPDATE PAGE (Wireless OTA)
+// ==========================================
+static void handleUpdateTab() {
+    if (!requireAuth()) return;
+
+    String html = renderHeader("update");
+
+    html += "<div class='card'><h2>Wireless OTA Firmware Update</h2>";
+    html += "<p class='hint'>Upload a new compiled <code>.bin</code> firmware file to wirelessly update the terminal software over Wi-Fi.</p>";
+    html += "<form method='POST' action='/update' enctype='multipart/form-data'>";
+    html += "<label>Select Firmware File (.bin):</label>";
+    html += "<input type='file' name='update' accept='.bin' required>";
+    html += "<input type='submit' class='btn btn-danger' value='Upload & Flash Firmware'>";
+    html += "</form></div>";
+
+    html += renderFooter();
+    server.send(200, "text/html", html);
+}
+
+// ==========================================
 // ACTION HANDLERS
 // ==========================================
 
-// Save Home Settings Live (No Reboot)
 static void handleSaveHomeWeb() {
     if (!requireAuth()) return;
 
@@ -324,6 +390,13 @@ static void handleSaveHomeWeb() {
             changed = true;
         }
     }
+    if (server.hasArg("buzzer_enabled")) {
+        uint8_t newBuzzer = server.arg("buzzer_enabled").toInt();
+        if (config->buzzer_enabled != newBuzzer) {
+            config->buzzer_enabled = newBuzzer;
+            changed = true;
+        }
+    }
 
     if (changed) {
         storageSaveConfig(*config);
@@ -337,7 +410,6 @@ static void handleSaveHomeWeb() {
     server.send(200, "text/html", html);
 }
 
-// Save AP & Wifi Settings Live (No Reboot)
 static void handleSaveWifiWeb() {
     if (!requireAuth()) return;
 
@@ -390,7 +462,6 @@ static void handleSaveWifiWeb() {
     server.send(200, "text/html", html);
 }
 
-// Save Password Settings & Reboot Machine (Reboots ONLY if password/username changed!)
 static void handleSavePasswordWeb() {
     if (!requireAuth()) return;
 
@@ -438,7 +509,6 @@ static void handleSavePasswordWeb() {
         html += "</div>";
         html += "</div>";
 
-        // Auto Availability Poller & Auto Redirect
         html += "<script>";
         html += "var attempts = 0;";
         html += "function checkMachine(){";
@@ -520,11 +590,15 @@ static void handleQueueClearWeb() {
 }
 
 void webPortalStart() {
+    httpUpdater.setup(&server, "/update", config->portal_user, config->portal_pass);
+
     server.on("/", handleHomeTab);
     server.on("/write", handleWriteTab);
     server.on("/queue", handleQueueTab);
     server.on("/wifi", handleWifiTab);
+    server.on("/wifi_scan", handleWifiScanApi);
     server.on("/password", handlePasswordTab);
+    server.on("/update", HTTP_GET, handleUpdateTab);
     
     server.on("/save_home", HTTP_POST, handleSaveHomeWeb);
     server.on("/save_wifi", HTTP_POST, handleSaveWifiWeb);

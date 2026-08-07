@@ -31,6 +31,7 @@ static void applyDefaults(Config &cfg) {
     strncpy(cfg.portal_user, DEFAULT_PORTAL_USER, sizeof(cfg.portal_user));
     strncpy(cfg.portal_pass, DEFAULT_PORTAL_PASS, sizeof(cfg.portal_pass));
     cfg.op_mode = MODE_READ;
+    cfg.buzzer_enabled = 1;
     cfg.tz_offset = 19800; // IST UTC+5:30
 }
 
