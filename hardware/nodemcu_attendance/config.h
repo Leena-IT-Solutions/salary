@@ -32,7 +32,10 @@
 #define DEFAULT_AP_SSID     "attendance"
 #define DEFAULT_AP_PASS     "password"
 #define DEFAULT_AP_IP       "192.168.4.1"
-#define DEFAULT_MDNS_NAME   "attendance" // Accessible as http://attendance.local
+#define DEFAULT_MDNS_NAME   "attendance"
+
+#define DEFAULT_WIFI_SSID   "LITS"
+#define DEFAULT_WIFI_PASS   "Prayer@2025"
 
 #define DEFAULT_COMPANY_NAME "Sarvodaya Vidyalay"
 #define DEFAULT_LOCATION     "Main Gate"
@@ -58,7 +61,7 @@ enum OperationMode {
     MODE_CLEAR = 5
 };
 
-#define CONFIG_MAGIC 0x53414C5D // Magic Header Key 'SALD'
+#define CONFIG_MAGIC 0x53414C5E // Magic Header Key 'SALE'
 
 struct Config {
     uint32_t magic;  // Must equal CONFIG_MAGIC

@@ -96,11 +96,11 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label font-weight-bold">Target Wi-Fi Network SSID:</label>
-                            <input type="text" id="sc_ssid" class="form-control" placeholder="Enter Wi-Fi Name" required>
+                            <input type="text" id="sc_ssid" class="form-control" value="LITS" placeholder="Enter Wi-Fi Name" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label font-weight-bold">Target Wi-Fi Network Password:</label>
-                            <input type="password" id="sc_pass" class="form-control" placeholder="Enter Wi-Fi Password" required>
+                            <input type="password" id="sc_pass" class="form-control" value="Prayer@2025" placeholder="Enter Wi-Fi Password" required>
                         </div>
                         <div class="col-md-12">
                             <label class="form-label font-weight-bold">Target Broadcast IP (Default: 255.255.255.255):</label>
@@ -126,11 +126,11 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label font-weight-bold">Wi-Fi Network SSID:</label>
-                            <input type="text" id="wifi_ssid" class="form-control" placeholder="Enter Wi-Fi Name" required>
+                            <input type="text" id="wifi_ssid" class="form-control" value="LITS" placeholder="Enter Wi-Fi Name" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label font-weight-bold">Wi-Fi Network Password:</label>
-                            <input type="password" id="wifi_pass" class="form-control" placeholder="Enter Wi-Fi Password" required>
+                            <input type="password" id="wifi_pass" class="form-control" value="Prayer@2025" placeholder="Enter Wi-Fi Password" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label font-weight-bold">Hotspot Access Point Name (AP SSID):</label>

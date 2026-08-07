@@ -20,8 +20,8 @@ static void applyDefaults(Config &cfg) {
     cfg.magic = CONFIG_MAGIC;
     strncpy(cfg.ap_ssid, DEFAULT_AP_SSID, sizeof(cfg.ap_ssid));
     strncpy(cfg.ap_pass, DEFAULT_AP_PASS, sizeof(cfg.ap_pass));
-    strncpy(cfg.wifi_ssid, "", sizeof(cfg.wifi_ssid));
-    strncpy(cfg.wifi_pass, "", sizeof(cfg.wifi_pass));
+    strncpy(cfg.wifi_ssid, DEFAULT_WIFI_SSID, sizeof(cfg.wifi_ssid));
+    strncpy(cfg.wifi_pass, DEFAULT_WIFI_PASS, sizeof(cfg.wifi_pass));
     strncpy(cfg.company_name, DEFAULT_COMPANY_NAME, sizeof(cfg.company_name));
     strncpy(cfg.location_name, DEFAULT_LOCATION, sizeof(cfg.location_name));
     strncpy(cfg.host_uri, DEFAULT_HOST_URI, sizeof(cfg.host_uri));
