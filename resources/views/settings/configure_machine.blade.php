@@ -30,12 +30,23 @@
 
 <div class="container-fluid px-4 py-4" id="machineApp">
     
+    <!-- Connection Mode Explainer Alert -->
+    <div class="alert alert-info border-0 shadow-sm mb-4">
+        <div class="d-flex align-items-center">
+            <div class="me-3 fs-3">ℹ️</div>
+            <div>
+                <strong class="d-block">Cloud Server Notice (payroll.sarvodayavidyalay.com):</strong>
+                Because this website is hosted in the cloud, select <strong>Direct Browser Connection</strong> to configure NodeMCU terminals on your local network (e.g. <code>192.168.4.1</code> or <code>192.168.1.100</code>).
+            </div>
+        </div>
+    </div>
+
     <!-- Machine Connector Bar -->
     <div class="machine-card">
-        <h4>📡 Machine Connection Setup</h4>
+        <h4>📡 Terminal Connection Setup</h4>
         <div class="row g-3 align-items-end">
             <div class="col-md-3">
-                <label class="form-label font-weight-bold">Terminal IP / Address:</label>
+                <label class="form-label font-weight-bold">Terminal IP Address:</label>
                 <input type="text" id="machine_ip" class="form-control" value="192.168.4.1" placeholder="192.168.4.1 or 192.168.1.100">
             </div>
             <div class="col-md-3">
@@ -58,7 +69,7 @@
     <!-- Main Navigation Tabs -->
     <ul class="nav nav-pills mb-4" id="configTabs" role="tablist">
         <li class="nav-item">
-            <button class="nav-link active font-weight-bold" id="tab-udp-tab" data-bs-toggle="pill" data-bs-target="#tab-udp" type="button">🌐 UDP Provisioning</button>
+            <button class="nav-link active font-weight-bold" id="tab-wifi-tab" data-bs-toggle="pill" data-bs-target="#tab-wifi" type="button">📶 Wi-Fi Credentials</button>
         </li>
         <li class="nav-item">
             <button class="nav-link font-weight-bold" id="tab-settings-tab" data-bs-toggle="pill" data-bs-target="#tab-settings" type="button">⚙️ Terminal Settings</button>
@@ -73,33 +84,37 @@
 
     <div class="tab-content">
 
-        <!-- TAB 1: UDP PROVISIONING -->
-        <div class="tab-pane fade show active" id="tab-udp">
+        <!-- TAB 1: WI-FI CREDENTIALS -->
+        <div class="tab-pane fade show active" id="tab-wifi">
             <div class="machine-card">
-                <h4>🌐 Local Network UDP Provisioning</h4>
-                <p class="text-muted">Broadcast Wi-Fi network credentials to unconfigured NodeMCU terminals on the local network (UDP Port 7778).</p>
-                <form id="udpForm">
+                <h4>📶 Configure Wi-Fi Network Credentials</h4>
+                <p class="text-muted">Enter your local Wi-Fi SSID and Password to connect the NodeMCU terminal to the internet.</p>
+                <form id="wifiForm">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label font-weight-bold">Wi-Fi Network SSID:</label>
-                            <input type="text" id="udp_ssid" class="form-control" placeholder="Enter Wi-Fi Name" required>
+                            <input type="text" id="wifi_ssid" class="form-control" placeholder="Enter Wi-Fi Name" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label font-weight-bold">Wi-Fi Network Password:</label>
-                            <input type="password" id="udp_pass" class="form-control" placeholder="Enter Wi-Fi Password" required>
+                            <input type="password" id="wifi_pass" class="form-control" placeholder="Enter Wi-Fi Password" required>
                         </div>
-                        <div class="col-md-12">
-                            <label class="form-label font-weight-bold">Broadcast IP (Default: 255.255.255.255):</label>
-                            <input type="text" id="udp_target" class="form-control" value="255.255.255.255">
+                        <div class="col-md-6">
+                            <label class="form-label font-weight-bold">Hotspot Access Point Name (AP SSID):</label>
+                            <input type="text" id="ap_ssid" class="form-control" value="attendance">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label font-weight-bold">Hotspot Access Point Password:</label>
+                            <input type="password" id="ap_pass" class="form-control" value="password">
                         </div>
                         <div class="col-md-12">
                             <button type="submit" class="btn btn-success font-weight-bold px-4">
-                                🚀 Broadcast UDP Wi-Fi Credentials
+                                🚀 Save & Apply Wi-Fi Credentials Live
                             </button>
                         </div>
                     </div>
                 </form>
-                <div id="udpStatus" class="mt-3"></div>
+                <div id="wifiStatus" class="mt-3"></div>
             </div>
         </div>
 
@@ -132,7 +147,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label font-weight-bold">Host URI Endpoint:</label>
-                            <input type="text" id="host_uri" class="form-control" required>
+                            <input type="text" id="host_uri" class="form-control" value="https://payroll.sarvodayavidyalay.com/attendance/save" required>
                         </div>
                         <div class="col-md-12">
                             <label class="form-label font-weight-bold">Bearer API Access Token:</label>
@@ -194,76 +209,88 @@
 <script>
 const CSRF_TOKEN = '{{ csrf_token() }}';
 
-function proxyCall(endpoint, method, data = {}) {
+function makeRequest(endpoint, method, data = {}) {
     const ip = document.getElementById('machine_ip').value;
     const user = document.getElementById('portal_user').value;
     const pass = document.getElementById('portal_pass').value;
 
-    return fetch('/application_settings/configure_machine/proxy_api', {
-        method: 'POST',
+    // Try Direct Browser-to-NodeMCU Fetch First
+    const directUrl = `http://${ip}/${endpoint.replace(/^\//, '')}`;
+    const authHeader = 'Basic ' + btoa(user + ':' + pass);
+
+    let formBody = new URLSearchParams();
+    for (let k in data) formBody.append(k, data[k]);
+
+    const fetchOptions = {
+        method: method,
         headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': CSRF_TOKEN
+            'Authorization': authHeader,
+            ...(method === 'POST' ? { 'Content-Type': 'application/x-www-form-urlencoded' } : {})
         },
-        body: JSON.stringify({
-            machine_ip: ip,
-            user: user,
-            pass: pass,
-            endpoint: endpoint,
-            method: method,
-            ...data
-        })
-    }).then(r => r.json());
+        ...(method === 'POST' ? { body: formBody } : {})
+    };
+
+    return fetch(directUrl, fetchOptions)
+        .then(r => r.json())
+        .catch(err => {
+            // Fallback to Cloud Proxy if Direct Fetch is blocked by network
+            return fetch('/application_settings/configure_machine/proxy_api', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': CSRF_TOKEN
+                },
+                body: JSON.stringify({
+                    machine_ip: ip,
+                    user: user,
+                    pass: pass,
+                    endpoint: endpoint,
+                    method: method,
+                    ...data
+                })
+            }).then(r => r.json());
+        });
 }
 
 function fetchStatus() {
     const box = document.getElementById('connectionStatus');
     box.innerHTML = '<span class="badge-offline">⏳ Connecting to NodeMCU...</span>';
 
-    proxyCall('/api/status', 'GET')
+    makeRequest('/api/status', 'GET')
         .then(data => {
             if (data.status === 'online') {
                 box.innerHTML = `<span class="badge-online">✓ Connected (${data.ip}) | RSSI: ${data.rssi} dBm | Company: ${data.company_name}</span>`;
                 document.getElementById('company_name').value = data.company_name || '';
-                document.getElementById('host_uri').value = data.host_uri || '';
+                document.getElementById('host_uri').value = data.host_uri || 'https://payroll.sarvodayavidyalay.com/attendance/save';
                 document.getElementById('api_token').value = data.api_token || '';
                 document.getElementById('op_mode').value = data.op_mode;
                 document.getElementById('buzzer_enabled').value = data.buzzer_enabled;
+                if (data.wifi_ssid) document.getElementById('wifi_ssid').value = data.wifi_ssid;
             } else {
                 box.innerHTML = `<span class="badge-offline">❌ Error: ${data.message || 'Connection failed'}</span>`;
             }
         })
-        .catch(err => {
+        .catch(() => {
             box.innerHTML = `<span class="badge-offline">❌ Connection failed - Check IP address.</span>`;
         });
 }
 
-document.getElementById('udpForm').addEventListener('submit', function(e) {
+document.getElementById('wifiForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    const ssid = document.getElementById('udp_ssid').value;
-    const pass = document.getElementById('udp_pass').value;
-    const target = document.getElementById('udp_target').value || document.getElementById('machine_ip').value;
-    const statusBox = document.getElementById('udpStatus');
+    const statusBox = document.getElementById('wifiStatus');
+    statusBox.innerHTML = '⏳ Applying Wi-Fi credentials...';
 
-    statusBox.innerHTML = '⏳ Broadcasting UDP Wi-Fi credentials...';
-
-    fetch('/application_settings/configure_machine/udp_provision', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': CSRF_TOKEN
-        },
-        body: JSON.stringify({
-            target_ip: target,
-            command: `SET_WIFI:${ssid}:${pass}`
-        })
+    makeRequest('/api/wifi', 'POST', {
+        wifi_ssid: document.getElementById('wifi_ssid').value,
+        wifi_pass: document.getElementById('wifi_pass').value,
+        ap_ssid: document.getElementById('ap_ssid').value,
+        ap_pass: document.getElementById('ap_pass').value
     })
-    .then(r => r.json())
     .then(data => {
-        statusBox.innerHTML = `<div class="alert alert-success">✓ ${data.message}</div>`;
+        statusBox.innerHTML = `<div class="alert alert-success">✓ ${data.message || 'Wi-Fi credentials saved and applied live!'}</div>`;
     })
     .catch(() => {
-        statusBox.innerHTML = `<div class="alert alert-danger">❌ Failed to send UDP packet.</div>`;
+        statusBox.innerHTML = `<div class="alert alert-danger">❌ Failed to apply Wi-Fi credentials.</div>`;
     });
 });
 
@@ -272,7 +299,7 @@ document.getElementById('settingsForm').addEventListener('submit', function(e) {
     const statusBox = document.getElementById('settingsStatus');
     statusBox.innerHTML = '⏳ Saving settings live...';
 
-    proxyCall('/api/config', 'POST', {
+    makeRequest('/api/config', 'POST', {
         company_name: document.getElementById('company_name').value,
         host_uri: document.getElementById('host_uri').value,
         api_token: document.getElementById('api_token').value,
@@ -294,7 +321,7 @@ document.getElementById('writeForm').addEventListener('submit', function(e) {
     statusBox.style.color = '#1e3a5f';
     statusBox.innerHTML = '⏳ Arming card write mode...';
 
-    proxyCall('/api/write', 'POST', { card_val: val })
+    makeRequest('/api/write', 'POST', { card_val: val })
     .then(data => {
         statusBox.innerHTML = `⏳ Armed! Place RFID card near terminal reader...`;
         pollWriteStatus();
@@ -302,7 +329,7 @@ document.getElementById('writeForm').addEventListener('submit', function(e) {
 });
 
 function pollWriteStatus() {
-    proxyCall('/api/write_status', 'GET').then(data => {
+    makeRequest('/api/write_status', 'GET').then(data => {
         const statusBox = document.getElementById('writeStatus');
         if (data.status === 'success') {
             statusBox.style.color = '#10b981';
@@ -320,7 +347,7 @@ function fetchQueue() {
     const box = document.getElementById('queueTableBox');
     box.innerHTML = '⏳ Fetching queue...';
 
-    proxyCall('/api/queue', 'GET').then(data => {
+    makeRequest('/api/queue', 'GET').then(data => {
         if (!Array.isArray(data) || data.length === 0) {
             box.innerHTML = '<div class="alert alert-success mb-0">✓ Queue is empty. All punches synced!</div>';
             return;
@@ -336,7 +363,7 @@ function fetchQueue() {
 
 function clearQueue() {
     if (!confirm('Clear all queued offline punches?')) return;
-    proxyCall('/api/queue/clear', 'POST').then(data => {
+    makeRequest('/api/queue/clear', 'POST').then(data => {
         fetchQueue();
     });
 }
