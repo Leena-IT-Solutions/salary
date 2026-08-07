@@ -2,15 +2,15 @@
 #include "web_portal.h"
 #include "udp_config.h"
 #include "audio.h"
+#include "storage.h"
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 #include <time.h>
 
 static bool apMode = false;
+static bool smartConfigActive = false;
 static unsigned long lastReconnectAttempt = 0;
 static const unsigned long RECONNECT_INTERVAL_MS = 20000; // retry every 20s
-// ~6 * 20s = 2 minutes of retrying a dropped connection before giving up
-// and falling back to the config portal.
 static const uint8_t MAX_RECONNECT_FAILURES_BEFORE_AP = 6;
 static uint8_t reconnectFailures = 0;
 
@@ -22,8 +22,6 @@ static void startMDNSAndPortal(Config &cfg) {
     MDNS.begin(DEFAULT_MDNS_NAME);
     MDNS.addService("http", "tcp", 80);
     webPortalStart();
-    // Only needs binding once - the UDP socket keeps working across an
-    // AP<->STA mode switch since it isn't tied to a specific interface.
     if (!udpStarted) {
         udpConfigStart(&cfg);
         udpStarted = true;
@@ -33,7 +31,7 @@ static void startMDNSAndPortal(Config &cfg) {
 void wifiStartAPMode(Config &cfg) {
     apMode = true;
     WiFi.persistent(false);
-    WiFi.mode(WIFI_AP);
+    WiFi.mode(WIFI_AP_STA); // AP + STA mode so SmartConfig can listen!
     WiFi.setOutputPower(17.5);
 
     IPAddress local_IP(192, 168, 4, 1);
@@ -47,6 +45,13 @@ void wifiStartAPMode(Config &cfg) {
 
     WiFi.softAPConfig(local_IP, gateway, subnet);
     WiFi.softAP(apSsid.c_str(), apPass.c_str());
+
+    // Start SmartConfig background listener
+    if (!smartConfigActive) {
+        WiFi.beginSmartConfig();
+        smartConfigActive = true;
+        Serial.println("[SMARTCONFIG] Listening for SmartConfig packets...");
+    }
 
     startMDNSAndPortal(cfg);
     beep(100, 3);
@@ -71,6 +76,10 @@ void wifiConnect(Config &cfg) {
     }
 
     if (WiFi.status() == WL_CONNECTED) {
+        if (smartConfigActive) {
+            WiFi.stopSmartConfig();
+            smartConfigActive = false;
+        }
         apMode = false;
         reconnectFailures = 0;
         configTime(cfg.tz_offset, 0, "pool.ntp.org", "time.nist.gov");
@@ -85,7 +94,24 @@ void wifiLoop(Config &cfg) {
     MDNS.update();
     udpConfigLoop();
 
-    if (apMode) return; // an intentional/fallback AP session isn't "dropped"
+    // Check if SmartConfig successfully received credentials
+    if (smartConfigActive && WiFi.smartConfigDone()) {
+        String newSsid = WiFi.SSID();
+        String newPass = WiFi.psk();
+        if (newSsid.length() > 0) {
+            strncpy(cfg.wifi_ssid, newSsid.c_str(), sizeof(cfg.wifi_ssid));
+            strncpy(cfg.wifi_pass, newPass.c_str(), sizeof(cfg.wifi_pass));
+            storageSaveConfig(cfg);
+            Serial.printf("[SMARTCONFIG] Received Wi-Fi Credentials! SSID: %s\n", cfg.wifi_ssid);
+            WiFi.stopSmartConfig();
+            smartConfigActive = false;
+            beepSuccess();
+            wifiConnect(cfg);
+            return;
+        }
+    }
+
+    if (apMode) return;
 
     if (WiFi.status() == WL_CONNECTED) {
         reconnectFailures = 0;
@@ -108,6 +134,10 @@ void wifiLoop(Config &cfg) {
 
 void wifiApplyLiveWifiCredentials(Config &cfg) {
     if (strlen(cfg.wifi_ssid) > 0) {
+        if (smartConfigActive) {
+            WiFi.stopSmartConfig();
+            smartConfigActive = false;
+        }
         WiFi.disconnect();
         WiFi.begin(cfg.wifi_ssid, cfg.wifi_pass);
     }
