@@ -4,6 +4,22 @@
 #include <Arduino.h>
 
 // ==========================================
+// Debug Logging Toggle (0 = Disabled, 1 = Enabled)
+// Set to 0 to remove all Serial output and free up RAM/Flash
+// ==========================================
+#define ENABLE_SERIAL 0
+
+#if ENABLE_SERIAL
+  #define LOG_PRINT(...) Serial.print(__VA_ARGS__)
+  #define LOG_PRINTLN(...) Serial.println(__VA_ARGS__)
+  #define LOG_PRINTF(...) Serial.printf(__VA_ARGS__)
+#else
+  #define LOG_PRINT(...)
+  #define LOG_PRINTLN(...)
+  #define LOG_PRINTF(...)
+#endif
+
+// ==========================================
 // Hardware Pin Definitions (NodeMCU ESP8266)
 // ==========================================
 #define OLED_SDA_PIN    4   // NodeMCU D2 (GPIO4)

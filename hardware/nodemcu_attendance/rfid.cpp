@@ -50,9 +50,11 @@ static const KeyCandidate kKnownKeys[] = {
 static const uint8_t kMessageBlocks[2] = {4, 5};
 
 static void logHex(const char *label, const uint8_t *data, size_t len) {
+#if ENABLE_SERIAL
     Serial.print(label);
     for (size_t i = 0; i < len; i++) Serial.printf("%02X ", data[i]);
     Serial.println();
+#endif
 }
 
 // Multi-Key Authentication with automatic HALT-state card re-selection

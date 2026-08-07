@@ -42,8 +42,8 @@ void storageSaveConfig(Config &cfg) {
     EEPROM.put(0, cfg);
     bool ok = EEPROM.commit();
     EEPROM.end();
-    Serial.printf("[STORAGE] Config saved to EEPROM (Magic: 0x%08X | SSID: '%s' | Flash Commit: %s)\n", 
-                  cfg.magic, cfg.wifi_ssid, ok ? "SUCCESS" : "FAILED");
+    LOG_PRINTF("[STORAGE] Config saved to EEPROM (Magic: 0x%08X | SSID: '%s' | Flash Commit: %s)\n", 
+               cfg.magic, cfg.wifi_ssid, ok ? "SUCCESS" : "FAILED");
 }
 
 void storageLoadConfig(Config &cfg) {
@@ -52,7 +52,7 @@ void storageLoadConfig(Config &cfg) {
     EEPROM.end();
 
     if (cfg.magic != CONFIG_MAGIC) {
-        Serial.println("[STORAGE] Magic header invalid. Initializing default settings...");
+        LOG_PRINTLN("[STORAGE] Magic header invalid. Initializing default settings...");
         applyDefaults(cfg);
         storageSaveConfig(cfg);
         return;
@@ -80,8 +80,8 @@ void storageLoadConfig(Config &cfg) {
     if (strlen(cfg.portal_user) == 0) strncpy(cfg.portal_user, DEFAULT_PORTAL_USER, sizeof(cfg.portal_user));
     if (strlen(cfg.portal_pass) == 0) strncpy(cfg.portal_pass, DEFAULT_PORTAL_PASS, sizeof(cfg.portal_pass));
 
-    Serial.printf("[STORAGE] Config loaded from EEPROM! (SSID: '%s' | AP: '%s' | Domain: '%s')\n", 
-                  cfg.wifi_ssid, cfg.ap_ssid, cfg.mdns_name);
+    LOG_PRINTF("[STORAGE] Config loaded from EEPROM! (SSID: '%s' | AP: '%s' | Domain: '%s')\n", 
+               cfg.wifi_ssid, cfg.ap_ssid, cfg.mdns_name);
 }
 
 void storageResetConfig(Config &cfg) {
@@ -109,17 +109,17 @@ void storageSaveOfflinePunch(const String &tagms, const String &tagid,
         file.print(",");
         file.println(timeStr);
         file.close();
-        Serial.printf("[OFFLINE QUEUE] Saved punch offline: Code=%s, Tag=%s, Date=%s, Time=%s\n",
-                      tagms.c_str(), tagid.c_str(), dateStr.c_str(), timeStr.c_str());
+        LOG_PRINTF("[OFFLINE QUEUE] Saved punch offline: Code=%s, Tag=%s, Date=%s, Time=%s\n",
+                   tagms.c_str(), tagid.c_str(), dateStr.c_str(), timeStr.c_str());
     } else {
-        Serial.println("[OFFLINE STORAGE ERROR] Failed to open /punches.txt for writing!");
+        LOG_PRINTLN("[OFFLINE STORAGE ERROR] Failed to open /punches.txt for writing!");
     }
 }
 
 void storageClearOfflineQueue() {
     if (LittleFS.exists("/punches.txt")) {
         LittleFS.remove("/punches.txt");
-        Serial.println("[OFFLINE QUEUE] Cleared all offline punches.");
+        LOG_PRINTLN("[OFFLINE QUEUE] Cleared all offline punches.");
     }
 }
 
@@ -146,105 +146,4 @@ String storageGetOfflineQueueContents() {
     String contents = file.readString();
     file.close();
     return contents;
-}
-
-static String urlEncode(const String &str) {
-    String encoded = "";
-    for (size_t i = 0; i < str.length(); i++) {
-        char c = str.charAt(i);
-        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
-            encoded += c;
-        } else if (c == ' ') {
-            encoded += "%20";
-        } else {
-            char buf[4];
-            sprintf(buf, "%%%02X", (unsigned char)c);
-            encoded += buf;
-        }
-    }
-    return encoded;
-}
-
-void storageSyncOfflinePunches(const String &hostUri, const String &apiToken) {
-    if (hostUri.length() == 0 || WiFi.status() != WL_CONNECTED) return;
-    if (!LittleFS.exists("/punches.txt")) return;
-
-    File file = LittleFS.open("/punches.txt", "r");
-    if (!file || file.size() == 0) {
-        if (file) file.close();
-        return;
-    }
-
-    File tempFile = LittleFS.open("/punches_tmp.txt", "w");
-
-    bool isHttps = hostUri.startsWith("https");
-    const uint16_t kSyncTimeoutMs = 5000;
-    const int kMaxSyncPerCall = 3;
-    int attempted = 0;
-
-    while (file.available()) {
-        String line = file.readStringUntil('\n');
-        line.trim();
-        if (line.length() == 0) continue;
-
-        if (attempted >= kMaxSyncPerCall) {
-            tempFile.println(line);
-            continue;
-        }
-
-        int comma1 = line.indexOf(',');
-        int comma2 = line.indexOf(',', comma1 + 1);
-        int comma3 = line.indexOf(',', comma2 + 1);
-
-        if (comma1 != -1 && comma2 != -1 && comma3 != -1) {
-            attempted++;
-            String tagms = line.substring(0, comma1);
-            String tagid = line.substring(comma1 + 1, comma2);
-            String dt = line.substring(comma2 + 1, comma3);
-            String tim = line.substring(comma3 + 1);
-
-            String url = hostUri;
-            url += (url.indexOf('?') >= 0 ? "&" : "?");
-            url += "tagms=" + urlEncode(tagms) + "&tagid=" + urlEncode(tagid) + "&dt=" + urlEncode(dt) + "&tim=" + urlEncode(tim);
-
-            Serial.printf("[SYNC REQUEST] Syncing queued punch: %s\n", url.c_str());
-
-            HTTPClient http;
-            http.setTimeout(kSyncTimeoutMs);
-
-            int httpCode = 0;
-            if (isHttps) {
-                WiFiClientSecure *clientSec = new WiFiClientSecure();
-                clientSec->setInsecure();
-                clientSec->setBufferSizes(2048, 1024);
-                clientSec->setTimeout(kSyncTimeoutMs);
-                http.begin(*clientSec, url);
-                if (apiToken.length() > 0) http.addHeader("Authorization", "Bearer " + apiToken);
-                httpCode = http.GET();
-                http.end();
-                delete clientSec;
-            } else {
-                WiFiClient *clientPln = new WiFiClient();
-                clientPln->setTimeout(kSyncTimeoutMs);
-                http.begin(*clientPln, url);
-                if (apiToken.length() > 0) http.addHeader("Authorization", "Bearer " + apiToken);
-                httpCode = http.GET();
-                http.end();
-                delete clientPln;
-            }
-
-            Serial.printf("[SYNC RESPONSE] HTTP Code: %d\n", httpCode);
-
-            if (httpCode != 200 && httpCode != 201) {
-                tempFile.println(line); // Failed - keep in queue
-            }
-        }
-        yield();
-    }
-
-    file.close();
-    tempFile.close();
-
-    LittleFS.remove("/punches.txt");
-    LittleFS.rename("/punches_tmp.txt", "/punches.txt");
 }
