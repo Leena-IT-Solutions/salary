@@ -135,7 +135,7 @@
                     if(data.wf_pswd) document.getElementById("wf_pswd").value = data.wf_pswd;
                     if(data.op_mode) document.getElementById("op_mode").value = data.op_mode;
                     if(data.sr_host) document.getElementById("sr_host").value = data.sr_host;
-                    if(data.card_value) document.getElementById("card_value").value = data.card_value;
+                    if(data.card_value != undefined) document.getElementById("card_value").value = data.card_value;
                     if(data.api_token) document.getElementById("api_token").value = data.api_token;
                 } catch(e){}
             }
@@ -186,7 +186,9 @@
                     setTimeout(window.checkStatus, 1000);
                 } else {
                     window.setData();
+                    document.getElementById("card_value").value = "";
                     document.getElementById("cardButton").innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Write Card to NFC Tag';
+                    window.showToast("✓ Card Written Successfully");
                 }
             }
         };
