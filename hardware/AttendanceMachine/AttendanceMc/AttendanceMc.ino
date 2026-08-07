@@ -349,6 +349,10 @@ const String queue_filename = "/queue.json";
 unsigned long lastQueueSyncCheck = 0;
 bool isQueueSyncing = false;
 
+enum SyncResult { SYNC_SUCCESS, SYNC_SERVER_ERROR, SYNC_CLIENT_ERROR };
+unsigned long serverErrorCooldownUntil = 0;
+int consecutiveServerErrors = 0;
+
 void startWebServer();
 void startSoftAP();
 void startWiFi();
@@ -375,8 +379,8 @@ bool enqueueRecord(String tId, String tMs, String d, String t);
 bool dequeueRecord();
 void clearQueue();
 void processOfflineQueue();
-bool sendDataToServerParams(String tId, String tMs, String d, String t);
-bool sendDataToServer();
+SyncResult sendDataToServerParams(String tId, String tMs, String d, String t);
+SyncResult sendDataToServer();
 
 void notFound() { server.send(404, "text/html", "<h1>Page Not Found</h1>"); }
 
@@ -1045,15 +1049,15 @@ void clearQueue() {
   Serial.println("[QUEUE] Queue cleared manually.");
 }
 
-bool sendDataToServerParams(String tId, String tMs, String d, String t) {
+SyncResult sendDataToServerParams(String tId, String tMs, String d, String t) {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("[API] Cannot send data: Wi-Fi not connected.");
-    return false;
+    return SYNC_SERVER_ERROR;
   }
 
   if (sr_host.length() == 0) {
     Serial.println("[API] Cannot send data: Host URI is empty.");
-    return false;
+    return SYNC_CLIENT_ERROR;
   }
 
   String encodeduri = "tagid=" + urlEncode(tId) +
@@ -1078,13 +1082,14 @@ bool sendDataToServerParams(String tId, String tMs, String d, String t) {
 
   HTTPClient http;
   bool isHttps = uri.startsWith("https://");
-  bool success = false;
+  SyncResult result = SYNC_SERVER_ERROR;
 
   if (isHttps) {
     std::unique_ptr<BearSSL::WiFiClientSecure> client(new BearSSL::WiFiClientSecure);
     client->setInsecure();
     client->setBufferSizes(1024, 1024);
-    http.setTimeout(10000);
+    client->setTimeout(2500);
+    http.setTimeout(2500);
     http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
     http.setUserAgent("ESP8266-AttendanceMachine");
 
@@ -1098,17 +1103,23 @@ bool sendDataToServerParams(String tId, String tMs, String d, String t) {
       if (httpCode >= 200 && httpCode < 300) {
         String payload = http.getString();
         Serial.print("[API] Server Response: "); Serial.println(payload);
-        success = true;
+        result = SYNC_SUCCESS;
+      } else if (httpCode >= 400 && httpCode < 500) {
+        Serial.print("[API] Client Error Code: "); Serial.println(httpCode);
+        result = SYNC_CLIENT_ERROR;
       } else {
-        Serial.print("[API] HTTPS GET Failed, Error Code: "); Serial.println(httpCode);
+        Serial.print("[API] HTTPS GET Server Error / Timeout Code: "); Serial.println(httpCode);
+        result = SYNC_SERVER_ERROR;
       }
       http.end();
     } else {
       Serial.println("[API] Unable to initialize HTTPS connection");
+      result = SYNC_SERVER_ERROR;
     }
   } else {
     WiFiClient client;
-    http.setTimeout(10000);
+    client.setTimeout(2500);
+    http.setTimeout(2500);
     http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
     http.setUserAgent("ESP8266-AttendanceMachine");
 
@@ -1122,25 +1133,34 @@ bool sendDataToServerParams(String tId, String tMs, String d, String t) {
       if (httpCode >= 200 && httpCode < 300) {
         String payload = http.getString();
         Serial.print("[API] Server Response: "); Serial.println(payload);
-        success = true;
+        result = SYNC_SUCCESS;
+      } else if (httpCode >= 400 && httpCode < 500) {
+        Serial.print("[API] Client Error Code: "); Serial.println(httpCode);
+        result = SYNC_CLIENT_ERROR;
       } else {
-        Serial.print("[API] HTTP GET Failed, Error Code: "); Serial.println(httpCode);
+        Serial.print("[API] HTTP GET Server Error / Timeout Code: "); Serial.println(httpCode);
+        result = SYNC_SERVER_ERROR;
       }
       http.end();
     } else {
       Serial.println("[API] Unable to initialize HTTP connection");
+      result = SYNC_SERVER_ERROR;
     }
   }
   Serial.println("------------------------------------\n");
-  return success;
+  return result;
 }
 
-bool sendDataToServer() {
+SyncResult sendDataToServer() {
   return sendDataToServerParams(tagId, tagMs, dt, tim);
 }
 
 void processOfflineQueue() {
   if (WiFi.status() != WL_CONNECTED || isQueueSyncing) {
+    return;
+  }
+
+  if (millis() < serverErrorCooldownUntil) {
     return;
   }
 
@@ -1163,12 +1183,25 @@ void processOfflineQueue() {
   String qDt = item["dt"].as<String>();
   String qTim = item["tim"].as<String>();
 
-  Serial.println("[QUEUE] Auto-syncing pending offline record: " + qTagId + " / " + qTagMs);
-  bool ok = sendDataToServerParams(qTagId, qTagMs, qDt, qTim);
-  if (ok) {
+  Serial.println("[QUEUE] Attempting background sync: " + qTagId + " / " + qTagMs);
+  SyncResult res = sendDataToServerParams(qTagId, qTagMs, qDt, qTim);
+
+  if (res == SYNC_SUCCESS) {
     dequeueRecord();
-  } else {
-    Serial.println("[QUEUE] Sync attempt failed. Will retry next cycle.");
+    consecutiveServerErrors = 0;
+    serverErrorCooldownUntil = 0;
+  } else if (res == SYNC_CLIENT_ERROR) {
+    static int clientErrorCount = 0;
+    clientErrorCount++;
+    if (clientErrorCount >= 3) {
+      Serial.println("[QUEUE] Client HTTP 4xx error persisted 3 times. Dropping corrupt record.");
+      dequeueRecord();
+      clientErrorCount = 0;
+    }
+  } else { // SYNC_SERVER_ERROR
+    consecutiveServerErrors++;
+    serverErrorCooldownUntil = millis() + 30000;
+    Serial.println("[QUEUE] Server error/timeout detected. Entering 30s network cooldown penalty.");
   }
   isQueueSyncing = false;
 }
