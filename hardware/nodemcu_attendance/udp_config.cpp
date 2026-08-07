@@ -23,6 +23,21 @@ static void applyIfPresent(char *dest, size_t destSize, JsonDocument &doc,
     }
 }
 
+void udpSendBroadcast(const String &message, uint16_t port) {
+    IPAddress broadcastIp(255, 255, 255, 255);
+    udp.beginPacket(broadcastIp, port);
+    udp.write((const uint8_t *)message.c_str(), message.length());
+    udp.endPacket();
+    Serial.printf("[UDP BROADCAST] Sent to 255.255.255.255:%d -> %s\n", port, message.c_str());
+}
+
+void udpSendBeacon() {
+    if (config == nullptr) return;
+    String ipStr = wifiIsAPMode() ? "192.168.4.1" : WiFi.localIP().toString();
+    String beacon = "DISCOVER_TERMINAL:" + String(config->device_code) + ":" + ipStr + ":" + String(config->company_name);
+    udpSendBroadcast(beacon, UDP_CONFIG_PORT);
+}
+
 void udpConfigLoop() {
     int packetSize = udp.parsePacket();
     if (packetSize <= 0 || config == nullptr) return;
@@ -54,7 +69,12 @@ void udpConfigLoop() {
             Serial.printf("[UDP CONFIG] Set Wi-Fi SSID: %s\n", ssid.c_str());
         }
     }
-    // Format 2: Standard JSON Packet {"wifi_ssid":"...", "wifi_pass":"..."}
+    // Format 2: Discovery Query "DISCOVER_PING"
+    else if (packetStr == "DISCOVER_PING") {
+        udpSendBeacon();
+        return;
+    }
+    // Format 3: Standard JSON Packet {"wifi_ssid":"...", "wifi_pass":"..."}
     else {
         JsonDocument doc;
         if (!deserializeJson(doc, buf)) {
