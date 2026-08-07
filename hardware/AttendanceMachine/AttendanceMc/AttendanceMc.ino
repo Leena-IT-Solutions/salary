@@ -365,6 +365,7 @@ void setSettings();
 void saveSettings(String msg);
 void updateAndSaveSettings();
 void writeCompanyName();
+void drawScreenWithMiddleText(const String &middleText);
 void showMessage();
 void readCard();
 void writeCard();
