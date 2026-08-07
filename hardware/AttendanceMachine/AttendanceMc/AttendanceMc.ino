@@ -535,6 +535,9 @@ void saveSettings(String msg){
 
     setSettings();
 
+    // Immediately refresh OLED display screen with new mode!
+    writeCompanyName();
+
     bool wifiOrApChanged = (old_ap_ssid != ap_ssid) || 
                            (old_ap_pswd != ap_pswd) || 
                            (old_wf_ssid != wf_ssid) || 
