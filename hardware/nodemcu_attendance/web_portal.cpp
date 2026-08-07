@@ -415,7 +415,56 @@ static void handleSavePasswordWeb() {
     if (changed) {
         storageSaveConfig(*config);
 
-        String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f4f6f9;text-align:center;padding:50px;} .card{background:#fff;padding:30px;border-radius:12px;display:inline-block;box-shadow:0 4px 15px rgba(0,0,0,0.1);} h2{color:#dc2626;margin-top:0;}</style></head><body><div class='card'><h2>🔄 Rebooting Terminal...</h2><p>Credentials updated successfully. Machine is restarting now...</p></div></body></html>";
+        String html = "<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'>";
+        html += "<meta name='viewport' content='width=device-width, initial-scale=1.0'>";
+        html += "<title>Rebooting Terminal | Attendance System</title>";
+        html += "<style>";
+        html += ":root{--primary:#1e3a5f;--accent:#10b981;--bg:#f4f6f9;--card:#ffffff;--text:#1f2937}";
+        html += "body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);text-align:center;padding:40px 15px;margin:0}";
+        html += ".card{background:var(--card);border-radius:12px;padding:30px;max-width:500px;margin:auto;box-shadow:0 4px 15px rgba(0,0,0,0.08)}";
+        html += "h2{color:#dc2626;margin-top:0;font-size:22px}";
+        html += ".btn-group{margin-top:25px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}";
+        html += ".btn{background:var(--primary);color:#fff;border:0;padding:12px 20px;border-radius:6px;font-weight:bold;cursor:pointer;text-decoration:none;font-size:14px;transition:background 0.2s}";
+        html += ".btn:hover{background:#0f2744}";
+        html += ".btn-success{background:var(--accent)}";
+        html += ".btn-success:hover{background:#059669}";
+        html += ".status{margin:20px 0;font-size:14px;color:var(--primary);font-weight:bold;padding:10px;background:#edf2f7;border-radius:8px}";
+        html += "</style></head><body><div class='card'>";
+        html += "<h2>🔄 Rebooting Terminal...</h2>";
+        html += "<p>Credentials updated successfully. Machine is restarting now...</p>";
+        html += "<div id='status' class='status'>⏳ Checking machine availability...</div>";
+        html += "<div class='btn-group'>";
+        html += "<a href='/' class='btn'>Go to Home Page</a>";
+        html += "<button onclick='checkMachine()' class='btn btn-success'>Check Machine Now</button>";
+        html += "</div>";
+        html += "</div>";
+
+        // Auto Availability Poller & Auto Redirect
+        html += "<script>";
+        html += "var attempts = 0;";
+        html += "function checkMachine(){";
+        html += "attempts++;";
+        html += "var statusEl = document.getElementById('status');";
+        html += "statusEl.style.color = '#1e3a5f';";
+        html += "statusEl.textContent = '⏳ Checking machine availability... (Attempt ' + attempts + ')';";
+        html += "fetch('/', { method: 'GET', cache: 'no-store' })";
+        html += ".then(function(r){";
+        html += "if (r.ok || r.status === 401) {";
+        html += "statusEl.style.color = '#10b981';";
+        html += "statusEl.textContent = '✓ Machine is ONLINE! Redirecting to Home...';";
+        html += "setTimeout(function(){ window.location.href = '/'; }, 1000);";
+        html += "} else {";
+        html += "setTimeout(checkMachine, 2000);";
+        html += "}";
+        html += "})";
+        html += ".catch(function(){";
+        html += "setTimeout(checkMachine, 2000);";
+        html += "});";
+        html += "}";
+        html += "setTimeout(checkMachine, 3000);";
+        html += "</script>";
+
+        html += "</body></html>";
         server.send(200, "text/html", html);
 
         delay(1000);
