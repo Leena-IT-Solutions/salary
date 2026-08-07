@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Attendance System</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .p-0 {
+            padding: 0px;
+        }
+
+        .p-1 {
+            padding: 5px;
+        }
+
+        .p-2 {
+            padding: 10px;
+        }
+
+        .p-3 {
+            padding: 25px;
+        }
+
+        .p-4 {
+            padding: 40px;
+        }
+
+        .p-5 {
+            padding: 60px;
+        }
+
+        .mb-0 {
+            margin-bottom: 0px;
+        }
+
+        .mb-1 {
+            margin-bottom: 5px;
+        }
+
+        .mb-2 {
+            margin-bottom: 10px;
+        }
+
+        .mb-3 {
+            margin-bottom: 25px;
+        }
+
+        .mb-4 {
+            margin-bottom: 40px;
+        }
+
+        .mb-5 {
+            margin-bottom: 60px;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .max-500 {
+            margin: 0 auto;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .w-full {
+            width: 100%;
+        }
+
+        .navbar {
+            text-align: center;
+        }
+
+        .navbar a {
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin: 0 3px;
+            box-shadow: #666 1px 2px 5px;
+            background-color: #000000;
+            color: #f0f0f0;
+        }
+
+        .active {
+            background-color: brown;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="max-500">
+
+        <div class="mb-3 p-2">
+            <h1 class="text-center">Attendance System</h1>
+            <p class="text-center">Powered By Leena IT Solutions</p>
+        </div>
+
+        <!-- Access Point Page -->
+        <div id="ap">
+            <h3 class="mb-3">Access Point Setup</h3>
+
+            <div class="mb-3">
+                <div for="ap_ssid" class="mb-1">Enter Accesspoint SSID</div>
+                <input id="ap_ssid" name="ap_ssid" value="" type="text" class="w-full p-2">
+            </div>
+
+            <div class="mb-5">
+                <div for="ap_pswd" class="mb-1">Enter Accesspoint Password</div>
+                <input id="ap_pswd" name="ap_pswd" value="" type="password" class="w-full p-2">
+            </div>
+        </div>
+
+        <!-- WiFi Page -->
+        <div id="wifi">
+            <h3 class="mb-3">WiFi Setup</h3>
+
+            <div class="mb-3">
+                <div for="wf_ssid" class="mb-1">Enter WiFi SSID</div>
+                <input id="wf_ssid" name="wf_ssid" value="" type="text" class="w-full p-2">
+            </div>
+
+            <div class="mb-3">
+                <div for="wf_pswd" class="mb-1">Enter WiFi Password</div>
+                <input id="wf_pswd" name="wf_pswd" value="" type="password" class="w-full p-2">
+            </div>
+        </div>
+
+        <!-- Home Page -->
+        <div id="home">
+            <div class="mb-3">
+                <div for="op_mode" class="mb-1">Operation Mode</div>
+                <select name="op_mode" id="op_mode" class="w-full p-2">
+                    <option value="Setup">Setup</option>
+                    <option value="Read">Read</option>
+                    <option value="Write">Write</option>
+                    <option value="Format">Format</option>
+                    <option value="Delete">Delete</option>
+                    <option value="Clear">Clear</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <div for="sr_host" class="mb-1">Host URI</div>
+                <input id="sr_host" name="sr_host" value="" type="text" class="w-full p-2">
+            </div>
+        </div>
+
+        <div class="mb-5">
+            <button onclick="saveData()" class="p-2">Save Settings</button>
+        </div>
+
+
+        <!-- Write Card Page -->
+        <div id="write">
+
+            <h3 class="mb-3">Write Card</h3>
+
+            <div class="mb-3">
+                <div for="card_value" class="mb-1">Card Value</div>
+                <input id="card_value" name="card_value" value="" type="text" class="w-full p-2">
+            </div>
+
+            <div class="mb-3">
+                <button onclick="writeCard()" class="p-2" id="cardButton">
+                    Write Card
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        var ap_ssid = "";
+        var ap_pswd = "";
+        var wf_ssid = "";
+        var wf_pswd = "";
+        var op_mode = "";
+        var sr_host = "";
+        var card_value = "";
+
+        var url = "http://" + location.hostname + "/settings";
+        var save_url = "http://" + location.hostname + "/save";
+
+        setData();
+
+        function setData() {
+            var jsonString = httpGet(url);
+
+            if (jsonString != "Connected") {
+                let data = JSON.parse(jsonString);
+                ap_ssid = data.ap_ssid;
+                ap_pswd = data.ap_pswd;
+                wf_ssid = data.wf_ssid;
+                wf_pswd = data.wf_pswd;
+                op_mode = data.op_mode;
+                sr_host = data.sr_host;
+                card_value = data.card_value;
+
+                document.getElementById("ap_ssid").value = ap_ssid;
+                document.getElementById("ap_pswd").value = ap_pswd;
+                document.getElementById("wf_ssid").value = wf_ssid;
+                document.getElementById("wf_pswd").value = wf_pswd;
+                let opm = document.getElementById("op_mode");
+                setSelectedValue(opm, op_mode);
+                document.getElementById("sr_host").value = sr_host;
+                document.getElementById("card_value").value = card_value;
+            }
+        }
+
+        function httpGet(theUrl) {
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("GET", theUrl, false);
+            xmlHttp.send(null);
+            return xmlHttp.responseText;
+        }
+
+        function setSelectedValue(selectObj, valueToSet) {
+            for (var i = 0; i < selectObj.options.length; i++) {
+                if (selectObj.options[i].text == valueToSet) {
+                    selectObj.options[i].selected = true;
+                    return;
+                }
+            }
+            opm.value = op_mode;
+        }
+
+        function getData() {
+            ap_ssid = document.getElementById("ap_ssid").value;
+            ap_pswd = document.getElementById("ap_pswd").value;
+            wf_ssid = document.getElementById("wf_ssid").value;
+            wf_pswd = document.getElementById("wf_pswd").value;
+            op_mode = document.getElementById("op_mode").value;
+            sr_host = document.getElementById("sr_host").value;
+            card_value = document.getElementById("card_value").value;
+
+            let data = {
+                ap_ssid: ap_ssid,
+                ap_pswd: ap_pswd,
+                wf_ssid: wf_ssid,
+                wf_pswd: wf_pswd,
+                op_mode: op_mode,
+                sr_host: sr_host,
+                card_value: card_value,
+            };
+
+            return data;
+        }
+
+        function saveData() {
+            let data = getData();
+            let d = JSON.stringify(data);
+            let x = httpSend(save_url + "?q=" + d);
+        }
+
+        function writeCard() {
+            let elm = document.getElementById("cardButton");
+            elm.innerHTML = "Waiting for Card to Swipe";
+            op_mode = "Write";
+            let opm = document.getElementById("op_mode");
+            setSelectedValue(opm, op_mode);
+            saveData();
+            checkStatus();
+        }
+
+        function checkStatus() {
+            var jsonString = httpGet(url);
+
+            if (jsonString != "Connected") {
+                let data = JSON.parse(jsonString);
+                if (data.op_mode == "Write") {
+                    setTimeout(checkStatus, 1000);
+                } else {
+                    setData();
+                    let elm = document.getElementById("cardButton");
+                    elm.innerHTML = "Write Card";
+                }
+            }
+        }
+
+        function httpSend(theUrl) {
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("GET", theUrl, false);
+            xmlHttp.send();
+            return xmlHttp.responseText;
+        }
+    </script>
+
+
+</body>
+
+</html>

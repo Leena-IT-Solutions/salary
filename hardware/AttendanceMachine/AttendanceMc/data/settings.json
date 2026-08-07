@@ -1,0 +1,9 @@
+{
+    "ap_ssid": "attendance",
+    "ap_pswd": "123456789",
+    "wf_ssid": "LITS",
+    "wf_pswd": "Platina@2010",
+    "op_mode": "Read",
+    "sr_host": "https://payroll.sarvodayavidyalay.com/attendance/save",
+    "card_value": ""
+}
