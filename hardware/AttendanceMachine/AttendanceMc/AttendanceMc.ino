@@ -297,6 +297,7 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Attendance System</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
@@ -314,7 +315,7 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
         h3 { color: #1e3a5f; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 15px; font-size: 15px; font-weight: 700; }
         
         .nav-tabs { display: flex; gap: 6px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
-        .nav-tab { flex: 1; border: 0; background: #f1f5f9; color: #475569; padding: 10px 4px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+        .nav-tab { flex: 1; border: 0; background: #f1f5f9; color: #475569; padding: 10px 4px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; }
         .nav-tab.active { background: #1e3a5f; color: #fff; box-shadow: 0 2px 8px rgba(30,58,95,0.25); }
         
         .tab-content { display: none; }
@@ -324,7 +325,7 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
         input[type=text], input[type=password], select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; margin-top: 4px; outline: none; transition: border-color 0.2s; }
         input:focus, select:focus { border-color: #1e3a5f; }
         
-        .btn { background: #1e3a5f; color: #fff; border: 0; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; font-size: 14px; margin-top: 8px; transition: background 0.2s; }
+        .btn { background: #1e3a5f; color: #fff; border: 0; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; font-size: 14px; margin-top: 8px; transition: background 0.2s; display: inline-flex; align-items: center; justify-content: center; }
         .btn:hover { background: #0f2744; }
         .btn-write { background: #2563eb; }
         .btn-write:hover { background: #1d4ed8; }
@@ -340,9 +341,9 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
         </div>
 
         <div class="nav-tabs mb-4">
-            <button id="btn-home" class="nav-tab active" onclick="window.switchTab('home')">🏠 Home</button>
-            <button id="btn-write" class="nav-tab" onclick="window.switchTab('write')">💳 Write Card</button>
-            <button id="btn-wifi" class="nav-tab" onclick="window.switchTab('wifi')">📶 Wi-Fi & AP</button>
+            <button id="btn-home" class="nav-tab active" onclick="window.switchTab('home')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> Home</button>
+            <button id="btn-write" class="nav-tab" onclick="window.switchTab('write')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px;"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg> Write Card</button>
+            <button id="btn-wifi" class="nav-tab" onclick="window.switchTab('wifi')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px;"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg> Wi-Fi & AP</button>
         </div>
 
         <!-- Page 1: Home -->
@@ -367,7 +368,7 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
                 <div class="mb-1">Bearer API Token</div>
                 <input id="api_token" name="api_token" type="password" placeholder="Sanctum Bearer Token">
             </div>
-            <button onclick="window.saveData(false)" class="btn">💾 Save Terminal Settings</button>
+            <button onclick="window.saveData(false)" class="btn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Save Terminal Settings</button>
         </div>
 
         <!-- Page 2: Write Card -->
@@ -377,7 +378,7 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
                 <div class="mb-1">Employee Code / Card Value</div>
                 <input id="card_value" name="card_value" type="text" placeholder="e.g. SV001">
             </div>
-            <button onclick="window.writeCard()" id="cardButton" class="btn btn-write">⚡ Write Card to NFC Tag</button>
+            <button onclick="window.writeCard()" id="cardButton" class="btn btn-write"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Write Card to NFC Tag</button>
         </div>
 
         <!-- Page 3: Wi-Fi & AP Setup -->
@@ -401,7 +402,7 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
                 <div class="mb-1">AP Accesspoint Password</div>
                 <input id="ap_pswd" name="ap_pswd" type="password" placeholder="123456789">
             </div>
-            <button onclick="window.saveData(true)" class="btn btn-save">🔄 Save & Restart Machine</button>
+            <button onclick="window.saveData(true)" class="btn btn-save"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px;"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg> Save & Restart Machine</button>
         </div>
     </div>
 
@@ -471,7 +472,7 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
                     setTimeout(window.checkStatus, 1000);
                 } else {
                     window.setData();
-                    document.getElementById("cardButton").innerHTML = "⚡ Write Card to NFC Tag";
+                    document.getElementById("cardButton").innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Write Card to NFC Tag';
                 }
             }
         };
