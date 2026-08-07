@@ -38,15 +38,21 @@ static void applyDefaults(Config &cfg) {
 
 void storageSaveConfig(Config &cfg) {
     cfg.magic = CONFIG_MAGIC;
+    EEPROM.begin(EEPROM_SIZE);
     EEPROM.put(0, cfg);
-    EEPROM.commit();
+    bool ok = EEPROM.commit();
+    EEPROM.end();
+    Serial.printf("[STORAGE] Config saved to EEPROM (Magic: 0x%08X | SSID: '%s' | Flash Commit: %s)\n", 
+                  cfg.magic, cfg.wifi_ssid, ok ? "SUCCESS" : "FAILED");
 }
 
 void storageLoadConfig(Config &cfg) {
     EEPROM.begin(EEPROM_SIZE);
     EEPROM.get(0, cfg);
+    EEPROM.end();
 
     if (cfg.magic != CONFIG_MAGIC) {
+        Serial.println("[STORAGE] Magic header invalid. Initializing default settings...");
         applyDefaults(cfg);
         storageSaveConfig(cfg);
         return;
@@ -73,12 +79,17 @@ void storageLoadConfig(Config &cfg) {
     if (strlen(cfg.device_code) == 0) strncpy(cfg.device_code, DEFAULT_DEVICE_CODE, sizeof(cfg.device_code));
     if (strlen(cfg.portal_user) == 0) strncpy(cfg.portal_user, DEFAULT_PORTAL_USER, sizeof(cfg.portal_user));
     if (strlen(cfg.portal_pass) == 0) strncpy(cfg.portal_pass, DEFAULT_PORTAL_PASS, sizeof(cfg.portal_pass));
+
+    Serial.printf("[STORAGE] Config loaded from EEPROM! (SSID: '%s' | AP: '%s' | Domain: '%s')\n", 
+                  cfg.wifi_ssid, cfg.ap_ssid, cfg.mdns_name);
 }
 
 void storageResetConfig(Config &cfg) {
     cfg.magic = 0x00000000;
+    EEPROM.begin(EEPROM_SIZE);
     EEPROM.put(0, cfg);
     EEPROM.commit();
+    EEPROM.end();
     storageLoadConfig(cfg);
 }
 

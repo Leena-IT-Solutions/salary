@@ -466,29 +466,37 @@ static void handleSaveWifiWeb() {
 
     if (server.hasArg("ap_ssid")) {
         String newVal = server.arg("ap_ssid");
-        if (String(config->ap_ssid) != newVal) {
-            strncpy(config->ap_ssid, newVal.c_str(), sizeof(config->ap_ssid));
+        newVal.trim();
+        if (newVal.length() > 0 && String(config->ap_ssid) != newVal) {
+            memset(config->ap_ssid, 0, sizeof(config->ap_ssid));
+            strncpy(config->ap_ssid, newVal.c_str(), sizeof(config->ap_ssid) - 1);
             apChanged = true;
         }
     }
     if (server.hasArg("ap_pass")) {
         String newVal = server.arg("ap_pass");
-        if (String(config->ap_pass) != newVal) {
-            strncpy(config->ap_pass, newVal.c_str(), sizeof(config->ap_pass));
+        newVal.trim();
+        if (newVal.length() > 0 && String(config->ap_pass) != newVal) {
+            memset(config->ap_pass, 0, sizeof(config->ap_pass));
+            strncpy(config->ap_pass, newVal.c_str(), sizeof(config->ap_pass) - 1);
             apChanged = true;
         }
     }
     if (server.hasArg("wifi_ssid")) {
         String newVal = server.arg("wifi_ssid");
+        newVal.trim();
         if (String(config->wifi_ssid) != newVal) {
-            strncpy(config->wifi_ssid, newVal.c_str(), sizeof(config->wifi_ssid));
+            memset(config->wifi_ssid, 0, sizeof(config->wifi_ssid));
+            strncpy(config->wifi_ssid, newVal.c_str(), sizeof(config->wifi_ssid) - 1);
             wifiChanged = true;
         }
     }
     if (server.hasArg("wifi_pass")) {
         String newVal = server.arg("wifi_pass");
+        newVal.trim();
         if (String(config->wifi_pass) != newVal) {
-            strncpy(config->wifi_pass, newVal.c_str(), sizeof(config->wifi_pass));
+            memset(config->wifi_pass, 0, sizeof(config->wifi_pass));
+            strncpy(config->wifi_pass, newVal.c_str(), sizeof(config->wifi_pass) - 1);
             wifiChanged = true;
         }
     }
