@@ -54,31 +54,7 @@ static void recordRecentScan(const String &tagms, const String &tagid, const Str
     recentScanHead = (recentScanHead + 1) % 5;
 }
 
-String getRecentScansHtml() {
-    String html = "<div class='card'><h2>Recent Activity Log (Last 5 Scans)</h2>";
-    bool hasAny = false;
-    for (int i = 0; i < 5; i++) {
-        int idx = (recentScanHead - 1 - i + 5) % 5;
-        if (recentScans[idx].tagid.length() > 0) {
-            if (!hasAny) {
-                html += "<div style='overflow-x:auto;'><table><tr><th>Employee</th><th>Tag ID</th><th>Time</th><th>Status</th></tr>";
-                hasAny = true;
-            }
-            html += "<tr><td>" + recentScans[idx].tagms + "</td><td>" +
-                    recentScans[idx].tagid + "</td><td>" +
-                    recentScans[idx].timeStr + "</td><td><span class='status-badge" +
-                    (recentScans[idx].status == "Success" ? "'>" : " ap'>") +
-                    recentScans[idx].status + "</span></td></tr>";
-        }
-    }
-    if (!hasAny) {
-        html += "<p style='color:#6b7280;'>No recent card scans recorded since boot.</p>";
-    } else {
-        html += "</table></div>";
-    }
-    html += "</div>";
-    return html;
-}
+
 
 char getModeChar(uint8_t mode) {
     switch (mode) {

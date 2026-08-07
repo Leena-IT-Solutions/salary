@@ -394,6 +394,11 @@ Route::middleware(['auth', 'role'])->group(function () {
     Route::get('/application_settings/preference', [App\Http\Controllers\PreferenceController::class, 'preference']);
     Route::get('/application_settings/preference/fetch', [App\Http\Controllers\PreferenceController::class, 'fetch']);
     Route::post('/application_settings/preference/save', [App\Http\Controllers\PreferenceController::class, 'save']);
+
+    /* Configure Machine */
+    Route::get('/application_settings/configure_machine', [App\Http\Controllers\MachineConfigController::class, 'index']);
+    Route::post('/application_settings/configure_machine/udp_provision', [App\Http\Controllers\MachineConfigController::class, 'sendUdpConfig']);
+    Route::post('/application_settings/configure_machine/proxy_api', [App\Http\Controllers\MachineConfigController::class, 'proxyApiCall']);
 });
 
 

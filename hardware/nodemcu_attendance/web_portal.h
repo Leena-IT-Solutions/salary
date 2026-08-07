@@ -9,7 +9,4 @@ void webPortalStart();
 void webPortalHandleClient();
 void webPortalSetWriteResult(bool success);
 
-// Recent activity helper
-String getRecentScansHtml();
-
 #endif // WEB_PORTAL_H
