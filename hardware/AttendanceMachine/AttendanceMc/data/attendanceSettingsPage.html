@@ -79,6 +79,30 @@
                 <input id="api_token" name="api_token" type="password" placeholder="Sanctum Bearer Token">
             </div>
             <button onclick="window.saveData(false)" class="btn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Save Terminal Settings</button>
+
+            <div style="margin-top: 25px; border-top: 2px solid #e2e8f0; padding-top: 15px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h3 style="border:0; margin:0; padding:0;">Offline Pending Queue <span id="queue-badge" style="background:#10b981; color:#fff; font-size:11px; padding:2px 8px; border-radius:12px; margin-left:6px;">0</span></h3>
+                    <div>
+                        <button onclick="window.syncQueue()" class="btn btn-save" style="padding:6px 12px; font-size:12px; width:auto; margin:0; display:inline-flex;">🔄 Sync Now</button>
+                        <button onclick="window.clearQueue()" class="btn" style="padding:6px 12px; font-size:12px; width:auto; margin:0; background:#dc2626; display:inline-flex;">🗑️ Clear</button>
+                    </div>
+                </div>
+                <div id="queue-list-container" style="max-height:180px; overflow-y:auto; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px;">
+                    <p id="no-queue-msg" style="font-size:13px; color:#64748b; text-align:center; padding:10px 0;">✓ No pending offline records</p>
+                    <table id="queue-table" style="width:100%; font-size:12px; text-align:left; border-collapse:collapse; display:none;">
+                        <thead>
+                            <tr style="border-bottom:1px solid #cbd5e1; color:#475569;">
+                                <th style="padding:4px;">Card UID</th>
+                                <th style="padding:4px;">Emp Code</th>
+                                <th style="padding:4px;">Date</th>
+                                <th style="padding:4px;">Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="queue-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
         <!-- Page 2: Write Card -->
@@ -164,6 +188,61 @@
                     document.getElementById("company_name").value = data.company_name || "Company";
                     document.getElementById("domain_name").value = data.domain_name || "attendance.local";
                 } catch(e){}
+            }
+            window.loadQueue();
+        };
+
+        window.loadQueue = function() {
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("GET", "/queue", true);
+            xmlHttp.onload = function() {
+                if (xmlHttp.status === 200) {
+                    try {
+                        let list = JSON.parse(xmlHttp.responseText);
+                        let badge = document.getElementById("queue-badge");
+                        let noMsg = document.getElementById("no-queue-msg");
+                        let table = document.getElementById("queue-table");
+                        let tbody = document.getElementById("queue-tbody");
+                        if (badge) badge.innerText = list.length;
+                        if (list.length > 0) {
+                            if (badge) badge.style.background = "#f59e0b";
+                            if (noMsg) noMsg.style.display = "none";
+                            if (table) table.style.display = "table";
+                            if (tbody) {
+                                tbody.innerHTML = list.map(item => `
+                                    <tr style="border-bottom:1px solid #e2e8f0;">
+                                        <td style="padding:6px 4px; font-weight:600;">${item.tagid || '-'}</td>
+                                        <td style="padding:6px 4px;">${item.tagms || '-'}</td>
+                                        <td style="padding:6px 4px;">${item.dt || '-'}</td>
+                                        <td style="padding:6px 4px;">${item.tim || '-'}</td>
+                                    </tr>
+                                `).join('');
+                            }
+                        } else {
+                            if (badge) badge.style.background = "#10b981";
+                            if (noMsg) noMsg.style.display = "block";
+                            if (table) table.style.display = "none";
+                        }
+                    } catch(e){}
+                }
+            };
+            xmlHttp.send(null);
+        };
+
+        window.syncQueue = function() {
+            window.showToast("🔄 Syncing offline queue...");
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("GET", "/sync-queue", true);
+            xmlHttp.onload = function() { window.loadQueue(); };
+            xmlHttp.send(null);
+        };
+
+        window.clearQueue = function() {
+            if (confirm("Are you sure you want to clear all offline pending records?")) {
+                var xmlHttp = new XMLHttpRequest();
+                xmlHttp.open("GET", "/clear-queue", true);
+                xmlHttp.onload = function() { window.loadQueue(); };
+                xmlHttp.send(null);
             }
         };
 

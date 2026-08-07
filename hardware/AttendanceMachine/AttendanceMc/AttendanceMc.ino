@@ -340,6 +340,10 @@ int swiStart = 0;
 int swiEnd = 0;
 int duration = 0;
 
+const String queue_filename = "/queue.json";
+unsigned long lastQueueSyncCheck = 0;
+bool isQueueSyncing = false;
+
 void startWebServer();
 void startSoftAP();
 void startWiFi();
@@ -357,6 +361,16 @@ void formatCard();
 void deleteCardMessage();
 void clearCard();
 void accessCard();
+
+String getQueueJSON();
+void writeQueueJSON(const String &jsonStr);
+int getQueueCount();
+bool enqueueRecord(String tId, String tMs, String d, String t);
+bool dequeueRecord();
+void clearQueue();
+void processOfflineQueue();
+bool sendDataToServerParams(String tId, String tMs, String d, String t);
+bool sendDataToServer();
 
 void notFound() { server.send(404, "text/html", "<h1>Page Not Found</h1>"); }
 
@@ -442,6 +456,30 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
                 <input id="api_token" name="api_token" type="password" placeholder="Sanctum Bearer Token">
             </div>
             <button onclick="window.saveData(false)" class="btn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Save Terminal Settings</button>
+            
+            <div style="margin-top: 25px; border-top: 2px solid #e2e8f0; padding-top: 15px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h3 style="border:0; margin:0; padding:0;">Offline Pending Queue <span id="queue-badge" style="background:#10b981; color:#fff; font-size:11px; padding:2px 8px; border-radius:12px; margin-left:6px;">0</span></h3>
+                    <div>
+                        <button onclick="window.syncQueue()" class="btn btn-save" style="padding:6px 12px; font-size:12px; width:auto; margin:0; display:inline-flex;">🔄 Sync Now</button>
+                        <button onclick="window.clearQueue()" class="btn" style="padding:6px 12px; font-size:12px; width:auto; margin:0; background:#dc2626; display:inline-flex;">🗑️ Clear</button>
+                    </div>
+                </div>
+                <div id="queue-list-container" style="max-height:180px; overflow-y:auto; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px;">
+                    <p id="no-queue-msg" style="font-size:13px; color:#64748b; text-align:center; padding:10px 0;">✓ No pending offline records</p>
+                    <table id="queue-table" style="width:100%; font-size:12px; text-align:left; border-collapse:collapse; display:none;">
+                        <thead>
+                            <tr style="border-bottom:1px solid #cbd5e1; color:#475569;">
+                                <th style="padding:4px;">Card UID</th>
+                                <th style="padding:4px;">Emp Code</th>
+                                <th style="padding:4px;">Date</th>
+                                <th style="padding:4px;">Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="queue-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
         <!-- Page 2: Write Card -->
@@ -527,6 +565,61 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
                     document.getElementById("company_name").value = data.company_name || "Company";
                     document.getElementById("domain_name").value = data.domain_name || "attendance.local";
                 } catch(e){}
+            }
+            window.loadQueue();
+        };
+
+        window.loadQueue = function() {
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("GET", "/queue", true);
+            xmlHttp.onload = function() {
+                if (xmlHttp.status === 200) {
+                    try {
+                        let list = JSON.parse(xmlHttp.responseText);
+                        let badge = document.getElementById("queue-badge");
+                        let noMsg = document.getElementById("no-queue-msg");
+                        let table = document.getElementById("queue-table");
+                        let tbody = document.getElementById("queue-tbody");
+                        if (badge) badge.innerText = list.length;
+                        if (list.length > 0) {
+                            if (badge) badge.style.background = "#f59e0b";
+                            if (noMsg) noMsg.style.display = "none";
+                            if (table) table.style.display = "table";
+                            if (tbody) {
+                                tbody.innerHTML = list.map(item => `
+                                    <tr style="border-bottom:1px solid #e2e8f0;">
+                                        <td style="padding:6px 4px; font-weight:600;">${item.tagid || '-'}</td>
+                                        <td style="padding:6px 4px;">${item.tagms || '-'}</td>
+                                        <td style="padding:6px 4px;">${item.dt || '-'}</td>
+                                        <td style="padding:6px 4px;">${item.tim || '-'}</td>
+                                    </tr>
+                                `).join('');
+                            }
+                        } else {
+                            if (badge) badge.style.background = "#10b981";
+                            if (noMsg) noMsg.style.display = "block";
+                            if (table) table.style.display = "none";
+                        }
+                    } catch(e){}
+                }
+            };
+            xmlHttp.send(null);
+        };
+
+        window.syncQueue = function() {
+            window.showToast("🔄 Syncing offline queue...");
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("GET", "/sync-queue", true);
+            xmlHttp.onload = function() { window.loadQueue(); };
+            xmlHttp.send(null);
+        };
+
+        window.clearQueue = function() {
+            if (confirm("Are you sure you want to clear all offline pending records?")) {
+                var xmlHttp = new XMLHttpRequest();
+                xmlHttp.open("GET", "/clear-queue", true);
+                xmlHttp.onload = function() { window.loadQueue(); };
+                xmlHttp.send(null);
             }
         };
 
@@ -699,6 +792,19 @@ void startWebServer() {
       server.send(200, "application/json", "{\"status\":\"ok\"}");
     }
   });
+  server.on("/queue", HTTP_GET, []() {
+    String jsonStr = getQueueJSON();
+    server.send(200, "application/json", jsonStr);
+  });
+  server.on("/sync-queue", HTTP_GET, []() {
+    processOfflineQueue();
+    String jsonStr = getQueueJSON();
+    server.send(200, "application/json", jsonStr);
+  });
+  server.on("/clear-queue", HTTP_GET, []() {
+    clearQueue();
+    server.send(200, "application/json", "[]");
+  });
   httpUpdater.setup(&server, "/update");
   server.onNotFound(notFound);
   server.begin();
@@ -848,21 +954,106 @@ void setSettings() {
   setupMDNS();
 }
 
-void sendDataToServer() {
+String getQueueJSON() {
+  if (!SPIFFS.exists(queue_filename)) {
+    return "[]";
+  }
+  File f = SPIFFS.open(queue_filename, "r");
+  if (!f) {
+    return "[]";
+  }
+  String str = f.readString();
+  f.close();
+  str.trim();
+  if (str.length() == 0 || !str.startsWith("[")) {
+    return "[]";
+  }
+  return str;
+}
+
+void writeQueueJSON(const String &jsonStr) {
+  File f = SPIFFS.open(queue_filename, "w");
+  if (f) {
+    f.print(jsonStr);
+    f.close();
+  }
+}
+
+int getQueueCount() {
+  String jsonStr = getQueueJSON();
+  DynamicJsonDocument doc(8192);
+  DeserializationError err = deserializeJson(doc, jsonStr);
+  if (err || !doc.is<JsonArray>()) {
+    return 0;
+  }
+  return doc.as<JsonArray>().size();
+}
+
+bool enqueueRecord(String tId, String tMs, String d, String t) {
+  String jsonStr = getQueueJSON();
+  DynamicJsonDocument doc(8192);
+  deserializeJson(doc, jsonStr);
+  JsonArray arr = doc.as<JsonArray>();
+
+  if (arr.size() >= 200) {
+    Serial.println("[QUEUE] Queue full! Max 200 entries reached.");
+    return false;
+  }
+
+  JsonObject item = arr.createNestedObject();
+  item["tagid"] = tId;
+  item["tagms"] = tMs;
+  item["dt"] = d;
+  item["tim"] = t;
+
+  String output;
+  serializeJson(doc, output);
+  writeQueueJSON(output);
+  Serial.print("[QUEUE] Enqueued offline record. Current Queue Count: ");
+  Serial.println(arr.size());
+  return true;
+}
+
+bool dequeueRecord() {
+  String jsonStr = getQueueJSON();
+  DynamicJsonDocument doc(8192);
+  deserializeJson(doc, jsonStr);
+  JsonArray arr = doc.as<JsonArray>();
+
+  if (arr.size() == 0) {
+    return false;
+  }
+
+  arr.remove(0);
+
+  String output;
+  serializeJson(doc, output);
+  writeQueueJSON(output);
+  Serial.print("[QUEUE] Dequeued 1 record. Remaining Queue Count: ");
+  Serial.println(arr.size());
+  return true;
+}
+
+void clearQueue() {
+  writeQueueJSON("[]");
+  Serial.println("[QUEUE] Queue cleared manually.");
+}
+
+bool sendDataToServerParams(String tId, String tMs, String d, String t) {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("[API] Cannot send data: Wi-Fi not connected.");
-    return;
+    return false;
   }
 
   if (sr_host.length() == 0) {
     Serial.println("[API] Cannot send data: Host URI is empty.");
-    return;
+    return false;
   }
 
-  String encodeduri = "tagid=" + urlEncode(tagId) +
-                      "&tagms=" + urlEncode(tagMs) +
-                      "&dt=" + urlEncode(dt) +
-                      "&tim=" + urlEncode(tim);
+  String encodeduri = "tagid=" + urlEncode(tId) +
+                      "&tagms=" + urlEncode(tMs) +
+                      "&dt=" + urlEncode(d) +
+                      "&tim=" + urlEncode(t);
 
   String uri = sr_host;
   if (uri.indexOf('?') != -1) {
@@ -881,6 +1072,7 @@ void sendDataToServer() {
 
   HTTPClient http;
   bool isHttps = uri.startsWith("https://");
+  bool success = false;
 
   if (isHttps) {
     std::unique_ptr<BearSSL::WiFiClientSecure> client(new BearSSL::WiFiClientSecure);
@@ -897,11 +1089,12 @@ void sendDataToServer() {
       }
       int httpCode = http.GET();
       Serial.print("[API] HTTPS Status Code: "); Serial.println(httpCode);
-      if (httpCode > 0) {
+      if (httpCode >= 200 && httpCode < 300) {
         String payload = http.getString();
         Serial.print("[API] Server Response: "); Serial.println(payload);
+        success = true;
       } else {
-        Serial.print("[API] HTTPS GET Failed, Error: "); Serial.println(http.errorToString(httpCode).c_str());
+        Serial.print("[API] HTTPS GET Failed, Error Code: "); Serial.println(httpCode);
       }
       http.end();
     } else {
@@ -920,11 +1113,12 @@ void sendDataToServer() {
       }
       int httpCode = http.GET();
       Serial.print("[API] HTTP Status Code: "); Serial.println(httpCode);
-      if (httpCode > 0) {
+      if (httpCode >= 200 && httpCode < 300) {
         String payload = http.getString();
         Serial.print("[API] Server Response: "); Serial.println(payload);
+        success = true;
       } else {
-        Serial.print("[API] HTTP GET Failed, Error: "); Serial.println(http.errorToString(httpCode).c_str());
+        Serial.print("[API] HTTP GET Failed, Error Code: "); Serial.println(httpCode);
       }
       http.end();
     } else {
@@ -932,6 +1126,45 @@ void sendDataToServer() {
     }
   }
   Serial.println("------------------------------------\n");
+  return success;
+}
+
+bool sendDataToServer() {
+  return sendDataToServerParams(tagId, tagMs, dt, tim);
+}
+
+void processOfflineQueue() {
+  if (WiFi.status() != WL_CONNECTED || isQueueSyncing) {
+    return;
+  }
+
+  String jsonStr = getQueueJSON();
+  DynamicJsonDocument doc(8192);
+  DeserializationError err = deserializeJson(doc, jsonStr);
+  if (err || !doc.is<JsonArray>()) {
+    return;
+  }
+
+  JsonArray arr = doc.as<JsonArray>();
+  if (arr.size() == 0) {
+    return;
+  }
+
+  isQueueSyncing = true;
+  JsonObject item = arr[0];
+  String qTagId = item["tagid"].as<String>();
+  String qTagMs = item["tagms"].as<String>();
+  String qDt = item["dt"].as<String>();
+  String qTim = item["tim"].as<String>();
+
+  Serial.println("[QUEUE] Auto-syncing pending offline record: " + qTagId + " / " + qTagMs);
+  bool ok = sendDataToServerParams(qTagId, qTagMs, qDt, qTim);
+  if (ok) {
+    dequeueRecord();
+  } else {
+    Serial.println("[QUEUE] Sync attempt failed. Will retry next cycle.");
+  }
+  isQueueSyncing = false;
 }
 
 void readCard() {
@@ -955,7 +1188,17 @@ void readCard() {
   if (tagId.length() > 0 || tagMs.length() > 0) {
     showMessage();
     printLocalTime();
-    sendDataToServer();
+    bool sent = sendDataToServer();
+    if (!sent) {
+      enqueueRecord(tagId, tagMs, dt, tim);
+      oled.clearDisplay();
+      oled.setCursor(0, 0);
+      oled.println(company_name);
+      oled.println("-----------------");
+      oled.println("SAVED OFFLINE!");
+      oled.print("Queue Count: "); oled.println(getQueueCount());
+      oled.display();
+    }
     delay(2000);
   }
   writeCompanyName();
@@ -1150,4 +1393,9 @@ void loop() {
   server.handleClient();
   writeCompanyName();
   accessCard();
+
+  if (millis() - lastQueueSyncCheck > 10000) {
+    lastQueueSyncCheck = millis();
+    processOfflineQueue();
+  }
 }
