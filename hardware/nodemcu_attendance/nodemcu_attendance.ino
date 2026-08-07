@@ -80,9 +80,9 @@ void renderScreen(const String &cardMsg = "", const String &customMsg = "") {
     struct tm *timeinfo = localtime(&now);
     char clockStr[32] = "";
     if (now > 100000) {
-        strftime(clockStr, sizeof(clockStr), "%d/%m/%Y %H:%M:%S", timeinfo);
+        strftime(clockStr, sizeof(clockStr), "%H:%M:%S", timeinfo);
     } else {
-        snprintf(clockStr, sizeof(clockStr), "System Starting...");
+        snprintf(clockStr, sizeof(clockStr), "00:00:00");
     }
 
     String statusLine = "";
