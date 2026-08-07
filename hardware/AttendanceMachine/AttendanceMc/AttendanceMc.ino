@@ -335,6 +335,7 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
 </head>
 <body>
     <div class="max-500">
+        <div id="toast" style="display:none; background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; padding:10px 14px; border-radius:8px; margin-bottom:15px; font-weight:600; font-size:13px; text-align:center;">✓ Settings Saved Successfully</div>
         <div class="text-center">
             <h1>Attendance System</h1>
             <p class="subtitle">Powered By Leena IT Solutions</p>
@@ -436,6 +437,15 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
             }
         };
 
+        window.showToast = function(msg) {
+            let t = document.getElementById('toast');
+            if (t) {
+                t.innerText = msg;
+                t.style.display = 'block';
+                setTimeout(function() { t.style.display = 'none'; }, 3000);
+            }
+        };
+
         window.saveData = function(isWifiSave) {
             let data = {
                 ap_ssid: document.getElementById("ap_ssid").value,
@@ -451,7 +461,7 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
             xmlHttp.open("GET", save_url + "?q=" + encodeURIComponent(JSON.stringify(data)), false);
             xmlHttp.send(null);
             if (!isWifiSave) {
-                alert("Settings Saved Successfully!");
+                window.showToast("✓ Settings Saved Successfully");
             }
         };
 
