@@ -271,6 +271,24 @@ bool isNetwork = false;
 
 ESP8266WebServer server(80);
 
+void startWebServer();
+void startSoftAP();
+void startWiFi();
+void printLocalTime();
+void getWebpage();
+String getSettings();
+void setSettings();
+void saveSettings(String msg);
+void updateAndSaveSettings();
+void writeCompanyName();
+void showMessage();
+void readCard();
+void writeCard();
+void formatCard();
+void deleteCardMessage();
+void clearCard();
+void accessCard();
+
 void notFound(){
   server.send(404, "text/html", "<h1>Page Not Found</h1>");
 }
@@ -322,9 +340,9 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
         </div>
 
         <div class="nav-tabs mb-4">
-            <button id="btn-home" class="nav-tab active" onclick="switchTab('home')">🏠 Home</button>
-            <button id="btn-write" class="nav-tab" onclick="switchTab('write')">💳 Write Card</button>
-            <button id="btn-wifi" class="nav-tab" onclick="switchTab('wifi')">📶 Wi-Fi & AP</button>
+            <button id="btn-home" class="nav-tab active" onclick="window.switchTab('home')">🏠 Home</button>
+            <button id="btn-write" class="nav-tab" onclick="window.switchTab('write')">💳 Write Card</button>
+            <button id="btn-wifi" class="nav-tab" onclick="window.switchTab('wifi')">📶 Wi-Fi & AP</button>
         </div>
 
         <!-- Page 1: Home -->
@@ -349,7 +367,7 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
                 <div class="mb-1">Bearer API Token</div>
                 <input id="api_token" name="api_token" type="password" placeholder="Sanctum Bearer Token">
             </div>
-            <button onclick="saveData(false)" class="btn">💾 Save Terminal Settings</button>
+            <button onclick="window.saveData(false)" class="btn">💾 Save Terminal Settings</button>
         </div>
 
         <!-- Page 2: Write Card -->
@@ -359,7 +377,7 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
                 <div class="mb-1">Employee Code / Card Value</div>
                 <input id="card_value" name="card_value" type="text" placeholder="e.g. SV001">
             </div>
-            <button onclick="writeCard()" id="cardButton" class="btn btn-write">⚡ Write Card to NFC Tag</button>
+            <button onclick="window.writeCard()" id="cardButton" class="btn btn-write">⚡ Write Card to NFC Tag</button>
         </div>
 
         <!-- Page 3: Wi-Fi & AP Setup -->
@@ -383,23 +401,22 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
                 <div class="mb-1">AP Accesspoint Password</div>
                 <input id="ap_pswd" name="ap_pswd" type="password" placeholder="123456789">
             </div>
-            <button onclick="saveData(true)" class="btn btn-save">🔄 Save & Restart Machine</button>
+            <button onclick="window.saveData(true)" class="btn btn-save">🔄 Save & Restart Machine</button>
         </div>
     </div>
 
     <script>
         var url = "/settings";
         var save_url = "/save";
-        setData();
-
-        function switchTab(tabName) {
+        
+        window.switchTab = function(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-' + tabName).classList.add('active');
             document.getElementById('btn-' + tabName).classList.add('active');
-        }
+        };
 
-        function setData() {
+        window.setData = function() {
             var xmlHttp = new XMLHttpRequest();
             xmlHttp.open("GET", url, false);
             xmlHttp.send(null);
@@ -416,9 +433,9 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
                     if(data.api_token) document.getElementById("api_token").value = data.api_token;
                 } catch(e){}
             }
-        }
+        };
 
-        function saveData(isWifiSave) {
+        window.saveData = function(isWifiSave) {
             let data = {
                 ap_ssid: document.getElementById("ap_ssid").value,
                 ap_pswd: document.getElementById("ap_pswd").value,
@@ -435,29 +452,31 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
             if (!isWifiSave) {
                 alert("Settings Saved Successfully!");
             }
-        }
+        };
 
-        function writeCard() {
+        window.writeCard = function() {
             document.getElementById("cardButton").innerHTML = "⌛ Waiting for Card Tap...";
             document.getElementById("op_mode").value = "Write";
-            saveData(false);
-            setTimeout(checkStatus, 1000);
-        }
+            window.saveData(false);
+            setTimeout(window.checkStatus, 1000);
+        };
 
-        function checkStatus() {
+        window.checkStatus = function() {
             var xmlHttp = new XMLHttpRequest();
             xmlHttp.open("GET", url, false);
             xmlHttp.send(null);
             if (xmlHttp.responseText) {
                 let data = JSON.parse(xmlHttp.responseText);
                 if (data.op_mode == "Write") {
-                    setTimeout(checkStatus, 1000);
+                    setTimeout(window.checkStatus, 1000);
                 } else {
-                    setData();
+                    window.setData();
                     document.getElementById("cardButton").innerHTML = "⚡ Write Card to NFC Tag";
                 }
             }
-        }
+        };
+
+        window.setData();
     </script>
 </body>
 </html>
