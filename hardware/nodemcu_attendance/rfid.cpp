@@ -3,11 +3,6 @@
 #include <Adafruit_PN532.h>
 #include <Wire.h>
 
-// -1/-1: this board has no IRQ or RESET line wired to the PN532 module
-// (see the comment in config.h). Passing real GPIO numbers here (as the
-// old hand-rolled driver's call site did) would make the real library's
-// reset() toggle that pin as a digital output, corrupting the shared I2C
-// bus - this must stay -1/-1 for this hardware.
 static Adafruit_PN532 nfc(PN532_IRQ_PIN, PN532_RESET_PIN, &Wire);
 
 bool rfidInit() {
@@ -25,11 +20,20 @@ bool rfidPoll(uint8_t *uid, uint8_t *uidLength, uint16_t timeoutMs) {
                                     timeoutMs);
 }
 
-static uint8_t defaultKeyA[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+struct KeyCandidate {
+    const char *name;
+    uint8_t key[6];
+};
 
-// Blocks 4 and 5 are both plain data blocks within sector 1 - a single
-// authentication against block 4 covers the whole sector, so no second
-// auth call is needed to reach block 5.
+static const KeyCandidate kKnownKeys[] = {
+    {"FFFFFFFFFFFF (factory default)", {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}},
+    {"A0A1A2A3A4A5 (NFC Forum MAD key)", {0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5}},
+    {"D3F7D3F7D3F7 (NFC Forum NDEF key)", {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7}},
+    {"000000000000 (blank/reset)", {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
+    {"AABBCCDDEEFF (common default)", {0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF}},
+    {"4D3A99C351DD (common default)", {0x4D, 0x3A, 0x99, 0xC3, 0x51, 0xDD}},
+};
+
 static const uint8_t kMessageBlocks[2] = {4, 5};
 
 static void logHex(const char *label, const uint8_t *data, size_t len) {
@@ -38,11 +42,29 @@ static void logHex(const char *label, const uint8_t *data, size_t len) {
     Serial.println();
 }
 
-bool rfidReadMessage(uint8_t *uid, uint8_t uidLength, char *out,
-                      size_t outSize) {
-    if (!nfc.mifareclassic_AuthenticateBlock(uid, uidLength, kMessageBlocks[0],
-                                              0, defaultKeyA)) {
-        Serial.println("[RFID] Read: authentication FAILED");
+// Multi-Key Authentication with automatic HALT-state card re-selection
+static bool authenticateCardBlock(uint8_t *uid, uint8_t uidLength, uint8_t blockNum) {
+    for (uint8_t k = 0; k < sizeof(kKnownKeys) / sizeof(kKnownKeys[0]); k++) {
+        for (uint8_t keyType = 0; keyType <= 1; keyType++) { // 0 = Key A, 1 = Key B
+            uint8_t keyCopy[6];
+            memcpy(keyCopy, kKnownKeys[k].key, 6);
+
+            if (nfc.mifareclassic_AuthenticateBlock(uid, uidLength, blockNum, keyType, keyCopy)) {
+                Serial.printf("[RFID] Auth SUCCESS on Block %u using Key %s (%s)\n", 
+                              blockNum, keyType == 0 ? "A" : "B", kKnownKeys[k].name);
+                return true;
+            }
+            // If auth failed, card enters HALT state - re-select target to reset RF state machine
+            uint8_t dumpUid[7]; uint8_t dumpLen = 0;
+            nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, dumpUid, &dumpLen, 10);
+        }
+    }
+    Serial.printf("[RFID] Auth FAILED on Block %u (all candidate keys rejected)\n", blockNum);
+    return false;
+}
+
+bool rfidReadMessage(uint8_t *uid, uint8_t uidLength, char *out, size_t outSize) {
+    if (!authenticateCardBlock(uid, uidLength, kMessageBlocks[0])) {
         return false;
     }
 
@@ -55,11 +77,6 @@ bool rfidReadMessage(uint8_t *uid, uint8_t uidLength, char *out,
     }
     logHex("[RFID] Read: raw = ", raw, sizeof(raw));
 
-    // Stop at the first null/non-printable byte, like a normal C string.
-    // The old version skipped over non-printable bytes and kept scanning
-    // the whole window, which could stitch a leftover fragment from an
-    // older write (sitting later in the same 20-byte span) onto the
-    // current value instead of ignoring it.
     size_t idx = 0;
     for (int k = 0; k < RFID_MESSAGE_MAX_LEN && idx + 1 < outSize; k++) {
         if (raw[k] < 32 || raw[k] > 126) break;
@@ -70,18 +87,8 @@ bool rfidReadMessage(uint8_t *uid, uint8_t uidLength, char *out,
     return idx > 0;
 }
 
-// Mifare Classic's EEPROM needs a few ms after a block write for the cell
-// to actually finish committing. Reading it back immediately (zero delay)
-// can see stale pre-write data and look like a failed write even though
-// it would have genuinely taken - this settle delay avoids that false
-// negative.
 static const uint16_t kWriteSettleMs = 10;
 
-// Writes 32 bytes (data[0..15] -> kMessageBlocks[0], data[16..31] ->
-// kMessageBlocks[1]) and reads them back to confirm they actually landed.
-// Adafruit_PN532's WriteDataBlock only confirms the PN532 got an ACK for
-// the command - never that the card actually persisted it - so both
-// Write and Clear/Format/Delete need this same verify, not just Write.
 static bool writeAndVerifyBlocks(uint8_t *data) {
     for (uint8_t i = 0; i < 2; i++) {
         if (!nfc.mifareclassic_WriteDataBlock(kMessageBlocks[i], data + i * 16)) {
@@ -108,9 +115,7 @@ static bool writeAndVerifyBlocks(uint8_t *data) {
 }
 
 bool rfidWriteMessage(uint8_t *uid, uint8_t uidLength, const char *value) {
-    if (!nfc.mifareclassic_AuthenticateBlock(uid, uidLength, kMessageBlocks[0],
-                                              0, defaultKeyA)) {
-        Serial.println("[RFID] Write: authentication FAILED");
+    if (!authenticateCardBlock(uid, uidLength, kMessageBlocks[0])) {
         return false;
     }
 
@@ -122,9 +127,7 @@ bool rfidWriteMessage(uint8_t *uid, uint8_t uidLength, const char *value) {
 }
 
 bool rfidClearMessage(uint8_t *uid, uint8_t uidLength) {
-    if (!nfc.mifareclassic_AuthenticateBlock(uid, uidLength, kMessageBlocks[0],
-                                              0, defaultKeyA)) {
-        Serial.println("[RFID] Clear: authentication FAILED");
+    if (!authenticateCardBlock(uid, uidLength, kMessageBlocks[0])) {
         return false;
     }
 
@@ -132,29 +135,12 @@ bool rfidClearMessage(uint8_t *uid, uint8_t uidLength) {
     return writeAndVerifyBlocks(raw);
 }
 
-struct KeyCandidate {
-    const char *name;
-    uint8_t key[6];
-};
-
-// The most commonly reused Mifare Classic default/leftover keys in the
-// wild - factory default, the two NFC Forum standard keys (MAD sector /
-// NDEF data sectors), and an all-zero key some tools reset cards to.
-static const KeyCandidate kKnownKeys[] = {
-    {"FFFFFFFFFFFF (factory default)", {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}},
-    {"A0A1A2A3A4A5 (NFC Forum MAD key)", {0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5}},
-    {"D3F7D3F7D3F7 (NFC Forum NDEF key)", {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7}},
-    {"000000000000 (blank/reset)", {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
-    {"AABBCCDDEEFF (common default)", {0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF}},
-    {"4D3A99C351DD (common default)", {0x4D, 0x3A, 0x99, 0xC3, 0x51, 0xDD}},
-};
-
 void rfidDiagnoseCard(uint8_t *uid, uint8_t uidLength) {
-    Serial.println("[DIAGNOSE] Trying known keys (A and B) against all 16 sectors - this takes a few seconds, keep the card on the reader...");
+    Serial.println("[DIAGNOSE] Trying known keys (A and B) against all 16 sectors - this takes a few seconds, keep card on reader...");
     bool foundAny = false;
 
     for (uint8_t sector = 0; sector <= 15; sector++) {
-        uint8_t block = sector * 4; // first block of the sector
+        uint8_t block = sector * 4;
 
         for (uint8_t k = 0; k < sizeof(kKnownKeys) / sizeof(kKnownKeys[0]); k++) {
             for (uint8_t keyNumber = 0; keyNumber <= 1; keyNumber++) {
@@ -162,6 +148,8 @@ void rfidDiagnoseCard(uint8_t *uid, uint8_t uidLength) {
                 memcpy(keyCopy, kKnownKeys[k].key, 6);
 
                 if (!nfc.mifareclassic_AuthenticateBlock(uid, uidLength, block, keyNumber, keyCopy)) {
+                    uint8_t dumpUid[7]; uint8_t dumpLen = 0;
+                    nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, dumpUid, &dumpLen, 10);
                     continue;
                 }
 
@@ -185,15 +173,10 @@ void rfidDiagnoseCard(uint8_t *uid, uint8_t uidLength) {
                 }
             }
         }
-        // Long scan (16 sectors x keys x 2 key types) - yield so Wi-Fi/OS
-        // housekeeping still runs and the software watchdog doesn't reset
-        // the board mid-scan.
         yield();
-        Serial.printf("[DIAGNOSE] ...sector %u done\n", sector);
     }
 
     if (!foundAny) {
         Serial.println("[DIAGNOSE] No known key authenticated any of the 16 sectors.");
-        Serial.println("[DIAGNOSE] The old machine likely used a custom key not in this list.");
     }
 }
