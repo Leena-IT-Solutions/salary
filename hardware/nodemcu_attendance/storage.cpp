@@ -143,6 +143,7 @@ void storageSyncOfflinePunches(const String &hostUri,
 
     File tempFile = LittleFS.open("/punches_tmp.txt", "w");
 
+    bool isHttps = hostUri.startsWith("https");
     const uint16_t kSyncTimeoutMs = 3000;
     const int kMaxSyncPerCall = 3;
     int attempted = 0;
