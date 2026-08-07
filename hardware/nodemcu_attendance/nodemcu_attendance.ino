@@ -243,6 +243,10 @@ void processCardScan(String tagidStr, uint8_t *uid, uint8_t uidLength) {
                 renderScreen("Write Success!", String(currentConfig.card_value));
                 beepSuccess();
                 webPortalSetWriteResult(true);
+
+                // Automatically revert to Read mode (Normal Attendance) after successful card write
+                currentConfig.op_mode = MODE_READ;
+                storageSaveConfig(currentConfig);
             } else {
                 renderScreen("Write Failed!", "Try Again");
                 beepError();
