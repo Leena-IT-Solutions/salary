@@ -10,7 +10,7 @@ This document details the exact hardware schematic, PCB pinout, and wiring mappi
 2. **1.3" OLED Display** (SH1106 / SSD1306 Driver, I2C Interface, 128x64 pixels)
 3. **PN532 NFC / RFID Module** (Red Board, configured in I2C mode)
 4. **Active 5V Buzzer** (Audio feedback for scans)
-5. **Tactile Push Button** (Wi-Fi config reset & manual punch sync)
+5. **Tactile Push Button** (short press cycles mode, hold 10s for factory reset)
 6. **Custom PCB** with DC Barrel Jack & 4-pin JST connectors
 
 ---
@@ -22,7 +22,7 @@ This document details the exact hardware schematic, PCB pinout, and wiring mappi
 | **D1** | GPIO5 | OLED & PN532 | **I2C SCL** | Shared I2C Clock Line |
 | **D2** | GPIO4 | OLED & PN532 | **I2C SDA** | Shared I2C Data Line |
 | **D7** | GPIO13 | Buzzer | **Audio Output** | High = Beep On, Low = Off |
-| **D6** | GPIO12 | Tactile Switch | **Button Input** | Active LOW (INPUT_PULLUP) |
+| **D4** | GPIO2 | Tactile Switch | **Button Input** | Active LOW (INPUT_PULLUP) - boot-strapping pin, see note below |
 | **3V3 / VIN** | - | Power Bus | **VCC (+3.3V / +5V)** | Power to OLED, PN532 & Buzzer |
 | **GND** | - | Ground Bus | **GND (0V)** | Common Ground Plane |
 
@@ -53,13 +53,14 @@ This document details the exact hardware schematic, PCB pinout, and wiring mappi
 - **I2C Address**: `0x24`
 
 ### C. Audio Feedback (Buzzer)
-- **Positive (+)** → NodeMCU **D5** (GPIO14)
+- **Positive (+)** → NodeMCU **D7** (GPIO13)
 - **Negative (-)** → NodeMCU GND via current-limiting resistor
 
 ### D. Tactile Push Button
-- **Terminal 1** → NodeMCU **D6** (GPIO12)
+- **Terminal 1** → NodeMCU **D4** (GPIO2)
 - **Terminal 2** → NodeMCU GND
-- Pressing the button pulls GPIO12 to `LOW`. Holding for >3s resets Wi-Fi settings & launches Access Point Mode (`attendance` / `password`).
+- Pressing the button pulls GPIO2 to `LOW`. A short press cycles the operation mode (Read → Write → Setup → Read); holding for ≥10s triggers a full factory reset and launches Access Point Mode (`attendance` / `password`).
+- ⚠️ **GPIO2 is a boot-mode strapping pin** - it must be HIGH when the board powers on or resets, or it may fail to boot from flash. Don't hold this button down while plugging in power or pressing an external reset.
 
 ---
 
@@ -77,8 +78,8 @@ This document details the exact hardware schematic, PCB pinout, and wiring mappi
                        | D1 (GPIO5 - SCL) -------+-----> OLED SCL & PN532 SCL
                        | D2 (GPIO4 - SDA) -------+-----> OLED SDA & PN532 SDA
                        |                         |
-                       | D5 (GPIO14) ------------+-----> Buzzer (+)
-                       | D6 (GPIO12) ------------+-----> Tactile Switch -> GND
+                       | D7 (GPIO13) ------------+-----> Buzzer (+)
+                       | D4 (GPIO2)  ------------+-----> Tactile Switch -> GND
                        +-------------------------+
 ```
 
