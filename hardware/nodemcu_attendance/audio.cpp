@@ -17,9 +17,19 @@ void beep(int durationMs, int count, int freq) {
     }
 }
 
-void beepSuccess() { beep(70, 2, 2800); }
-void beepError()   { beep(400, 1, 1500); }
-// Long single tone acknowledging a detected card tap (all modes).
+// High-pitch bright double chime: Punch Recorded Successfully (2800Hz -> 3400Hz)
+void beepSuccess() {
+    digitalWrite(BUZZER_PIN, HIGH); tone(BUZZER_PIN, 2800); delay(70); noTone(BUZZER_PIN); digitalWrite(BUZZER_PIN, LOW); delay(40);
+    digitalWrite(BUZZER_PIN, HIGH); tone(BUZZER_PIN, 3400); delay(100); noTone(BUZZER_PIN); digitalWrite(BUZZER_PIN, LOW);
+}
+
+// Distinct dual medium warning chime: Punch Already Exists (1800Hz -> 1500Hz)
+void beepAlreadyExists() {
+    digitalWrite(BUZZER_PIN, HIGH); tone(BUZZER_PIN, 1800); delay(100); noTone(BUZZER_PIN); digitalWrite(BUZZER_PIN, LOW); delay(60);
+    digitalWrite(BUZZER_PIN, HIGH); tone(BUZZER_PIN, 1400); delay(120); noTone(BUZZER_PIN); digitalWrite(BUZZER_PIN, LOW);
+}
+
+void beepError()   { beep(400, 1, 1200); }
 void beepScan()    { beep(350, 1, 2400); }
 
 void beepPowerOn() {
@@ -28,6 +38,4 @@ void beepPowerOn() {
     digitalWrite(BUZZER_PIN, HIGH); tone(BUZZER_PIN, 3000); delay(120); noTone(BUZZER_PIN); digitalWrite(BUZZER_PIN, LOW);
 }
 
-// Distinct "boot finished, ready to scan" cue - separate from the power-on
-// jingle and from the Wi-Fi-connected/AP-mode beeps that may fire before it.
 void beepReady() { beep(90, 2, 3200); }

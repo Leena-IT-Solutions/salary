@@ -216,7 +216,7 @@ void processCardScan(String tagidStr, uint8_t *uid, uint8_t uidLength) {
                     if (msg == "Success") {
                         beepSuccess();
                     } else if (msg == "Already Exists") {
-                        beep(150, 1, 2000);
+                        beepAlreadyExists();
                     } else {
                         beepError();
                     }

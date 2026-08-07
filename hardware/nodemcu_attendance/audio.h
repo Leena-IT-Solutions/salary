@@ -8,6 +8,7 @@ void audioInit();
 
 void beep(int durationMs, int count = 1, int freq = 2700);
 void beepSuccess();
+void beepAlreadyExists();
 void beepError();
 void beepScan();
 void beepPowerOn();
