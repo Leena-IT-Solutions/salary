@@ -66,6 +66,14 @@
                 </select>
             </div>
             <div class="mb-3">
+                <div class="mb-1">Company Name</div>
+                <input id="company_name" name="company_name" type="text" placeholder="Company">
+            </div>
+            <div class="mb-3">
+                <div class="mb-1">Domain Name (mDNS)</div>
+                <input id="domain_name" name="domain_name" type="text" placeholder="attendance.local">
+            </div>
+            <div class="mb-3">
                 <div class="mb-1">Host URI</div>
                 <input id="sr_host" name="sr_host" type="text" placeholder="https://domain.com/attendance/save">
             </div>
@@ -137,6 +145,8 @@
                     if(data.sr_host) document.getElementById("sr_host").value = data.sr_host;
                     if(data.card_value != undefined) document.getElementById("card_value").value = data.card_value;
                     if(data.api_token) document.getElementById("api_token").value = data.api_token;
+                    if(data.company_name) document.getElementById("company_name").value = data.company_name;
+                    if(data.domain_name) document.getElementById("domain_name").value = data.domain_name;
                 } catch(e){}
             }
         };
@@ -159,7 +169,9 @@
                 op_mode: document.getElementById("op_mode").value,
                 sr_host: document.getElementById("sr_host").value,
                 card_value: document.getElementById("card_value").value,
-                api_token: document.getElementById("api_token").value
+                api_token: document.getElementById("api_token").value,
+                company_name: document.getElementById("company_name").value,
+                domain_name: document.getElementById("domain_name").value
             };
             var xmlHttp = new XMLHttpRequest();
             xmlHttp.open("GET", save_url + "?q=" + encodeURIComponent(JSON.stringify(data)), false);

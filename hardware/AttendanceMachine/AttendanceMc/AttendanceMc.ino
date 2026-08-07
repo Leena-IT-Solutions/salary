@@ -1,49 +1,66 @@
-#include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
+#include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h>
 static String urlEncode(const String &str) {
-    String encoded = "";
-    for (size_t i = 0; i < str.length(); i++) {
-        char c = str.charAt(i);
-        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
-            encoded += c;
-        } else if (c == ' ') {
-            encoded += "%20";
-        } else {
-            char buf[4];
-            sprintf(buf, "%%%02X", (unsigned char)c);
-            encoded += buf;
-        }
+  String encoded = "";
+  for (size_t i = 0; i < str.length(); i++) {
+    char c = str.charAt(i);
+    if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+      encoded += c;
+    } else if (c == ' ') {
+      encoded += "%20";
+    } else {
+      char buf[4];
+      sprintf(buf, "%%%02X", (unsigned char)c);
+      encoded += buf;
     }
-    return encoded;
+  }
+  return encoded;
 }
-#include <U8g2lib.h>
-#include <FS.h>
-#include <ArduinoJson.h>
-#include <ESP8266WebServer.h>
-#include <Ticker.h>
 #include "time.h"
 #include <Adafruit_PN532.h>
+#include <ArduinoJson.h>
+#include <ESP8266WebServer.h>
+#include <FS.h>
+#include <Ticker.h>
+#include <U8g2lib.h>
 
 static Adafruit_PN532 pn532(-1, -1, &Wire);
 
+const String settings_filename = "/settings.json";
+String ap_ssid = "attendance";
+String ap_pswd = "123456789";
+String wf_ssid = "";
+String wf_pswd = "";
+String op_mode = "";
+String sr_host = "";
+String card_value = "";
+String api_token = "";
+String company_name = "Company";
+String domain_name = "attendance.local";
+
+String webpage = "";
+IPAddress ipAddress;
+bool isNetwork = false;
+
 class NdefRecordCompat {
 public:
-    String _payload;
-    byte getPayloadLength() { return _payload.length(); }
-    void getPayload(byte *out) {
-        memcpy(out, _payload.c_str(), _payload.length());
-    }
+  String _payload;
+  byte getPayloadLength() { return _payload.length(); }
+  void getPayload(byte *out) {
+    memcpy(out, _payload.c_str(), _payload.length());
+  }
 };
 
 class NdefMessageCompat {
 public:
-    String _text;
-    void addTextRecord(const String &val) { _text = val; }
-    NdefRecordCompat getRecord(int idx) {
-        NdefRecordCompat r;
-        r._payload = String((char)0x02) + "en" + _text;
-        return r;
-    }
+  String _text;
+  void addTextRecord(const String &val) { _text = val; }
+  NdefRecordCompat getRecord(int idx) {
+    NdefRecordCompat r;
+    r._payload = String((char)0x02) + "en" + _text;
+    return r;
+  }
 };
 
 typedef NdefMessageCompat NdefMessage;
@@ -51,151 +68,206 @@ typedef NdefRecordCompat NdefRecord;
 
 class NfcTagCompat {
 public:
-    String _uidStr;
-    String _text;
-    bool _hasNdef;
+  String _uidStr;
+  String _text;
+  bool _hasNdef;
 
-    String getUidString() { return _uidStr; }
-    bool hasNdefMessage() { return _hasNdef; }
-    NdefMessageCompat getNdefMessage() {
-        NdefMessageCompat msg;
-        msg._text = _text;
-        return msg;
-    }
+  String getUidString() { return _uidStr; }
+  bool hasNdefMessage() { return _hasNdef; }
+  NdefMessageCompat getNdefMessage() {
+    NdefMessageCompat msg;
+    msg._text = _text;
+    return msg;
+  }
 };
 
 typedef NfcTagCompat NfcTag;
 
 class NfcAdapterCompat {
 private:
-    uint8_t _lastUid[7];
-    uint8_t _lastUidLen;
+  uint8_t _lastUid[7];
+  uint8_t _lastUidLen;
+
 public:
-    void begin() {
-        pn532.begin();
-        pn532.SAMConfig();
+  void begin() {
+    pn532.begin();
+    pn532.SAMConfig();
+  }
+
+  bool tagPresent(uint16_t timeout = 50) {
+    _lastUidLen = 0;
+    return pn532.readPassiveTargetID(PN532_MIFARE_ISO14443A, _lastUid,
+                                     &_lastUidLen, timeout);
+  }
+
+  NfcTag read() {
+    NfcTag tag;
+    tag._hasNdef = false;
+
+    char buf[20] = "";
+    char *ptr = buf;
+    for (uint8_t i = 0; i < _lastUidLen; i++) {
+      if (i > 0)
+        ptr += sprintf(ptr, " ");
+      ptr += sprintf(ptr, "%02X", _lastUid[i]);
+    }
+    tag._uidStr = String(buf);
+
+    uint8_t keyNDEF[6] = {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7};
+    uint8_t keyDef[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+    uint8_t keyMAD[6] = {0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5};
+    uint8_t keyNDEFB[6] = {0xF7, 0xD3, 0xF7, 0xD3, 0xF7, 0xD3};
+
+    bool auth = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4,
+                                                      0, keyNDEF);
+    if (!auth) {
+      pn532.inListPassiveTarget();
+      auth = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 0,
+                                                   keyDef);
+    }
+    if (!auth) {
+      pn532.inListPassiveTarget();
+      auth = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 1,
+                                                   keyNDEFB);
+    }
+    if (!auth) {
+      pn532.inListPassiveTarget();
+      auth = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 0,
+                                                   keyMAD);
     }
 
-    bool tagPresent(uint16_t timeout = 50) {
-        _lastUidLen = 0;
-        return pn532.readPassiveTargetID(PN532_MIFARE_ISO14443A, _lastUid, &_lastUidLen, timeout);
-    }
+    if (auth) {
+      uint8_t raw[32];
+      memset(raw, 0, sizeof(raw));
+      if (pn532.mifareclassic_ReadDataBlock(4, &raw[0])) {
+        pn532.mifareclassic_ReadDataBlock(5, &raw[16]);
 
-    NfcTag read() {
-        NfcTag tag;
-        tag._hasNdef = false;
-
-        char buf[20] = "";
-        char *ptr = buf;
-        for (uint8_t i = 0; i < _lastUidLen; i++) {
-            if (i > 0) ptr += sprintf(ptr, " ");
-            ptr += sprintf(ptr, "%02X", _lastUid[i]);
+        size_t start = 0;
+        for (size_t i = 2; i < 28; i++) {
+          if (raw[i] == 0x02 && raw[i + 1] == 'e' && raw[i + 2] == 'n') {
+            start = i + 3;
+            break;
+          }
         }
-        tag._uidStr = String(buf);
-
-        uint8_t keyNDEF[6] = {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7};
-        uint8_t keyDef[6]  = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-        uint8_t keyMAD[6]  = {0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5};
-        uint8_t keyNDEFB[6] = {0xF7, 0xD3, 0xF7, 0xD3, 0xF7, 0xD3};
-
-        bool auth = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 0, keyNDEF);
-        if (!auth) { pn532.inListPassiveTarget(); auth = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 0, keyDef); }
-        if (!auth) { pn532.inListPassiveTarget(); auth = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 1, keyNDEFB); }
-        if (!auth) { pn532.inListPassiveTarget(); auth = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 0, keyMAD); }
-
-        if (auth) {
-            uint8_t raw[32];
-            memset(raw, 0, sizeof(raw));
-            if (pn532.mifareclassic_ReadDataBlock(4, &raw[0])) {
-                pn532.mifareclassic_ReadDataBlock(5, &raw[16]);
-                
-                size_t start = 0;
-                for (size_t i = 2; i < 28; i++) {
-                    if (raw[i] == 0x02 && raw[i+1] == 'e' && raw[i+2] == 'n') {
-                        start = i + 3;
-                        break;
-                    }
-                }
-                if (start == 0) {
-                    for (size_t i = 0; i < 32; i++) {
-                        if (isalnum((char)raw[i])) { start = i; break; }
-                    }
-                }
-
-                String text = "";
-                for (size_t i = start; i < 32; i++) {
-                    char c = (char)raw[i];
-                    if (c == 0xFE || c == '\0' || (uint8_t)c < 32 || (uint8_t)c > 126) break;
-                    text += c;
-                }
-                if (text.length() > 0) {
-                    tag._text = text;
-                    tag._hasNdef = true;
-                }
+        if (start == 0) {
+          for (size_t i = 0; i < 32; i++) {
+            if (isalnum((char)raw[i])) {
+              start = i;
+              break;
             }
+          }
         }
-        return tag;
+
+        String text = "";
+        for (size_t i = start; i < 32; i++) {
+          char c = (char)raw[i];
+          if (c == 0xFE || c == '\0' || (uint8_t)c < 32 || (uint8_t)c > 126)
+            break;
+          text += c;
+        }
+        if (text.length() > 0) {
+          tag._text = text;
+          tag._hasNdef = true;
+        }
+      }
+    }
+    return tag;
+  }
+
+  bool write(const NdefMessageCompat &msg) {
+    uint8_t keyDef[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+    uint8_t keyMAD[6] = {0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5};
+    uint8_t keyNDEF[6] = {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7};
+    uint8_t keyNDEFB[6] = {0xF7, 0xD3, 0xF7, 0xD3, 0xF7, 0xD3};
+
+    // Format Sector 0 MAD
+    bool authMAD = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen,
+                                                         1, 0, keyMAD);
+    if (!authMAD) {
+      pn532.inListPassiveTarget();
+      authMAD = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 1,
+                                                      0, keyDef);
+    }
+    if (authMAD) {
+      uint8_t mad1[16] = {0x14, 0x01, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1,
+                          0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1};
+      uint8_t mad2[16] = {0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1,
+                          0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1};
+      pn532.mifareclassic_WriteDataBlock(1, mad1);
+      pn532.mifareclassic_WriteDataBlock(2, mad2);
     }
 
-    bool write(const NdefMessageCompat &msg) {
-        uint8_t keyDef[6]   = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-        uint8_t keyMAD[6]   = {0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5};
-        uint8_t keyNDEF[6]  = {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7};
-        uint8_t keyNDEFB[6] = {0xF7, 0xD3, 0xF7, 0xD3, 0xF7, 0xD3};
-
-        // Format Sector 0 MAD
-        bool authMAD = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 1, 0, keyMAD);
-        if (!authMAD) { pn532.inListPassiveTarget(); authMAD = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 1, 0, keyDef); }
-        if (authMAD) {
-            uint8_t mad1[16] = {0x14, 0x01, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1};
-            uint8_t mad2[16] = {0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1, 0x03, 0xE1};
-            pn532.mifareclassic_WriteDataBlock(1, mad1);
-            pn532.mifareclassic_WriteDataBlock(2, mad2);
-        }
-
-        // Format Sector 1 Trailer
-        pn532.inListPassiveTarget();
-        bool authTrailer = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 7, 0, keyDef);
-        if (!authTrailer) { pn532.inListPassiveTarget(); authTrailer = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 7, 0, keyNDEF); }
-        if (!authTrailer) { pn532.inListPassiveTarget(); authTrailer = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 7, 0, keyMAD); }
-
-        if (authTrailer) {
-            uint8_t trailer[16] = {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7, 0x7F, 0x07, 0x88, 0x40, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7, 0xD3};
-            pn532.mifareclassic_WriteDataBlock(7, trailer);
-        }
-
-        // Authenticate Block 4 for Writing NDEF Payload
-        pn532.inListPassiveTarget();
-        bool auth4 = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 0, keyNDEF);
-        if (!auth4) { pn532.inListPassiveTarget(); auth4 = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 0, keyDef); }
-        if (!auth4) { pn532.inListPassiveTarget(); auth4 = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 1, keyNDEFB); }
-
-        if (!auth4) return false;
-
-        size_t len = msg._text.length();
-        if (len > 20) len = 20;
-
-        uint8_t buf[32];
-        memset(buf, 0, sizeof(buf));
-        buf[0] = 0x03; buf[1] = len + 7; buf[2] = 0xD1; buf[3] = 0x01; buf[4] = len + 3;
-        buf[5] = 'T'; buf[6] = 0x02; buf[7] = 'e'; buf[8] = 'n';
-        memcpy(&buf[9], msg._text.c_str(), len);
-        buf[9 + len] = 0xFE;
-
-        bool ok1 = pn532.mifareclassic_WriteDataBlock(4, &buf[0]);
-        if (len > 7) {
-            pn532.mifareclassic_WriteDataBlock(5, &buf[16]);
-        }
-        return ok1;
+    // Format Sector 1 Trailer
+    pn532.inListPassiveTarget();
+    bool authTrailer = pn532.mifareclassic_AuthenticateBlock(
+        _lastUid, _lastUidLen, 7, 0, keyDef);
+    if (!authTrailer) {
+      pn532.inListPassiveTarget();
+      authTrailer = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen,
+                                                          7, 0, keyNDEF);
+    }
+    if (!authTrailer) {
+      pn532.inListPassiveTarget();
+      authTrailer = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen,
+                                                          7, 0, keyMAD);
     }
 
-    bool format() { return true; }
-    bool erase() {
-        NdefMessageCompat msg;
-        msg._text = "";
-        return write(msg);
+    if (authTrailer) {
+      uint8_t trailer[16] = {0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7, 0x7F, 0x07,
+                             0x88, 0x40, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7, 0xD3};
+      pn532.mifareclassic_WriteDataBlock(7, trailer);
     }
-    bool clean() { return erase(); }
+
+    // Authenticate Block 4 for Writing NDEF Payload
+    pn532.inListPassiveTarget();
+    bool auth4 = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4,
+                                                       0, keyNDEF);
+    if (!auth4) {
+      pn532.inListPassiveTarget();
+      auth4 = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 0,
+                                                    keyDef);
+    }
+    if (!auth4) {
+      pn532.inListPassiveTarget();
+      auth4 = pn532.mifareclassic_AuthenticateBlock(_lastUid, _lastUidLen, 4, 1,
+                                                    keyNDEFB);
+    }
+
+    if (!auth4)
+      return false;
+
+    size_t len = msg._text.length();
+    if (len > 20)
+      len = 20;
+
+    uint8_t buf[32];
+    memset(buf, 0, sizeof(buf));
+    buf[0] = 0x03;
+    buf[1] = len + 7;
+    buf[2] = 0xD1;
+    buf[3] = 0x01;
+    buf[4] = len + 3;
+    buf[5] = 'T';
+    buf[6] = 0x02;
+    buf[7] = 'e';
+    buf[8] = 'n';
+    memcpy(&buf[9], msg._text.c_str(), len);
+    buf[9 + len] = 0xFE;
+
+    bool ok1 = pn532.mifareclassic_WriteDataBlock(4, &buf[0]);
+    if (len > 7) {
+      pn532.mifareclassic_WriteDataBlock(5, &buf[16]);
+    }
+    return ok1;
+  }
+
+  bool format() { return true; }
+  bool erase() {
+    NdefMessageCompat msg;
+    msg._text = "";
+    return write(msg);
+  }
+  bool clean() { return erase(); }
 };
 
 static NfcAdapterCompat nfc;
@@ -203,7 +275,7 @@ static NfcAdapterCompat nfc;
 Ticker timer1;
 Ticker timer2;
 
-const char* ntpServer = "in.pool.ntp.org";
+const char *ntpServer = "in.pool.ntp.org";
 const long gmtOffset = 0;
 const int daylightOffset = 19800;
 
@@ -213,34 +285,41 @@ const int daylightOffset = 19800;
 
 class OledCompat {
 private:
-    U8G2_SH1106_128X64_NONAME_F_HW_I2C _u8g2;
-    int _cursorX = 0;
-    int _cursorY = 0;
-    int _textSize = 1;
+  U8G2_SH1106_128X64_NONAME_F_HW_I2C _u8g2;
+  int _cursorX = 0;
+  int _cursorY = 0;
+  int _textSize = 1;
+
 public:
-    OledCompat() : _u8g2(U8G2_R0, U8X8_PIN_NONE) {}
+  OledCompat() : _u8g2(U8G2_R0, U8X8_PIN_NONE) {}
 
-    void begin(uint8_t addr, bool reset) {
-        _u8g2.setI2CAddress(addr << 1);
-        _u8g2.begin();
-        _u8g2.setFontMode(0);
-        _u8g2.setDrawColor(1);
-    }
-    void clearDisplay() { _u8g2.clearBuffer(); }
-    void setTextColor(int c) {}
-    void setTextSize(int s) { _textSize = s; }
-    void setCursor(int x, int y) { _cursorX = x; _cursorY = y; }
+  void begin(uint8_t addr, bool reset) {
+    _u8g2.setI2CAddress(addr << 1);
+    _u8g2.begin();
+    _u8g2.setFontMode(0);
+    _u8g2.setDrawColor(1);
+  }
+  void clearDisplay() { _u8g2.clearBuffer(); }
+  void setTextColor(int c) {}
+  void setTextSize(int s) { _textSize = s; }
+  void setCursor(int x, int y) {
+    _cursorX = x;
+    _cursorY = y;
+  }
 
-    void println(const String &str) {
-        if (_textSize == 3)      _u8g2.setFont(u8g2_font_logisoso24_tf);
-        else if (_textSize == 2) _u8g2.setFont(u8g2_font_logisoso20_tf);
-        else                     _u8g2.setFont(u8g2_font_6x10_tf);
-        _u8g2.drawStr(_cursorX, _cursorY + (_textSize == 1 ? 8 : 16), str.c_str());
-    }
+  void println(const String &str) {
+    if (_textSize == 3)
+      _u8g2.setFont(u8g2_font_logisoso24_tf);
+    else if (_textSize == 2)
+      _u8g2.setFont(u8g2_font_logisoso20_tf);
+    else
+      _u8g2.setFont(u8g2_font_6x10_tf);
+    _u8g2.drawStr(_cursorX, _cursorY + (_textSize == 1 ? 8 : 16), str.c_str());
+  }
 
-    void println(IPAddress ip) { println(ip.toString()); }
+  void println(IPAddress ip) { println(ip.toString()); }
 
-    void display() { _u8g2.sendBuffer(); }
+  void display() { _u8g2.sendBuffer(); }
 };
 
 static OledCompat oled;
@@ -291,9 +370,7 @@ void deleteCardMessage();
 void clearCard();
 void accessCard();
 
-void notFound(){
-  server.send(404, "text/html", "<h1>Page Not Found</h1>");
-}
+void notFound() { server.send(404, "text/html", "<h1>Page Not Found</h1>"); }
 
 static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
@@ -362,6 +439,14 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
                     <option value="Delete">Delete</option>
                     <option value="Clear">Clear</option>
                 </select>
+            </div>
+            <div class="mb-3">
+                <div class="mb-1">Company Name</div>
+                <input id="company_name" name="company_name" type="text" placeholder="Company">
+            </div>
+            <div class="mb-3">
+                <div class="mb-1">Domain Name (mDNS)</div>
+                <input id="domain_name" name="domain_name" type="text" placeholder="attendance.local">
             </div>
             <div class="mb-3">
                 <div class="mb-1">Host URI</div>
@@ -435,6 +520,8 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
                     if(data.sr_host) document.getElementById("sr_host").value = data.sr_host;
                     if(data.card_value != undefined) document.getElementById("card_value").value = data.card_value;
                     if(data.api_token) document.getElementById("api_token").value = data.api_token;
+                    if(data.company_name) document.getElementById("company_name").value = data.company_name;
+                    if(data.domain_name) document.getElementById("domain_name").value = data.domain_name;
                 } catch(e){}
             }
         };
@@ -457,7 +544,9 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
                 op_mode: document.getElementById("op_mode").value,
                 sr_host: document.getElementById("sr_host").value,
                 card_value: document.getElementById("card_value").value,
-                api_token: document.getElementById("api_token").value
+                api_token: document.getElementById("api_token").value,
+                company_name: document.getElementById("company_name").value,
+                domain_name: document.getElementById("domain_name").value
             };
             var xmlHttp = new XMLHttpRequest();
             xmlHttp.open("GET", save_url + "?q=" + encodeURIComponent(JSON.stringify(data)), false);
@@ -497,10 +586,10 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
 </html>
 )rawliteral";
 
-void getWebpage(){
+void getWebpage() {
   File file = SPIFFS.open("/attendanceSettingsPage.html", "r");
-  if (file){
-    while (file.available()){
+  if (file) {
+    while (file.available()) {
       webpage = file.readString();
     }
     file.close();
@@ -510,41 +599,52 @@ void getWebpage(){
   }
 }
 
-void startSoftAP(){
-  if(WiFi.softAP(ap_ssid, ap_pswd)){
-    ipAddress = WiFi.softAPIP();
-    startWebServer();
-    //Serial.println("");
-    //Serial.println(ipAddress);  
+void setupMDNS() {
+  String host = domain_name;
+  host.trim();
+  if (host.endsWith(".local")) {
+    host.remove(host.length() - 6);
+  }
+  if (host.length() == 0) {
+    host = "attendance";
+  }
+  if (MDNS.begin(host.c_str())) {
+    MDNS.addService("http", "tcp", 80);
   }
 }
 
-void startWiFi(){
+void startSoftAP() {
+  if (WiFi.softAP(ap_ssid, ap_pswd)) {
+    ipAddress = WiFi.softAPIP();
+    setupMDNS();
+    startWebServer();
+  }
+}
+
+void startWiFi() {
   WiFi.begin(wf_ssid, wf_pswd);
-  // WL_CONNECTED | WL_IDLE_STATUS | WL_CONNECT_FAILED
-  while(WiFi.status() != WL_CONNECTED){
-    //Serial.print(".");
+  while (WiFi.status() != WL_CONNECTED) {
     delay(200);
-    if(millis() > 20000){
+    if (millis() > 20000) {
       break;
     }
   }
-  if(WiFi.status() != WL_CONNECTED){
+  if (WiFi.status() != WL_CONNECTED) {
     startSoftAP();
   } else {
     ipAddress = WiFi.localIP();
-    //Serial.println(ipAddress);
     configTime(gmtOffset, daylightOffset, ntpServer);
     printLocalTime();
     isNetwork = true;
+    setupMDNS();
     startWebServer();
   }
 }
 
-void printLocalTime(){
+void printLocalTime() {
   struct tm timeinfo;
-  if(!getLocalTime(&timeinfo)){
-    //Serial.println("Failed to obtain time");
+  if (!getLocalTime(&timeinfo)) {
+    // Serial.println("Failed to obtain time");
     return;
   }
 
@@ -558,29 +658,26 @@ void printLocalTime(){
   // Serial.println(timeinfo.tm_yday);
   // Serial.println(timeinfo.tm_isdst);
 
-  char dtbuf [12];
-  strftime (dtbuf, 80, "%F", &timeinfo);
+  char dtbuf[12];
+  strftime(dtbuf, 80, "%F", &timeinfo);
   dt = dtbuf;
-  //Serial.println(dt);
+  // Serial.println(dt);
 
-  char timbuf [12];
-  strftime (timbuf, 80, "%T", &timeinfo);
+  char timbuf[12];
+  strftime(timbuf, 80, "%T", &timeinfo);
   tim = timbuf;
-  //Serial.println(tim);
-
+  // Serial.println(tim);
 }
 
-void startWebServer(){
-  server.on("/", HTTP_GET, [](){
-    server.send(200, "text/html", webpage);
-  });
-  server.on("/settings", HTTP_GET, [](){
+void startWebServer() {
+  server.on("/", HTTP_GET, []() { server.send(200, "text/html", webpage); });
+  server.on("/settings", HTTP_GET, []() {
     String message = getSettings();
     server.send(200, "application/json", message);
   });
-  server.on("/save", HTTP_GET, [](){
+  server.on("/save", HTTP_GET, []() {
     String message = "";
-    if(server.hasArg("q")){
+    if (server.hasArg("q")) {
       message = server.arg("q");
       saveSettings(message);
     }
@@ -590,37 +687,46 @@ void startWebServer(){
   server.begin();
 }
 
-void saveSettings(String msg){
-    String old_ap_ssid = ap_ssid;
-    String old_ap_pswd = ap_pswd;
-    String old_wf_ssid = wf_ssid;
-    String old_wf_pswd = wf_pswd;
+void saveSettings(String msg) {
+  String old_ap_ssid = ap_ssid;
+  String old_ap_pswd = ap_pswd;
+  String old_wf_ssid = wf_ssid;
+  String old_wf_pswd = wf_pswd;
 
-    File fl = SPIFFS.open(settings_filename, "w");
-    if(!fl){
-      return;
-    }
-    fl.print(msg);
-    fl.close();
+  File fl = SPIFFS.open(settings_filename, "w");
+  if (!fl) {
+    return;
+  }
+  fl.print(msg);
+  fl.close();
 
-    setSettings();
+  setSettings();
 
-    // Immediately refresh OLED display screen with new mode!
-    writeCompanyName();
+  // Immediately refresh OLED display screen with new mode!
+  writeCompanyName();
 
-    bool wifiOrApChanged = (old_ap_ssid != ap_ssid) || 
-                           (old_ap_pswd != ap_pswd) || 
-                           (old_wf_ssid != wf_ssid) || 
-                           (old_wf_pswd != wf_pswd);
+  bool wifiOrApChanged = (old_ap_ssid != ap_ssid) || (old_ap_pswd != ap_pswd) ||
+                         (old_wf_ssid != wf_ssid) || (old_wf_pswd != wf_pswd);
 
-    if (wifiOrApChanged) {
-      server.send(200, "text/html", "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-width, initial-scale=1.0'><style>body{font-family:-apple-system,sans-serif;background:#f4f6f9;text-align:center;padding:50px;} .card{background:#fff;padding:30px;border-radius:12px;display:inline-block;box-shadow:0 4px 15px rgba(0,0,0,0.1);} h2{color:#dc2626;margin-top:0;}</style></head><body><div class='card'><h2>🔄 Rebooting Machine...</h2><p>Wi-Fi / AP settings updated. Machine is restarting to apply new network parameters...</p></div><script>setTimeout(function(){ window.location.href='/'; }, 6000);</script></body></html>");
-      delay(1000);
-      ESP.restart();
-    }
+  if (wifiOrApChanged) {
+    server.send(200, "text/html",
+                "<!DOCTYPE html><html><head><meta name='viewport' "
+                "content='width=device-width, "
+                "initial-scale=1.0'><style>body{font-family:-apple-system,sans-"
+                "serif;background:#f4f6f9;text-align:center;padding:50px;} "
+                ".card{background:#fff;padding:30px;border-radius:12px;display:"
+                "inline-block;box-shadow:0 4px 15px rgba(0,0,0,0.1);} "
+                "h2{color:#dc2626;margin-top:0;}</style></head><body><div "
+                "class='card'><h2>🔄 Rebooting Machine...</h2><p>Wi-Fi / AP "
+                "settings updated. Machine is restarting to apply new network "
+                "parameters...</p></div><script>setTimeout(function(){ "
+                "window.location.href='/'; }, 6000);</script></body></html>");
+    delay(1000);
+    ESP.restart();
+  }
 }
 
-void updateAndSaveSettings(){
+void updateAndSaveSettings() {
   StaticJsonDocument<1024> doc;
   doc["ap_ssid"] = ap_ssid;
   doc["ap_pswd"] = ap_pswd;
@@ -630,15 +736,17 @@ void updateAndSaveSettings(){
   doc["sr_host"] = sr_host;
   doc["card_value"] = card_value;
   doc["api_token"] = api_token;
+  doc["company_name"] = company_name;
+  doc["domain_name"] = domain_name;
   String str = "";
   serializeJson(doc, str);
   saveSettings(str);
 }
 
-String getSettings(){
+String getSettings() {
   String str = "";
   File file = SPIFFS.open(settings_filename, "r");
-  if (file){
+  if (file) {
     str = file.readString();
     file.close();
     str.trim();
@@ -650,79 +758,110 @@ String getSettings(){
     doc["wf_ssid"] = wf_ssid;
     doc["wf_pswd"] = wf_pswd;
     doc["op_mode"] = (op_mode.length() > 0) ? op_mode : "Read";
-    doc["sr_host"] = (sr_host.length() > 0) ? sr_host : "https://payroll.sarvodayavidyalay.com/attendance/save";
+    doc["sr_host"] =
+        (sr_host.length() > 0)
+            ? sr_host
+            : "https://payroll.sarvodayavidyalay.com/attendance/save";
     doc["card_value"] = card_value;
     doc["api_token"] = api_token;
+    doc["company_name"] = (company_name.length() > 0) ? company_name : "Company";
+    doc["domain_name"] = (domain_name.length() > 0) ? domain_name : "attendance.local";
     serializeJson(doc, str);
   }
   return str;
 }
 
-void setSettings(){
+void setSettings() {
   String str = getSettings();
   DynamicJsonDocument doc(1024);
   DeserializationError error = deserializeJson(doc, str);
-  if(error){
+  if (error) {
     return;
   }
-  if (doc.containsKey("ap_ssid")) ap_ssid = String(doc["ap_ssid"]);
-  if (doc.containsKey("ap_pswd")) ap_pswd = String(doc["ap_pswd"]);
-  if (doc.containsKey("wf_ssid")) wf_ssid = String(doc["wf_ssid"]);
-  if (doc.containsKey("wf_pswd")) wf_pswd = String(doc["wf_pswd"]);
-  if (doc.containsKey("op_mode")) op_mode = String(doc["op_mode"]);
-  if (doc.containsKey("sr_host")) sr_host = String(doc["sr_host"]);
-  if (doc.containsKey("card_value")) card_value = String(doc["card_value"]);
-  if (doc.containsKey("api_token")) api_token = String(doc["api_token"]);
+  if (doc.containsKey("ap_ssid"))
+    ap_ssid = String(doc["ap_ssid"]);
+  if (doc.containsKey("ap_pswd"))
+    ap_pswd = String(doc["ap_pswd"]);
+  if (doc.containsKey("wf_ssid"))
+    wf_ssid = String(doc["wf_ssid"]);
+  if (doc.containsKey("wf_pswd"))
+    wf_pswd = String(doc["wf_pswd"]);
+  if (doc.containsKey("op_mode"))
+    op_mode = String(doc["op_mode"]);
+  if (doc.containsKey("sr_host"))
+    sr_host = String(doc["sr_host"]);
+  if (doc.containsKey("card_value"))
+    card_value = String(doc["card_value"]);
+  if (doc.containsKey("api_token"))
+    api_token = String(doc["api_token"]);
+  if (doc.containsKey("company_name"))
+    company_name = String(doc["company_name"]);
+  if (doc.containsKey("domain_name"))
+    domain_name = String(doc["domain_name"]);
 
-  if (op_mode.length() == 0) op_mode = "Read";
-  if (sr_host.length() == 0) sr_host = "https://payroll.sarvodayavidyalay.com/attendance/save";
+  if (op_mode.length() == 0)
+    op_mode = "Read";
+  if (sr_host.length() == 0)
+    sr_host = "https://payroll.sarvodayavidyalay.com/attendance/save";
+  if (company_name.length() == 0)
+    company_name = "Company";
+  if (domain_name.length() == 0)
+    domain_name = "attendance.local";
+
+  setupMDNS();
 }
 
-void sendDataToServer(){
+void sendDataToServer() {
 
   if ((WiFi.status() == WL_CONNECTED)) {
-    std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
-    //client->setFingerprint(fingerprint);
+    std::unique_ptr<BearSSL::WiFiClientSecure> client(
+        new BearSSL::WiFiClientSecure);
+    // client->setFingerprint(fingerprint);
     client->setInsecure();
     HTTPClient https;
 
-    //Serial.print("[HTTPS] begin...\n");
+    // Serial.print("[HTTPS] begin...\n");
 
-    // String encodeduri = urlEncode("tagid=" + tagId + "&tagms=" + tagMs + "&dt=" + dt + "&tim=" + tim);
+    // String encodeduri = urlEncode("tagid=" + tagId + "&tagms=" + tagMs +
+    // "&dt=" + dt + "&tim=" + tim);
 
-    String encodeduri = "tagid=" + urlEncode(tagId) + "&tagms=" + urlEncode(tagMs) + "&dt=" + urlEncode(dt) + "&tim=" + urlEncode(tim);
+    String encodeduri = "tagid=" + urlEncode(tagId) +
+                        "&tagms=" + urlEncode(tagMs) + "&dt=" + urlEncode(dt) +
+                        "&tim=" + urlEncode(tim);
 
     String uri = sr_host + "?" + encodeduri;
 
-    //Serial.print(uri);
+    // Serial.print(uri);
 
     if (https.begin(*client, uri)) {
       if (api_token.length() > 0) {
         https.addHeader("Authorization", "Bearer " + api_token);
       }
-      //Serial.print("[HTTPS] GET...\n");
+      // Serial.print("[HTTPS] GET...\n");
       int httpCode = https.GET();
-      //Serial.println(httpCode);
+      // Serial.println(httpCode);
       if (httpCode > 0) {
-        //Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
-        if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+        // Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
+        if (httpCode == HTTP_CODE_OK ||
+            httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
           String payload = https.getString();
           Serial.println(payload);
         }
       } else {
-        //Serial.printf("[HTTPS] GET... failed, error: %s\n", https.errorToString(httpCode).c_str());
+        // Serial.printf("[HTTPS] GET... failed, error: %s\n",
+        // https.errorToString(httpCode).c_str());
       }
       https.end();
     } else {
-      //Serial.printf("[HTTPS] Unable to connect\n");
+      // Serial.printf("[HTTPS] Unable to connect\n");
     }
   }
 }
 
-void readCard(){
+void readCard() {
   NfcTag tag = nfc.read();
   tagId = tag.getUidString();
-  if(tag.hasNdefMessage()){
+  if (tag.hasNdefMessage()) {
     NdefRecord record = tag.getNdefMessage().getRecord(0);
     byte length = record.getPayloadLength();
     byte payload[length + 1];
@@ -742,75 +881,91 @@ void readCard(){
   writeCompanyName();
 }
 
-void writeCard(){
-    NdefMessage message = NdefMessage();
-    message.addTextRecord(card_value);
-    bool success = nfc.write(message);
-    delay(500);
+void writeCard() {
+  NdefMessage message = NdefMessage();
+  message.addTextRecord(card_value);
+  bool success = nfc.write(message);
+  delay(500);
 
-    // Always reset mode to Read and clear card_value to reset web form input
-    op_mode = "Read";
-    card_value = "";
-    updateAndSaveSettings();
-    writeCompanyName();
+  // Always reset mode to Read and clear card_value to reset web form input
+  op_mode = "Read";
+  card_value = "";
+  updateAndSaveSettings();
+  writeCompanyName();
 
-    delay(1000);
+  delay(1000);
 }
 
-void formatCard(){
+void formatCard() {
   bool success = nfc.format();
   if (success) {
-    //Serial.println("\nThe card (tag) successfully formatted in the NTAG.");
+    // Serial.println("\nThe card (tag) successfully formatted in the NTAG.");
   } else {
-    //Serial.println("\nUnsuccessful formatting.");
+    // Serial.println("\nUnsuccessful formatting.");
   }
   delay(1000);
 }
 
-void deleteCardMessage(){
+void deleteCardMessage() {
   bool success = nfc.erase();
   if (success) {
-    //Serial.println("\nDeleted");
+    // Serial.println("\nDeleted");
   } else {
-    //Serial.println("\nDelete Unsuccessful.");
+    // Serial.println("\nDelete Unsuccessful.");
   }
   delay(1000);
 }
 
-void clearCard(){
+void clearCard() {
   bool success = nfc.clean();
   if (success) {
-    //Serial.println("\nCard Cleared");
+    // Serial.println("\nCard Cleared");
   } else {
-    //Serial.println("\nClear Unsuccessful.");
+    // Serial.println("\nClear Unsuccessful.");
   }
   delay(1000);
 }
 
-void accessCard(){
-  while(nfc.tagPresent()){
+void accessCard() {
+  while (nfc.tagPresent()) {
     digitalWrite(buz, HIGH);
-    if(op_mode == "Read"){ readCard(); }
-    if(op_mode == "Write"){ writeCard(); }
-    if(op_mode == "Format"){ formatCard(); }
-    if(op_mode == "Delete"){ deleteCardMessage(); }
-    if(op_mode == "Clear"){ clearCard(); }
+    if (op_mode == "Read") {
+      readCard();
+    }
+    if (op_mode == "Write") {
+      writeCard();
+    }
+    if (op_mode == "Format") {
+      formatCard();
+    }
+    if (op_mode == "Delete") {
+      deleteCardMessage();
+    }
+    if (op_mode == "Clear") {
+      clearCard();
+    }
     digitalWrite(buz, LOW);
   }
 }
 
 void drawScreenWithMiddleText(const String &middleText) {
   oled.clearDisplay();
-  
-  // Header at top
+
+  // Dynamic Header at top - Company Name
+  String compStr = (company_name.length() > 0) ? company_name : "Company";
+  int compLen = compStr.length();
+  int startCompX = (128 - (compLen * 6)) / 2;
+  if (startCompX < 0) startCompX = 0;
+
   oled.setTextSize(1);
-  oled.setCursor(10, 0);
-  oled.println(F("Sarvodaya Vidyalay"));
+  oled.setCursor(startCompX, 0);
+  oled.println(compStr);
 
   // Middle text (Time or Employee Code tagMs)
   int textLength = middleText.length();
   int startX = (128 - (textLength * 12)) / 2;
-  if (startX < 0) startX = 0;
+  if (startX < 0)
+    startX = 0;
 
   oled.setTextSize(2);
   oled.setCursor(startX, 22);
@@ -826,35 +981,33 @@ void drawScreenWithMiddleText(const String &middleText) {
   oled.display();
 }
 
-void writeCompanyName(){
+void writeCompanyName() {
   String clockText = (tim.length() > 0) ? tim : "00:00:00";
   drawScreenWithMiddleText(clockText);
 }
 
-void writeBrandName(){
+void writeBrandName() {
   oled.clearDisplay();
   oled.setTextSize(3);
-  oled.setCursor(30,15);
+  oled.setCursor(30, 15);
   oled.println(F("LITS"));
   oled.setTextSize(1);
-  oled.setCursor(11,44);
+  oled.setCursor(11, 44);
   oled.println(F("Leena IT Solutions"));
   oled.display();
 }
 
-void showMessage(){
-  drawScreenWithMiddleText(tagMs);
-}
+void showMessage() { drawScreenWithMiddleText(tagMs); }
 
-void readSwitch(){
-  if(digitalRead(swi) == 1){
-    if(swiStart == 0){
+void readSwitch() {
+  if (digitalRead(swi) == 1) {
+    if (swiStart == 0) {
       swiStart = millis();
     } else {
       swiEnd = millis();
     }
   } else {
-    if(swiStart != 0 && swiEnd != 0){
+    if (swiStart != 0 && swiEnd != 0) {
       duration = swiEnd - swiStart;
     } else {
       duration = 0;
@@ -862,11 +1015,11 @@ void readSwitch(){
     swiStart = 0;
     swiEnd = 0;
   }
-  if(duration > 0){
+  if (duration > 0) {
     Serial.println(duration);
   }
-  if(duration > 3000){
-    if(op_mode=="Setup"){
+  if (duration > 3000) {
+    if (op_mode == "Setup") {
       op_mode = "Read";
     } else {
       op_mode = "Setup";
@@ -875,15 +1028,15 @@ void readSwitch(){
   }
 }
 
-void hello(){
-  if(op_mode=="Read" && isNetwork){
+void hello() {
+  if (op_mode == "Read" && isNetwork) {
     printLocalTime();
   }
 }
 
 void setup() {
   Serial.begin(115200);
-  if (!SPIFFS.begin()){
+  if (!SPIFFS.begin()) {
     Serial.println("FS Failed");
   }
 
@@ -900,7 +1053,7 @@ void setup() {
   setSettings();
   getWebpage();
 
-  if(op_mode == "Setup"){
+  if (op_mode == "Setup") {
     startSoftAP();
   } else {
     startWiFi();
@@ -910,10 +1063,10 @@ void setup() {
 
   timer1.attach(0.1, readSwitch);
   timer2.attach(1, hello);
-
 }
 
 void loop() {
+  MDNS.update();
   server.handleClient();
   writeCompanyName();
   accessCard();
