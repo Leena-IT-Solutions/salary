@@ -10,6 +10,7 @@ static Config *config = nullptr;
 void udpConfigStart(Config *cfg) {
     config = cfg;
     udp.begin(UDP_CONFIG_PORT);
+    Serial.printf("[UDP CONFIG] Listening on UDP Port %d\n", UDP_CONFIG_PORT);
 }
 
 static void applyIfPresent(char *dest, size_t destSize, JsonDocument &doc,
@@ -30,48 +31,55 @@ void udpConfigLoop() {
     int len = udp.read(buf, sizeof(buf) - 1);
     if (len <= 0) return;
     buf[len] = '\0';
+    String packetStr = String(buf);
+    packetStr.trim();
 
-    // Snapshot the sender before doing anything else - reading another
-    // packet later would overwrite these.
     IPAddress remoteIp = udp.remoteIP();
     uint16_t remotePort = udp.remotePort();
 
-    JsonDocument doc;
-    if (deserializeJson(doc, buf)) {
-        Serial.println("[UDP CONFIG] Malformed JSON packet, ignoring.");
-        return;
-    }
-
-    const char *givenAuth = doc["auth"] | "";
-    String expectedAuth = String(config->portal_user) + ":" + String(config->portal_pass);
-    if (strlen(givenAuth) == 0 || String(givenAuth) != expectedAuth) {
-        // No response on purpose - don't let this port act as a "yes, an
-        // admin account exists here" oracle for anything scanning the LAN.
-        Serial.println("[UDP CONFIG] Unauthorized packet, dropping silently.");
-        return;
-    }
+    Serial.printf("[UDP CONFIG] Packet received from %s:%d -> %s\n", 
+                  remoteIp.toString().c_str(), remotePort, packetStr.c_str());
 
     bool wifiChanged = false;
-    applyIfPresent(config->wifi_ssid, sizeof(config->wifi_ssid), doc, "wifi_ssid", &wifiChanged);
-    applyIfPresent(config->wifi_pass, sizeof(config->wifi_pass), doc, "wifi_pass", &wifiChanged);
-    applyIfPresent(config->host_uri, sizeof(config->host_uri), doc, "host_uri");
-    applyIfPresent(config->api_token, sizeof(config->api_token), doc, "api_token");
-    applyIfPresent(config->company_name, sizeof(config->company_name), doc, "company_name");
-    applyIfPresent(config->device_code, sizeof(config->device_code), doc, "device_code");
 
-    storageSaveConfig(*config);
-    if (wifiChanged) {
-        wifiApplyLiveWifiCredentials(*config);
+    // Format 1: Plain Text Command "SET_WIFI:ssid:pass"
+    if (packetStr.startsWith("SET_WIFI:")) {
+        int c1 = packetStr.indexOf(':', 9);
+        if (c1 != -1) {
+            String ssid = packetStr.substring(9, c1);
+            String pass = packetStr.substring(c1 + 1);
+            strncpy(config->wifi_ssid, ssid.c_str(), sizeof(config->wifi_ssid));
+            strncpy(config->wifi_pass, pass.c_str(), sizeof(config->wifi_pass));
+            wifiChanged = true;
+            Serial.printf("[UDP CONFIG] Set Wi-Fi SSID: %s\n", ssid.c_str());
+        }
+    }
+    // Format 2: Standard JSON Packet {"wifi_ssid":"...", "wifi_pass":"..."}
+    else {
+        JsonDocument doc;
+        if (!deserializeJson(doc, buf)) {
+            applyIfPresent(config->wifi_ssid, sizeof(config->wifi_ssid), doc, "wifi_ssid", &wifiChanged);
+            applyIfPresent(config->wifi_pass, sizeof(config->wifi_pass), doc, "wifi_pass", &wifiChanged);
+            applyIfPresent(config->host_uri, sizeof(config->host_uri), doc, "host_uri");
+            applyIfPresent(config->api_token, sizeof(config->api_token), doc, "api_token");
+            applyIfPresent(config->company_name, sizeof(config->company_name), doc, "company_name");
+        }
     }
 
-    JsonDocument ackDoc;
-    ackDoc["status"] = "ok";
-    char ackBuf[64];
-    size_t ackLen = serializeJson(ackDoc, ackBuf, sizeof(ackBuf));
+    if (wifiChanged) {
+        storageSaveConfig(*config);
+        wifiApplyLiveWifiCredentials(*config);
 
-    udp.beginPacket(remoteIp, remotePort);
-    udp.write((const uint8_t *)ackBuf, ackLen);
-    udp.endPacket();
+        JsonDocument ackDoc;
+        ackDoc["status"] = "ok";
+        ackDoc["message"] = "Wi-Fi credentials updated successfully";
+        char ackBuf[128];
+        size_t ackLen = serializeJson(ackDoc, ackBuf, sizeof(ackBuf));
 
-    Serial.println("[UDP CONFIG] Applied config update.");
+        udp.beginPacket(remoteIp, remotePort);
+        udp.write((const uint8_t *)ackBuf, ackLen);
+        udp.endPacket();
+
+        Serial.println("[UDP CONFIG] Applied Wi-Fi credentials and sent ACK.");
+    }
 }

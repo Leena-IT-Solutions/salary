@@ -24,6 +24,7 @@
 #include "storage.h"
 #include "wifi_manager.h"
 #include "web_portal.h"
+#include "udp_config.h"
 
 Config currentConfig;
 
@@ -349,6 +350,7 @@ void cycleOperationMode() {
 void loop() {
     webPortalHandleClient();
     wifiLoop(currentConfig);
+    udpConfigLoop();
     yield();
 
     // 15-Minute Inactivity Safeguard: Auto Revert to Read Mode (Normal Attendance)

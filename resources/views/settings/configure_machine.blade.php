@@ -242,7 +242,7 @@ document.getElementById('udpForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const ssid = document.getElementById('udp_ssid').value;
     const pass = document.getElementById('udp_pass').value;
-    const target = document.getElementById('udp_target').value;
+    const target = document.getElementById('udp_target').value || document.getElementById('machine_ip').value;
     const statusBox = document.getElementById('udpStatus');
 
     statusBox.innerHTML = '⏳ Broadcasting UDP Wi-Fi credentials...';
