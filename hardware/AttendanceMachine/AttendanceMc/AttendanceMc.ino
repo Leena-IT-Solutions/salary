@@ -732,20 +732,15 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
 )rawliteral";
 
 void serveWebpage() {
-  File file = SPIFFS.open("/attendanceSettingsPage.html", "r");
-  if (file) {
-    server.setContentLength(file.size());
-    server.send(200, "text/html", "");
-    const size_t bufSize = 1024;
-    uint8_t buf[bufSize];
-    while (file.available()) {
-      size_t len = file.read(buf, bufSize);
-      server.sendContent((const char*)buf, len);
+  if (SPIFFS.exists("/attendanceSettingsPage.html")) {
+    File file = SPIFFS.open("/attendanceSettingsPage.html", "r");
+    if (file && file.size() > 0) {
+      server.streamFile(file, "text/html");
+      file.close();
+      return;
     }
-    file.close();
-  } else {
-    server.send(200, "text/html", FPSTR(DEFAULT_WEBPAGE_HTML));
   }
+  server.send(200, "text/html", FPSTR(DEFAULT_WEBPAGE_HTML));
 }
 
 void setupMDNS() {
