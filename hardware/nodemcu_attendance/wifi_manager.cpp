@@ -32,6 +32,7 @@ static void startMDNSAndPortal(Config &cfg) {
 
 void wifiStartAPMode(Config &cfg) {
     apMode = true;
+    WiFi.persistent(false);
     WiFi.mode(WIFI_AP);
     WiFi.setOutputPower(17.5);
 
@@ -57,6 +58,7 @@ void wifiConnect(Config &cfg) {
         return;
     }
 
+    WiFi.persistent(false);
     WiFi.mode(WIFI_STA);
     WiFi.setOutputPower(17.5);
     WiFi.begin(cfg.wifi_ssid, cfg.wifi_pass);
