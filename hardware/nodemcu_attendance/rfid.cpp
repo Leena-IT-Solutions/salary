@@ -58,11 +58,10 @@ static bool authenticateCardBlock(uint8_t *uid, uint8_t uidLength, uint8_t block
             nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, dumpUid, &dumpLen, 10);
         }
     }
-    Serial.printf("[RFID] Auth FAILED on Block %u (all candidate keys rejected)\n", blockNum);
     return false;
 }
 
-// Extract clean string from raw block bytes (Supports both NDEF Text Records & Plain ASCII)
+// Extract clean string from raw block/page bytes (Supports both NDEF Text Records & Plain ASCII)
 static void extractMessageString(const uint8_t *raw, size_t rawLen, char *out, size_t outSize) {
     out[0] = '\0';
     
@@ -71,7 +70,6 @@ static void extractMessageString(const uint8_t *raw, size_t rawLen, char *out, s
     int textLen = 0;
 
     for (size_t i = 0; i < rawLen - 4; i++) {
-        // Look for NDEF Text Record Header 'T' (0x54) preceded by NDEF header 0xD1 0x01
         if (raw[i] == 0xD1 && raw[i+1] == 0x01 && raw[i+3] == 0x54) {
             uint8_t statusByte = raw[i+4];
             uint8_t langLen = statusByte & 0x1F;
@@ -79,7 +77,6 @@ static void extractMessageString(const uint8_t *raw, size_t rawLen, char *out, s
             textLen = raw[i+2] - 1 - langLen;
             break;
         }
-        // Direct NDEF Text Record payload check
         if (raw[i] == 0x54 && (raw[i+1] == 0x02 || raw[i+1] == 0x05) && (raw[i+2] == 'e' || raw[i+2] == 'E')) {
             textStart = i + 4;
             textLen = 16;
@@ -111,20 +108,32 @@ static void extractMessageString(const uint8_t *raw, size_t rawLen, char *out, s
     out[idx] = '\0';
 }
 
+// Read Message (Supports Mifare Classic 1K AND NTAG213/215/216/Ultralight)
 bool rfidReadMessage(uint8_t *uid, uint8_t uidLength, char *out, size_t outSize) {
-    if (!authenticateCardBlock(uid, uidLength, kMessageBlocks[0])) {
-        return false;
-    }
-
     uint8_t raw[32] = {0};
-    for (uint8_t i = 0; i < 2; i++) {
-        if (!nfc.mifareclassic_ReadDataBlock(kMessageBlocks[i], raw + i * 16)) {
-            Serial.printf("[RFID] Read: block %u read FAILED\n", kMessageBlocks[i]);
-            return false;
+
+    // Try Mifare Classic 1K authentication
+    if (authenticateCardBlock(uid, uidLength, kMessageBlocks[0])) {
+        for (uint8_t i = 0; i < 2; i++) {
+            if (!nfc.mifareclassic_ReadDataBlock(kMessageBlocks[i], raw + i * 16)) {
+                Serial.printf("[RFID] Read: block %u read FAILED\n", kMessageBlocks[i]);
+                return false;
+            }
+        }
+    } else {
+        // Fallback to NTAG / Mifare Ultralight page read (Pages 4, 5, 6, 7)
+        Serial.println("[RFID] Mifare auth failed - attempting NTAG / Ultralight Page Read...");
+        for (uint8_t p = 0; p < 8; p++) {
+            uint8_t pageData[4] = {0};
+            if (nfc.mifareultralight_ReadPage(4 + p, pageData)) {
+                memcpy(raw + p * 4, pageData, 4);
+            } else {
+                break;
+            }
         }
     }
-    logHex("[RFID] Read: raw = ", raw, sizeof(raw));
 
+    logHex("[RFID] Read: raw = ", raw, sizeof(raw));
     extractMessageString(raw, sizeof(raw), out, outSize);
     Serial.printf("[RFID] Read: decoded = \"%s\"\n", out);
     return strlen(out) > 0;
@@ -157,28 +166,29 @@ static bool writeAndVerifyBlocks(uint8_t *data) {
     return true;
 }
 
-// Writes text as a Universal NFC Forum NDEF Text Record (Compatible with Android & iPhone!)
-bool rfidWriteMessage(uint8_t *uid, uint8_t uidLength, const char *value) {
-    if (!authenticateCardBlock(uid, uidLength, kMessageBlocks[0])) {
-        return false;
+// Write NTAG Pages (NTAG213 / NTAG215 / NTAG216 / Ultralight)
+static bool writeNtagPages(uint8_t *data, size_t len) {
+    bool allOk = true;
+    for (uint8_t p = 0; p < (len / 4); p++) {
+        uint8_t pageData[4];
+        memcpy(pageData, data + p * 4, 4);
+        if (nfc.mifareultralight_WritePage(4 + p, pageData)) {
+            delay(kWriteSettleMs);
+        } else {
+            Serial.printf("[RFID] NTAG: Write Page %u FAILED\n", 4 + p);
+            allOk = false;
+        }
     }
+    return allOk;
+}
 
+// Write Message (Supports Mifare Classic 1K AND NTAG213/215/216/Ultralight)
+bool rfidWriteMessage(uint8_t *uid, uint8_t uidLength, const char *value) {
     uint8_t raw[32] = {0};
     uint8_t textLen = strlen(value);
     if (textLen > RFID_MESSAGE_MAX_LEN) textLen = RFID_MESSAGE_MAX_LEN;
 
     // NDEF Text Record TLV Structure (NFC Forum Spec)
-    // 0x03 = NDEF TLV Tag
-    // [len] = NDEF Record Length
-    // 0xD1 = Header (MB=1, ME=1, CF=0, SR=1, IL=0, TNF=1)
-    // 0x01 = Type Length (1 byte: 'T')
-    // [payload_len] = Language len (3) + Text len
-    // 'T' = Text Record Type
-    // 0x02 = UTF-8, 2-byte language code ("en")
-    // 'e', 'n' = Language
-    // [text] = Employee Code
-    // 0xFE = NDEF Terminator TLV
-
     raw[0] = 0x03; // NDEF TLV Tag
     raw[1] = textLen + 7; // NDEF Message Length
     raw[2] = 0xD1; // Header
@@ -194,16 +204,26 @@ bool rfidWriteMessage(uint8_t *uid, uint8_t uidLength, const char *value) {
 
     logHex("[RFID] Write NDEF: intended raw = ", raw, sizeof(raw));
 
-    return writeAndVerifyBlocks(raw);
+    // Try Mifare Classic 1K authentication first
+    if (authenticateCardBlock(uid, uidLength, kMessageBlocks[0])) {
+        return writeAndVerifyBlocks(raw);
+    } else {
+        // Fallback to NTAG / Mifare Ultralight page write (Pages 4..11)
+        Serial.println("[RFID] Mifare auth failed - attempting NTAG / Ultralight Page Write...");
+        return writeNtagPages(raw, sizeof(raw));
+    }
 }
 
+// Clear Message / Format Card (Supports Mifare Classic 1K AND NTAG213/215/216/Ultralight)
 bool rfidClearMessage(uint8_t *uid, uint8_t uidLength) {
-    if (!authenticateCardBlock(uid, uidLength, kMessageBlocks[0])) {
-        return false;
-    }
-
     uint8_t raw[32] = {0};
-    return writeAndVerifyBlocks(raw);
+
+    if (authenticateCardBlock(uid, uidLength, kMessageBlocks[0])) {
+        return writeAndVerifyBlocks(raw);
+    } else {
+        Serial.println("[RFID] Mifare auth failed - attempting NTAG / Ultralight Page Clear...");
+        return writeNtagPages(raw, sizeof(raw));
+    }
 }
 
 void rfidDiagnoseCard(uint8_t *uid, uint8_t uidLength) {
