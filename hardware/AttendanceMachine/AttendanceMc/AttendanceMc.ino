@@ -746,8 +746,8 @@ void writeCompanyName(){
   oled.setCursor(10,0);
   oled.println(F("Sarvodaya Vidyalay"));
   oled.setTextSize(2);
-  oled.setCursor(30,15);
-  oled.println(tim.substring(0,5));
+  oled.setCursor(16, 15);
+  oled.println(tim.length() > 0 ? tim : "00:00:00");
   oled.setTextSize(1);
   oled.setCursor(0,55);
   oled.println(ipAddress);
