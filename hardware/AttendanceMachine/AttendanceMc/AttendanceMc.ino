@@ -885,6 +885,11 @@ void sendDataToServer() {
   if (isHttps) {
     std::unique_ptr<BearSSL::WiFiClientSecure> client(new BearSSL::WiFiClientSecure);
     client->setInsecure();
+    client->setBufferSizes(1024, 1024);
+    http.setTimeout(10000);
+    http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+    http.setUserAgent("ESP8266-AttendanceMachine");
+
     if (http.begin(*client, uri)) {
       http.addHeader("Accept", "application/json");
       if (api_token.length() > 0) {
@@ -904,6 +909,10 @@ void sendDataToServer() {
     }
   } else {
     WiFiClient client;
+    http.setTimeout(10000);
+    http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+    http.setUserAgent("ESP8266-AttendanceMachine");
+
     if (http.begin(client, uri)) {
       http.addHeader("Accept", "application/json");
       if (api_token.length() > 0) {
