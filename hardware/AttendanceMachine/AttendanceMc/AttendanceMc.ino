@@ -849,55 +849,86 @@ void setSettings() {
 }
 
 void sendDataToServer() {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("[API] Cannot send data: Wi-Fi not connected.");
+    return;
+  }
 
-  if ((WiFi.status() == WL_CONNECTED)) {
-    std::unique_ptr<BearSSL::WiFiClientSecure> client(
-        new BearSSL::WiFiClientSecure);
-    // client->setFingerprint(fingerprint);
+  if (sr_host.length() == 0) {
+    Serial.println("[API] Cannot send data: Host URI is empty.");
+    return;
+  }
+
+  String encodeduri = "tagid=" + urlEncode(tagId) +
+                      "&tagms=" + urlEncode(tagMs) +
+                      "&dt=" + urlEncode(dt) +
+                      "&tim=" + urlEncode(tim);
+
+  String uri = sr_host;
+  if (uri.indexOf('?') != -1) {
+    uri += "&" + encodeduri;
+  } else {
+    uri += "?" + encodeduri;
+  }
+
+  Serial.println("\n------------------------------------");
+  Serial.print("[API] Request URI: "); Serial.println(uri);
+  if (api_token.length() > 0) {
+    Serial.println("[API] Bearer Token Attached: YES");
+  } else {
+    Serial.println("[API] Bearer Token Attached: NO (token is empty)");
+  }
+
+  HTTPClient http;
+  bool isHttps = uri.startsWith("https://");
+
+  if (isHttps) {
+    std::unique_ptr<BearSSL::WiFiClientSecure> client(new BearSSL::WiFiClientSecure);
     client->setInsecure();
-    HTTPClient https;
-
-    // Serial.print("[HTTPS] begin...\n");
-
-    // String encodeduri = urlEncode("tagid=" + tagId + "&tagms=" + tagMs +
-    // "&dt=" + dt + "&tim=" + tim);
-
-    String encodeduri = "tagid=" + urlEncode(tagId) +
-                        "&tagms=" + urlEncode(tagMs) + "&dt=" + urlEncode(dt) +
-                        "&tim=" + urlEncode(tim);
-
-    String uri = sr_host + "?" + encodeduri;
-
-    // Serial.print(uri);
-
-    if (https.begin(*client, uri)) {
+    if (http.begin(*client, uri)) {
+      http.addHeader("Accept", "application/json");
       if (api_token.length() > 0) {
-        https.addHeader("Authorization", "Bearer " + api_token);
+        http.addHeader("Authorization", "Bearer " + api_token);
       }
-      // Serial.print("[HTTPS] GET...\n");
-      int httpCode = https.GET();
-      // Serial.println(httpCode);
+      int httpCode = http.GET();
+      Serial.print("[API] HTTPS Status Code: "); Serial.println(httpCode);
       if (httpCode > 0) {
-        // Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
-        if (httpCode == HTTP_CODE_OK ||
-            httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
-          String payload = https.getString();
-          Serial.println(payload);
-        }
+        String payload = http.getString();
+        Serial.print("[API] Server Response: "); Serial.println(payload);
       } else {
-        // Serial.printf("[HTTPS] GET... failed, error: %s\n",
-        // https.errorToString(httpCode).c_str());
+        Serial.print("[API] HTTPS GET Failed, Error: "); Serial.println(http.errorToString(httpCode).c_str());
       }
-      https.end();
+      http.end();
     } else {
-      // Serial.printf("[HTTPS] Unable to connect\n");
+      Serial.println("[API] Unable to initialize HTTPS connection");
+    }
+  } else {
+    WiFiClient client;
+    if (http.begin(client, uri)) {
+      http.addHeader("Accept", "application/json");
+      if (api_token.length() > 0) {
+        http.addHeader("Authorization", "Bearer " + api_token);
+      }
+      int httpCode = http.GET();
+      Serial.print("[API] HTTP Status Code: "); Serial.println(httpCode);
+      if (httpCode > 0) {
+        String payload = http.getString();
+        Serial.print("[API] Server Response: "); Serial.println(payload);
+      } else {
+        Serial.print("[API] HTTP GET Failed, Error: "); Serial.println(http.errorToString(httpCode).c_str());
+      }
+      http.end();
+    } else {
+      Serial.println("[API] Unable to initialize HTTP connection");
     }
   }
+  Serial.println("------------------------------------\n");
 }
 
 void readCard() {
   NfcTag tag = nfc.read();
   tagId = tag.getUidString();
+  tagMs = "";
   if (tag.hasNdefMessage()) {
     NdefRecord record = tag.getNdefMessage().getRecord(0);
     byte length = record.getPayloadLength();
@@ -910,10 +941,13 @@ void readCard() {
       tagMs = tagMs.substring(3);
     }
     tagMs.trim();
+  }
+
+  if (tagId.length() > 0 || tagMs.length() > 0) {
     showMessage();
     printLocalTime();
     sendDataToServer();
-    delay(2000); // Keep Employee Code visible on screen for 2 seconds
+    delay(2000);
   }
   writeCompanyName();
 }
