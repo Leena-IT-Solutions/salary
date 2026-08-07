@@ -19,6 +19,16 @@ class AttendanceMachineController extends Controller
     // http://localhost:8000/attendance/save?tagid=1234&tagms=LITS0001&dt=2024-08-01&tim=09:00
 
     public function save(Request $request){
+        $machineToken = Setting::where('key', 'Attendance Machine API Token')->first()?->value;
+        $requestToken = $request->bearerToken();
+
+        if ($machineToken && $requestToken !== $machineToken) {
+            return response()->json([
+                "employee" => "",
+                "message" => "Unauthorized: Invalid API Token"
+            ], 401);
+        }
+
         $employee_code = $request->tagms;
         $tagid = $request->tagid;
         $punch_date = $request->dt;
