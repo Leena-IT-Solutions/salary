@@ -397,6 +397,8 @@ static void handleSaveHomeWeb() {
             config->buzzer_enabled = newBuzzer;
             changed = true;
         }
+    }
+
     bool mdnsChanged = false;
     if (server.hasArg("mdns_name")) {
         String newVal = server.arg("mdns_name");
