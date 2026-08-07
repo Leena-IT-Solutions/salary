@@ -39,6 +39,8 @@ String card_value = "";
 String api_token = "";
 String company_name = "Company";
 String domain_name = "attendance.local";
+String admin_user = "admin";
+String admin_pass = "password";
 
 String webpage = "";
 IPAddress ipAddress;
@@ -437,6 +439,7 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
             <button id="btn-write" class="nav-tab" onclick="window.switchTab('write')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px;"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg> Write Card</button>
             <button id="btn-wifi" class="nav-tab" onclick="window.switchTab('wifi')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px;"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg> Wi-Fi & AP</button>
             <button id="btn-update" class="nav-tab" onclick="window.switchTab('update')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg> Update OTA</button>
+            <button id="btn-security" class="nav-tab" onclick="window.switchTab('security')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Security</button>
         </div>
 
         <!-- Page 1: Home -->
@@ -544,6 +547,21 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
                 <button type="submit" class="btn" style="background:#8b5cf6;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg> Flash Firmware (.bin)</button>
             </form>
         </div>
+
+        <!-- Page 5: Web Portal Security -->
+        <div id="tab-security" class="tab-content">
+            <h3 class="mb-3">Web Portal Credentials</h3>
+            <div class="mb-3">
+                <div class="mb-1">Portal Username</div>
+                <input id="admin_user" name="admin_user" type="text" placeholder="admin">
+            </div>
+            <div class="mb-3">
+                <div class="mb-1">Portal Password</div>
+                <input id="admin_pass" name="admin_pass" type="password" placeholder="••••••••">
+            </div>
+            <button onclick="window.saveData(false)" class="btn btn-save" style="margin-bottom:12px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Save Security Credentials</button>
+            <a href="/logout" class="btn" style="background:#dc2626; text-decoration:none; text-align:center; display:block;">🚪 Logout from Portal</a>
+        </div>
     </div>
 
     <script>
@@ -574,6 +592,8 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
                     if(data.api_token) document.getElementById("api_token").value = data.api_token;
                     document.getElementById("company_name").value = data.company_name || "Company";
                     document.getElementById("domain_name").value = data.domain_name || "attendance.local";
+                    document.getElementById("admin_user").value = data.admin_user || "admin";
+                    document.getElementById("admin_pass").value = data.admin_pass || "password";
                 } catch(e){}
             }
             window.loadQueue();
@@ -653,7 +673,9 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
                 card_value: document.getElementById("card_value").value,
                 api_token: document.getElementById("api_token").value,
                 company_name: document.getElementById("company_name").value,
-                domain_name: document.getElementById("domain_name").value
+                domain_name: document.getElementById("domain_name").value,
+                admin_user: document.getElementById("admin_user").value,
+                admin_pass: document.getElementById("admin_pass").value
             };
             var xmlHttp = new XMLHttpRequest();
             xmlHttp.open("GET", save_url + "?q=" + encodeURIComponent(JSON.stringify(data)), false);
@@ -788,13 +810,101 @@ void printLocalTime() {
   tim = timbuf;
 }
 
+bool is_authenticated() {
+  if (server.hasHeader("Cookie")) {
+    String cookie = server.header("Cookie");
+    if (cookie.indexOf("ESPSESSIONID=1") != -1) {
+      return true;
+    }
+  }
+  return false;
+}
+
+String getLoginPageHTML(String errorMsg) {
+  String errBox = "";
+  if (errorMsg.length() > 0) {
+    errBox = "<div style='background:#fef2f2;color:#dc2626;border:1px solid #fecaca;padding:10px;border-radius:8px;font-size:13px;text-align:center;margin-bottom:18px;'>" + errorMsg + "</div>";
+  }
+  String page = "<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Attendance System Login</title>"
+                "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
+                "<style>* { margin: 0; padding: 0; box-sizing: border-box; }"
+                "body { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif; background: #f4f6f9; color: #333; padding: 15px; display: flex; align-items: center; justify-content: center; min-height: 100vh; }"
+                ".card { width: 100%; max-width: 400px; background: #fff; border-radius: 12px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }"
+                "h1 { color: #1e3a5f; font-size: 22px; text-align: center; margin-bottom: 4px; }"
+                "p.subtitle { color: #64748b; font-size: 13px; text-align: center; margin-bottom: 25px; }"
+                "label { font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 5px; }"
+                "input { width: 100%; padding: 11px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; margin-bottom: 18px; outline: none; transition: border-color 0.2s; }"
+                "input:focus { border-color: #1e3a5f; }"
+                ".btn { background: #1e3a5f; color: #fff; border: 0; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; font-size: 14px; transition: background 0.2s; }"
+                ".btn:hover { background: #0f2744; }</style></head><body>"
+                "<div class='card'><h1>Attendance System</h1><p class='subtitle'>Powered By Leena IT Solutions</p>"
+                + errBox +
+                "<form method='POST' action='/login'>"
+                "<label>Username</label><input type='text' name='username' placeholder='admin' required autofocus>"
+                "<label>Password</label><input type='password' name='password' placeholder='••••••••' required>"
+                "<button type='submit' class='btn'>Login to Web Portal</button>"
+                "</form></div></body></html>";
+  return page;
+}
+
 void startWebServer() {
-  server.on("/", HTTP_GET, []() { server.send(200, "text/html", webpage); });
+  const char *headerkeys[] = {"Cookie"};
+  size_t headerkeyssize = sizeof(headerkeys) / sizeof(char *);
+  server.collectHeaders(headerkeys, headerkeyssize);
+
+  server.on("/login", HTTP_ANY, []() {
+    if (server.method() == HTTP_POST) {
+      String u = server.arg("username");
+      String p = server.arg("password");
+      if (u == admin_user && p == admin_pass) {
+        server.sendHeader("Set-Cookie", "ESPSESSIONID=1; Path=/; HttpOnly");
+        server.sendHeader("Location", "/");
+        server.send(302, "text/plain", "");
+        return;
+      } else {
+        String html = getLoginPageHTML("Invalid Username or Password!");
+        server.send(200, "text/html", html);
+        return;
+      }
+    }
+    if (is_authenticated()) {
+      server.sendHeader("Location", "/");
+      server.send(302, "text/plain", "");
+      return;
+    }
+    String html = getLoginPageHTML("");
+    server.send(200, "text/html", html);
+  });
+
+  server.on("/logout", HTTP_GET, []() {
+    server.sendHeader("Set-Cookie", "ESPSESSIONID=0; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT");
+    server.sendHeader("Location", "/login");
+    server.send(302, "text/plain", "");
+  });
+
+  server.on("/", HTTP_GET, []() {
+    if (!is_authenticated()) {
+      server.sendHeader("Location", "/login");
+      server.send(302, "text/plain", "");
+      return;
+    }
+    server.send(200, "text/html", webpage);
+  });
+
   server.on("/settings", HTTP_GET, []() {
+    if (!is_authenticated()) {
+      server.send(401, "application/json", "{\"error\":\"Unauthorized\"}");
+      return;
+    }
     String message = getSettings();
     server.send(200, "application/json", message);
   });
+
   server.on("/save", HTTP_GET, []() {
+    if (!is_authenticated()) {
+      server.send(401, "application/json", "{\"error\":\"Unauthorized\"}");
+      return;
+    }
     if (server.hasArg("q")) {
       String message = server.arg("q");
       saveSettings(message);
@@ -802,19 +912,35 @@ void startWebServer() {
       server.send(200, "application/json", "{\"status\":\"ok\"}");
     }
   });
+
   server.on("/queue", HTTP_GET, []() {
+    if (!is_authenticated()) {
+      server.send(401, "application/json", "{\"error\":\"Unauthorized\"}");
+      return;
+    }
     String jsonStr = getQueueJSON();
     server.send(200, "application/json", jsonStr);
   });
+
   server.on("/sync-queue", HTTP_GET, []() {
+    if (!is_authenticated()) {
+      server.send(401, "application/json", "{\"error\":\"Unauthorized\"}");
+      return;
+    }
     processOfflineQueue();
     String jsonStr = getQueueJSON();
     server.send(200, "application/json", jsonStr);
   });
+
   server.on("/clear-queue", HTTP_GET, []() {
+    if (!is_authenticated()) {
+      server.send(401, "application/json", "{\"error\":\"Unauthorized\"}");
+      return;
+    }
     clearQueue();
     server.send(200, "application/json", "[]");
   });
+
   httpUpdater.setup(&server, "/update");
   server.onNotFound(notFound);
   server.begin();
@@ -918,6 +1044,8 @@ String getSettings() {
   if (!doc.containsKey("api_token")) doc["api_token"] = api_token;
   if (!doc.containsKey("company_name") || doc["company_name"].as<String>().length() == 0) doc["company_name"] = (company_name.length() > 0) ? company_name : "Company";
   if (!doc.containsKey("domain_name") || doc["domain_name"].as<String>().length() == 0) doc["domain_name"] = (domain_name.length() > 0) ? domain_name : "attendance.local";
+  if (!doc.containsKey("admin_user") || doc["admin_user"].as<String>().length() == 0) doc["admin_user"] = (admin_user.length() > 0) ? admin_user : "admin";
+  if (!doc.containsKey("admin_pass") || doc["admin_pass"].as<String>().length() == 0) doc["admin_pass"] = (admin_pass.length() > 0) ? admin_pass : "password";
 
   String result = "";
   serializeJson(doc, result);
@@ -951,6 +1079,10 @@ void setSettings() {
     company_name = String(doc["company_name"]);
   if (doc.containsKey("domain_name"))
     domain_name = String(doc["domain_name"]);
+  if (doc.containsKey("admin_user"))
+    admin_user = String(doc["admin_user"]);
+  if (doc.containsKey("admin_pass"))
+    admin_pass = String(doc["admin_pass"]);
 
   if (op_mode.length() == 0)
     op_mode = "Read";
@@ -960,6 +1092,10 @@ void setSettings() {
     company_name = "Company";
   if (domain_name.length() == 0)
     domain_name = "attendance.local";
+  if (admin_user.length() == 0)
+    admin_user = "admin";
+  if (admin_pass.length() == 0)
+    admin_pass = "password";
 
   setupMDNS();
 }

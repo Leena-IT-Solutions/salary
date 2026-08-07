@@ -50,6 +50,7 @@
             <button id="btn-write" class="nav-tab" onclick="window.switchTab('write')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px;"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg> Write Card</button>
             <button id="btn-wifi" class="nav-tab" onclick="window.switchTab('wifi')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px;"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg> Wi-Fi & AP</button>
             <button id="btn-update" class="nav-tab" onclick="window.switchTab('update')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg> Update OTA</button>
+            <button id="btn-security" class="nav-tab" onclick="window.switchTab('security')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Security</button>
         </div>
 
         <!-- Page 1: Home -->
@@ -157,6 +158,21 @@
                 <button type="submit" class="btn" style="background:#8b5cf6;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg> Flash Firmware (.bin)</button>
             </form>
         </div>
+
+        <!-- Page 5: Web Portal Security -->
+        <div id="tab-security" class="tab-content">
+            <h3 class="mb-3">Web Portal Credentials</h3>
+            <div class="mb-3">
+                <div class="mb-1">Portal Username</div>
+                <input id="admin_user" name="admin_user" type="text" placeholder="admin">
+            </div>
+            <div class="mb-3">
+                <div class="mb-1">Portal Password</div>
+                <input id="admin_pass" name="admin_pass" type="password" placeholder="••••••••">
+            </div>
+            <button onclick="window.saveData(false)" class="btn btn-save" style="margin-bottom:12px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Save Security Credentials</button>
+            <a href="/logout" class="btn" style="background:#dc2626; text-decoration:none; text-align:center; display:block;">🚪 Logout from Portal</a>
+        </div>
     </div>
 
     <script>
@@ -187,6 +203,8 @@
                     if(data.api_token) document.getElementById("api_token").value = data.api_token;
                     document.getElementById("company_name").value = data.company_name || "Company";
                     document.getElementById("domain_name").value = data.domain_name || "attendance.local";
+                    document.getElementById("admin_user").value = data.admin_user || "admin";
+                    document.getElementById("admin_pass").value = data.admin_pass || "password";
                 } catch(e){}
             }
             window.loadQueue();
@@ -266,7 +284,9 @@
                 card_value: document.getElementById("card_value").value,
                 api_token: document.getElementById("api_token").value,
                 company_name: document.getElementById("company_name").value,
-                domain_name: document.getElementById("domain_name").value
+                domain_name: document.getElementById("domain_name").value,
+                admin_user: document.getElementById("admin_user").value,
+                admin_pass: document.getElementById("admin_pass").value
             };
             var xmlHttp = new XMLHttpRequest();
             xmlHttp.open("GET", save_url + "?q=" + encodeURIComponent(JSON.stringify(data)), false);
