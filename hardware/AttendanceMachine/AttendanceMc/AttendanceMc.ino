@@ -586,6 +586,7 @@ void getWebpage() {
 }
 
 void setupMDNS() {
+  MDNS.close();
   String host = domain_name;
   host.trim();
   if (host.endsWith(".local")) {
@@ -630,29 +631,16 @@ void startWiFi() {
 void printLocalTime() {
   struct tm timeinfo;
   if (!getLocalTime(&timeinfo)) {
-    // Serial.println("Failed to obtain time");
     return;
   }
-
-  // Serial.println(timeinfo.tm_sec);
-  // Serial.println(timeinfo.tm_min);
-  // Serial.println(timeinfo.tm_hour);
-  // Serial.println(timeinfo.tm_mday);
-  // Serial.println(timeinfo.tm_mon);
-  // Serial.println(timeinfo.tm_year);
-  // Serial.println(timeinfo.tm_wday);
-  // Serial.println(timeinfo.tm_yday);
-  // Serial.println(timeinfo.tm_isdst);
 
   char dtbuf[12];
   strftime(dtbuf, 80, "%F", &timeinfo);
   dt = dtbuf;
-  // Serial.println(dt);
 
   char timbuf[12];
   strftime(timbuf, 80, "%T", &timeinfo);
   tim = timbuf;
-  // Serial.println(tim);
 }
 
 void startWebServer() {
@@ -678,6 +666,7 @@ void saveSettings(String msg) {
   String old_ap_pswd = ap_pswd;
   String old_wf_ssid = wf_ssid;
   String old_wf_pswd = wf_pswd;
+  String old_domain_name = domain_name;
 
   File fl = SPIFFS.open(settings_filename, "w");
   if (!fl) {
@@ -691,10 +680,11 @@ void saveSettings(String msg) {
   // Immediately refresh OLED display screen with new mode!
   writeCompanyName();
 
-  bool wifiOrApChanged = (old_ap_ssid != ap_ssid) || (old_ap_pswd != ap_pswd) ||
-                         (old_wf_ssid != wf_ssid) || (old_wf_pswd != wf_pswd);
+  bool rebootNeeded = (old_ap_ssid != ap_ssid) || (old_ap_pswd != ap_pswd) ||
+                       (old_wf_ssid != wf_ssid) || (old_wf_pswd != wf_pswd) ||
+                       (old_domain_name != domain_name);
 
-  if (wifiOrApChanged) {
+  if (rebootNeeded) {
     server.send(200, "text/html",
                 "<!DOCTYPE html><html><head><meta name='viewport' "
                 "content='width=device-width, "
@@ -703,7 +693,7 @@ void saveSettings(String msg) {
                 ".card{background:#fff;padding:30px;border-radius:12px;display:"
                 "inline-block;box-shadow:0 4px 15px rgba(0,0,0,0.1);} "
                 "h2{color:#dc2626;margin-top:0;}</style></head><body><div "
-                "class='card'><h2>🔄 Rebooting Machine...</h2><p>Wi-Fi / AP "
+                "class='card'><h2>🔄 Rebooting Machine...</h2><p>Network / mDNS Domain "
                 "settings updated. Machine is restarting to apply new network "
                 "parameters...</p></div><script>setTimeout(function(){ "
                 "window.location.href='/'; }, 6000);</script></body></html>");
