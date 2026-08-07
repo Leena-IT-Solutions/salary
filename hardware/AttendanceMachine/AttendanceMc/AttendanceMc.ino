@@ -1259,6 +1259,12 @@ SyncResult sendDataToServerParams(String tId, String tMs, String d, String t) {
     return SYNC_CLIENT_ERROR;
   }
 
+  uint32_t freeHeap = ESP.getFreeHeap();
+  if (freeHeap < 10000) {
+    Serial.println("[API] Warning: Low Heap RAM (" + String(freeHeap) + " B). Aborting network call to prevent OOM crash.");
+    return SYNC_SERVER_ERROR;
+  }
+
   String encodeduri = "tagid=" + urlEncode(tId) +
                       "&tagms=" + urlEncode(tMs) +
                       "&dt=" + urlEncode(d) +
@@ -1293,14 +1299,17 @@ SyncResult sendDataToServerParams(String tId, String tMs, String d, String t) {
     http.setUserAgent("ESP8266-AttendanceMachine");
 
     yield();
+    ESP.wdtFeed();
     if (http.begin(client, uri)) {
       http.addHeader("Accept", "application/json");
       if (api_token.length() > 0) {
         http.addHeader("Authorization", "Bearer " + api_token);
       }
       yield();
+      ESP.wdtFeed();
       int httpCode = http.GET();
       yield();
+      ESP.wdtFeed();
       Serial.print("[API] HTTPS Status Code: "); Serial.println(httpCode);
       if (httpCode >= 200 && httpCode < 300) {
         String payload = http.getString();
@@ -1326,14 +1335,17 @@ SyncResult sendDataToServerParams(String tId, String tMs, String d, String t) {
     http.setUserAgent("ESP8266-AttendanceMachine");
 
     yield();
+    ESP.wdtFeed();
     if (http.begin(client, uri)) {
       http.addHeader("Accept", "application/json");
       if (api_token.length() > 0) {
         http.addHeader("Authorization", "Bearer " + api_token);
       }
       yield();
+      ESP.wdtFeed();
       int httpCode = http.GET();
       yield();
+      ESP.wdtFeed();
       Serial.print("[API] HTTP Status Code: "); Serial.println(httpCode);
       if (httpCode >= 200 && httpCode < 300) {
         String payload = http.getString();
@@ -1353,6 +1365,7 @@ SyncResult sendDataToServerParams(String tId, String tMs, String d, String t) {
     }
   }
   yield();
+  ESP.wdtFeed();
   Serial.println("------------------------------------\n");
   return result;
 }
@@ -1406,8 +1419,14 @@ void processOfflineQueue() {
     }
   } else { // SYNC_SERVER_ERROR
     consecutiveServerErrors++;
-    serverErrorCooldownUntil = millis() + 60000; // 60-second cooldown penalty!
-    Serial.println("[QUEUE] Server error/timeout detected. Entering 60s network cooldown penalty.");
+    unsigned long cooldownDuration = 30000; // 1st error: 30 seconds
+    if (consecutiveServerErrors == 2) {
+      cooldownDuration = 60000; // 2nd error: 60 seconds
+    } else if (consecutiveServerErrors >= 3) {
+      cooldownDuration = 300000; // 3rd+ error: 5 Minutes (300 seconds)!
+    }
+    serverErrorCooldownUntil = millis() + cooldownDuration;
+    Serial.println("[QUEUE] Server error/timeout #" + String(consecutiveServerErrors) + " detected. Entering " + String(cooldownDuration / 1000) + "s network cooldown penalty.");
   }
   isQueueSyncing = false;
 }
