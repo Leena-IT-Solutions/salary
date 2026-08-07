@@ -381,6 +381,7 @@ bool enqueueRecord(String tId, String tMs, String d, String t);
 bool dequeueRecord();
 void clearQueue();
 void processOfflineQueue();
+void factoryReset();
 SyncResult sendDataToServerParams(String tId, String tMs, String d, String t);
 SyncResult sendDataToServer();
 
@@ -560,13 +561,23 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
                 <input id="admin_pass" name="admin_pass" type="password" placeholder="••••••••">
             </div>
             <button onclick="window.saveData(false)" class="btn btn-save" style="margin-bottom:12px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Save Security Credentials</button>
-            <a href="/logout" class="btn" style="background:#dc2626; text-decoration:none; text-align:center; display:block;">🚪 Logout from Portal</a>
+            <a href="/logout" class="btn" style="background:#dc2626; text-decoration:none; text-align:center; display:block; margin-bottom:25px;">🚪 Logout from Portal</a>
+
+            <h3 class="mb-3" style="margin-top:25px; color:#dc2626; border-color:#fecaca;">Danger Zone</h3>
+            <p style="font-size:13px; color:#64748b; margin-bottom:12px;">Restore device to factory default settings. All Wi-Fi networks, saved settings, and offline pending queue records will be erased.</p>
+            <button onclick="window.factoryReset()" class="btn" style="background:#991b1b;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:4px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> ⚠️ Factory Reset Device</button>
         </div>
     </div>
 
     <script>
         var url = "/settings";
         var save_url = "/save";
+
+        window.factoryReset = function() {
+            if (confirm("⚠️ DANGER: Are you sure you want to perform Factory Reset?\n\nThis will permanently erase all saved Wi-Fi networks, server settings, admin credentials, and offline pending queue records.")) {
+                window.location.href = "/factory-reset";
+            }
+        };
         
         window.switchTab = function(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -941,9 +952,60 @@ void startWebServer() {
     server.send(200, "application/json", "[]");
   });
 
+  server.on("/factory-reset", HTTP_ANY, []() {
+    if (!is_authenticated()) {
+      server.send(401, "text/plain", "Unauthorized");
+      return;
+    }
+    factoryReset();
+  });
+
   httpUpdater.setup(&server, "/update");
   server.onNotFound(notFound);
   server.begin();
+}
+
+void factoryReset() {
+  if (SPIFFS.exists(settings_filename)) {
+    SPIFFS.remove(settings_filename);
+  }
+  if (SPIFFS.exists(queue_filename)) {
+    SPIFFS.remove(queue_filename);
+  }
+  ap_ssid = "attendance";
+  ap_pswd = "123456789";
+  wf_ssid = "";
+  wf_pswd = "";
+  op_mode = "Read";
+  sr_host = "https://payroll.sarvodayavidyalay.com/attendance/save";
+  card_value = "";
+  api_token = "";
+  company_name = "Company";
+  domain_name = "attendance.local";
+  admin_user = "admin";
+  admin_pass = "password";
+
+  oled.clearDisplay();
+  oled.setCursor(0, 0);
+  oled.println(company_name);
+  oled.setCursor(0, 15);
+  oled.println("FACTORY RESET!");
+  oled.setCursor(0, 30);
+  oled.println("Rebooting...");
+  oled.display();
+
+  beep(2, 200, 100);
+
+  String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Factory Reset</title>"
+                "<meta http-equiv='refresh' content='10;url=http://attendance.local/'>"
+                "<style>body{font-family:sans-serif;background:#f4f6f9;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;}"
+                ".card{background:#fff;padding:30px;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,0.1);text-align:center;max-width:400px;}"
+                "h2{color:#dc2626;margin-bottom:10px;}p{color:#64748b;font-size:14px;}</style></head><body>"
+                "<div class='card'><h2>⚠️ Factory Reset Complete</h2>"
+                "<p>Device memory cleared. Rebooting into AP Access Point mode...</p></div></body></html>";
+  server.send(200, "text/html", html);
+  delay(1500);
+  ESP.restart();
 }
 
 void saveSettings(String msg) {
