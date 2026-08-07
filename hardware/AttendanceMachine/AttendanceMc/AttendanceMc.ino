@@ -321,6 +321,9 @@ public:
     _u8g2.drawStr(_cursorX, _cursorY + (_textSize == 1 ? 8 : 16), str.c_str());
   }
 
+  void print(const String &str) { println(str); }
+  void print(int val) { println(String(val)); }
+
   void println(IPAddress ip) { println(ip.toString()); }
 
   void display() { _u8g2.sendBuffer(); }
@@ -1194,9 +1197,10 @@ void readCard() {
       oled.clearDisplay();
       oled.setCursor(0, 0);
       oled.println(company_name);
-      oled.println("-----------------");
+      oled.setCursor(0, 15);
       oled.println("SAVED OFFLINE!");
-      oled.print("Queue Count: "); oled.println(getQueueCount());
+      oled.setCursor(0, 30);
+      oled.println("Queue Count: " + String(getQueueCount()));
       oled.display();
     }
     delay(2000);
