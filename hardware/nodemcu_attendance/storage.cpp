@@ -197,6 +197,7 @@ void storageSyncOfflinePunches(const String &hostUri, const String &apiToken) {
             if (isHttps) {
                 WiFiClientSecure *clientSec = new WiFiClientSecure();
                 clientSec->setInsecure();
+                clientSec->setBufferSizes(2048, 1024);
                 clientSec->setTimeout(kSyncTimeoutMs);
                 http.begin(*clientSec, url);
                 if (apiToken.length() > 0) http.addHeader("Authorization", "Bearer " + apiToken);
