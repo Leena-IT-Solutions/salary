@@ -50,8 +50,6 @@ static bool authenticateCardBlock(uint8_t *uid, uint8_t uidLength, uint8_t block
             memcpy(keyCopy, kKnownKeys[k].key, 6);
 
             if (nfc.mifareclassic_AuthenticateBlock(uid, uidLength, blockNum, keyType, keyCopy)) {
-                Serial.printf("[RFID] Auth SUCCESS on Block %u using Key %s (%s)\n", 
-                              blockNum, keyType == 0 ? "A" : "B", kKnownKeys[k].name);
                 return true;
             }
             uint8_t dumpUid[7]; uint8_t dumpLen = 0;
@@ -108,35 +106,54 @@ static void extractMessageString(const uint8_t *raw, size_t rawLen, char *out, s
     out[idx] = '\0';
 }
 
-// Read Message (Supports Mifare Classic 1K AND NTAG213/215/216/Ultralight)
+// Read Message with Auto-Retry (Supports Mifare Classic 1K AND NTAG213/215/216/Ultralight)
 bool rfidReadMessage(uint8_t *uid, uint8_t uidLength, char *out, size_t outSize) {
     uint8_t raw[32] = {0};
+    bool readSuccess = false;
 
-    // Try Mifare Classic 1K authentication
+    // Attempt 1: Mifare Classic 1K
     if (authenticateCardBlock(uid, uidLength, kMessageBlocks[0])) {
-        for (uint8_t i = 0; i < 2; i++) {
-            if (!nfc.mifareclassic_ReadDataBlock(kMessageBlocks[i], raw + i * 16)) {
-                Serial.printf("[RFID] Read: block %u read FAILED\n", kMessageBlocks[i]);
-                return false;
+        if (nfc.mifareclassic_ReadDataBlock(kMessageBlocks[0], raw) &&
+            nfc.mifareclassic_ReadDataBlock(kMessageBlocks[1], raw + 16)) {
+            readSuccess = true;
+        }
+    }
+
+    // Retry once if fast-swipe caused authentication or I2C read error
+    if (!readSuccess) {
+        delay(20);
+        uint8_t retryUid[7]; uint8_t retryLen = 0;
+        if (nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, retryUid, &retryLen, 30)) {
+            if (authenticateCardBlock(retryUid, retryLen, kMessageBlocks[0])) {
+                if (nfc.mifareclassic_ReadDataBlock(kMessageBlocks[0], raw) &&
+                    nfc.mifareclassic_ReadDataBlock(kMessageBlocks[1], raw + 16)) {
+                    readSuccess = true;
+                }
             }
         }
-    } else {
-        // Fallback to NTAG / Mifare Ultralight page read (Pages 4, 5, 6, 7)
-        Serial.println("[RFID] Mifare auth failed - attempting NTAG / Ultralight Page Read...");
+    }
+
+    // Attempt 2: NTAG / Mifare Ultralight page read (Pages 4, 5, 6, 7)
+    if (!readSuccess) {
         for (uint8_t p = 0; p < 8; p++) {
             uint8_t pageData[4] = {0};
             if (nfc.mifareultralight_ReadPage(4 + p, pageData)) {
                 memcpy(raw + p * 4, pageData, 4);
+                readSuccess = true;
             } else {
                 break;
             }
         }
     }
 
-    logHex("[RFID] Read: raw = ", raw, sizeof(raw));
-    extractMessageString(raw, sizeof(raw), out, outSize);
-    Serial.printf("[RFID] Read: decoded = \"%s\"\n", out);
-    return strlen(out) > 0;
+    if (readSuccess) {
+        logHex("[RFID] Read: raw = ", raw, sizeof(raw));
+        extractMessageString(raw, sizeof(raw), out, outSize);
+        Serial.printf("[RFID] Read: decoded = \"%s\"\n", out);
+        return strlen(out) > 0;
+    }
+
+    return false;
 }
 
 static const uint16_t kWriteSettleMs = 10;
