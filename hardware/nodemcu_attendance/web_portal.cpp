@@ -295,15 +295,46 @@ static void handlePasswordTab() {
 static void handleSaveHomeWeb() {
     if (!requireAuth()) return;
 
-    if (server.hasArg("company_name")) strncpy(config->company_name, server.arg("company_name").c_str(), sizeof(config->company_name));
-    if (server.hasArg("host_uri")) strncpy(config->host_uri, server.arg("host_uri").c_str(), sizeof(config->host_uri));
-    if (server.hasArg("api_token")) strncpy(config->api_token, server.arg("api_token").c_str(), sizeof(config->api_token));
-    if (server.hasArg("op_mode")) config->op_mode = server.arg("op_mode").toInt();
+    bool changed = false;
 
-    storageSaveConfig(*config);
-    if (savedCallback) savedCallback();
+    if (server.hasArg("company_name")) {
+        String newVal = server.arg("company_name");
+        if (String(config->company_name) != newVal) {
+            strncpy(config->company_name, newVal.c_str(), sizeof(config->company_name));
+            changed = true;
+        }
+    }
+    if (server.hasArg("host_uri")) {
+        String newVal = server.arg("host_uri");
+        if (String(config->host_uri) != newVal) {
+            strncpy(config->host_uri, newVal.c_str(), sizeof(config->host_uri));
+            changed = true;
+        }
+    }
+    if (server.hasArg("api_token")) {
+        String newVal = server.arg("api_token");
+        if (String(config->api_token) != newVal) {
+            strncpy(config->api_token, newVal.c_str(), sizeof(config->api_token));
+            changed = true;
+        }
+    }
+    if (server.hasArg("op_mode")) {
+        uint8_t newMode = server.arg("op_mode").toInt();
+        if (config->op_mode != newMode) {
+            config->op_mode = newMode;
+            changed = true;
+        }
+    }
 
-    String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><meta http-equiv='refresh' content='2;url=/'><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f4f6f9;text-align:center;padding:50px;} .card{background:#fff;padding:30px;border-radius:12px;display:inline-block;box-shadow:0 4px 15px rgba(0,0,0,0.1);} h2{color:#10b981;margin-top:0;} a{color:#1e3a5f;text-decoration:none;font-weight:bold;}</style></head><body><div class='card'><h2>✓ Home Settings Applied Live!</h2><p>Company name, Mode, and Host URI updated in real-time without rebooting.</p><p><a href='/'>Returning to Home...</a></p></div></body></html>";
+    if (changed) {
+        storageSaveConfig(*config);
+        if (savedCallback) savedCallback();
+    }
+
+    String msgHtml = changed ? "<h2>✓ Home Settings Updated Live!</h2><p>Changes saved and applied in real-time.</p>" 
+                             : "<h2>ℹ️ No Changes Detected</h2><p>Submitted values match current settings - unchanged.</p>";
+
+    String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><meta http-equiv='refresh' content='2;url=/'><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f4f6f9;text-align:center;padding:50px;} .card{background:#fff;padding:30px;border-radius:12px;display:inline-block;box-shadow:0 4px 15px rgba(0,0,0,0.1);} h2{color:" + String(changed ? "#10b981" : "#1e3a5f") + ";margin-top:0;} a{color:#1e3a5f;text-decoration:none;font-weight:bold;}</style></head><body><div class='card'>" + msgHtml + "<p><a href='/'>Returning to Home...</a></p></div></body></html>";
     server.send(200, "text/html", html);
 }
 
@@ -311,51 +342,88 @@ static void handleSaveHomeWeb() {
 static void handleSaveWifiWeb() {
     if (!requireAuth()) return;
 
-    String oldWifiSsid = String(config->wifi_ssid);
-    String oldWifiPass = String(config->wifi_pass);
-    String oldApSsid = String(config->ap_ssid);
-    String oldApPass = String(config->ap_pass);
+    bool wifiChanged = false;
+    bool apChanged = false;
 
-    if (server.hasArg("ap_ssid")) strncpy(config->ap_ssid, server.arg("ap_ssid").c_str(), sizeof(config->ap_ssid));
-    if (server.hasArg("ap_pass")) strncpy(config->ap_pass, server.arg("ap_pass").c_str(), sizeof(config->ap_pass));
-    if (server.hasArg("wifi_ssid")) strncpy(config->wifi_ssid, server.arg("wifi_ssid").c_str(), sizeof(config->wifi_ssid));
-    if (server.hasArg("wifi_pass")) strncpy(config->wifi_pass, server.arg("wifi_pass").c_str(), sizeof(config->wifi_pass));
-
-    storageSaveConfig(*config);
-    if (savedCallback) savedCallback();
-
-    // Live Wi-Fi reconnect if credentials changed
-    if (String(config->wifi_ssid) != oldWifiSsid || String(config->wifi_pass) != oldWifiPass) {
-        wifiApplyLiveWifiCredentials(*config);
+    if (server.hasArg("ap_ssid")) {
+        String newVal = server.arg("ap_ssid");
+        if (String(config->ap_ssid) != newVal) {
+            strncpy(config->ap_ssid, newVal.c_str(), sizeof(config->ap_ssid));
+            apChanged = true;
+        }
+    }
+    if (server.hasArg("ap_pass")) {
+        String newVal = server.arg("ap_pass");
+        if (String(config->ap_pass) != newVal) {
+            strncpy(config->ap_pass, newVal.c_str(), sizeof(config->ap_pass));
+            apChanged = true;
+        }
+    }
+    if (server.hasArg("wifi_ssid")) {
+        String newVal = server.arg("wifi_ssid");
+        if (String(config->wifi_ssid) != newVal) {
+            strncpy(config->wifi_ssid, newVal.c_str(), sizeof(config->wifi_ssid));
+            wifiChanged = true;
+        }
+    }
+    if (server.hasArg("wifi_pass")) {
+        String newVal = server.arg("wifi_pass");
+        if (String(config->wifi_pass) != newVal) {
+            strncpy(config->wifi_pass, newVal.c_str(), sizeof(config->wifi_pass));
+            wifiChanged = true;
+        }
     }
 
-    // Live AP update if AP credentials changed
-    if (String(config->ap_ssid) != oldApSsid || String(config->ap_pass) != oldApPass) {
-        wifiApplyLiveApCredentials(*config);
+    bool anyChanged = (wifiChanged || apChanged);
+
+    if (anyChanged) {
+        storageSaveConfig(*config);
+        if (savedCallback) savedCallback();
+
+        if (wifiChanged) wifiApplyLiveWifiCredentials(*config);
+        if (apChanged) wifiApplyLiveApCredentials(*config);
     }
 
-    String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><meta http-equiv='refresh' content='2;url=/wifi'><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f4f6f9;text-align:center;padding:50px;} .card{background:#fff;padding:30px;border-radius:12px;display:inline-block;box-shadow:0 4px 15px rgba(0,0,0,0.1);} h2{color:#10b981;margin-top:0;} a{color:#1e3a5f;text-decoration:none;font-weight:bold;}</style></head><body><div class='card'><h2>✓ Wi-Fi Settings Applied Live!</h2><p>Access Point and Wi-Fi credentials updated without rebooting.</p><p><a href='/wifi'>Returning to AP & Wifi...</a></p></div></body></html>";
+    String msgHtml = anyChanged ? "<h2>✓ Wi-Fi Settings Updated Live!</h2><p>Network credentials updated and applied without rebooting.</p>" 
+                                : "<h2>ℹ️ No Changes Detected</h2><p>Wi-Fi credentials match current settings - unchanged.</p>";
+
+    String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><meta http-equiv='refresh' content='2;url=/wifi'><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f4f6f9;text-align:center;padding:50px;} .card{background:#fff;padding:30px;border-radius:12px;display:inline-block;box-shadow:0 4px 15px rgba(0,0,0,0.1);} h2{color:" + String(anyChanged ? "#10b981" : "#1e3a5f") + ";margin-top:0;} a{color:#1e3a5f;text-decoration:none;font-weight:bold;}</style></head><body><div class='card'>" + msgHtml + "<p><a href='/wifi'>Returning to AP & Wifi...</a></p></div></body></html>";
     server.send(200, "text/html", html);
 }
 
-// Save Password Settings & Reboot Machine!
+// Save Password Settings & Reboot Machine (Reboots ONLY if password/username changed!)
 static void handleSavePasswordWeb() {
     if (!requireAuth()) return;
 
+    bool changed = false;
+
     if (server.hasArg("portal_user") && server.arg("portal_user").length() > 0) {
-        strncpy(config->portal_user, server.arg("portal_user").c_str(), sizeof(config->portal_user));
+        String newVal = server.arg("portal_user");
+        if (String(config->portal_user) != newVal) {
+            strncpy(config->portal_user, newVal.c_str(), sizeof(config->portal_user));
+            changed = true;
+        }
     }
     if (server.hasArg("portal_pass") && server.arg("portal_pass").length() > 0) {
-        strncpy(config->portal_pass, server.arg("portal_pass").c_str(), sizeof(config->portal_pass));
+        String newVal = server.arg("portal_pass");
+        if (String(config->portal_pass) != newVal) {
+            strncpy(config->portal_pass, newVal.c_str(), sizeof(config->portal_pass));
+            changed = true;
+        }
     }
 
-    storageSaveConfig(*config);
+    if (changed) {
+        storageSaveConfig(*config);
 
-    String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f4f6f9;text-align:center;padding:50px;} .card{background:#fff;padding:30px;border-radius:12px;display:inline-block;box-shadow:0 4px 15px rgba(0,0,0,0.1);} h2{color:#dc2626;margin-top:0;}</style></head><body><div class='card'><h2>🔄 Rebooting Terminal...</h2><p>Password updated successfully. Machine is restarting now...</p></div></body></html>";
-    server.send(200, "text/html", html);
+        String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f4f6f9;text-align:center;padding:50px;} .card{background:#fff;padding:30px;border-radius:12px;display:inline-block;box-shadow:0 4px 15px rgba(0,0,0,0.1);} h2{color:#dc2626;margin-top:0;}</style></head><body><div class='card'><h2>🔄 Rebooting Terminal...</h2><p>Credentials updated successfully. Machine is restarting now...</p></div></body></html>";
+        server.send(200, "text/html", html);
 
-    delay(1000);
-    ESP.restart();
+        delay(1000);
+        ESP.restart();
+    } else {
+        String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><meta http-equiv='refresh' content='2;url=/password'><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f4f6f9;text-align:center;padding:50px;} .card{background:#fff;padding:30px;border-radius:12px;display:inline-block;box-shadow:0 4px 15px rgba(0,0,0,0.1);} h2{color:#1e3a5f;margin-top:0;} a{color:#1e3a5f;text-decoration:none;font-weight:bold;}</style></head><body><div class='card'><h2>ℹ️ No Changes Detected</h2><p>Username and password match current credentials - no reboot required.</p><p><a href='/password'>Returning to Password...</a></p></div></body></html>";
+        server.send(200, "text/html", html);
+    }
 }
 
 static void handleWriteCardWeb() {
