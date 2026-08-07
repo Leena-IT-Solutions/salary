@@ -138,16 +138,15 @@ void processCardScan(String tagidStr, uint8_t *uid, uint8_t uidLength) {
     switch (currentConfig.op_mode) {
         case MODE_READ: {
             time_t now = time(nullptr);
-            if (now <= 100000) {
-                beepError();
-                break;
+            char dateBuf[16] = "1970-01-01";
+            char timeBuf[16] = "00:00:00";
+            if (now > 100000) {
+                struct tm *timeinfo = localtime(&now);
+                strftime(dateBuf, sizeof(dateBuf), "%Y-%m-%d", timeinfo);
+                strftime(timeBuf, sizeof(timeBuf), "%H:%M:%S", timeinfo);
+            } else {
+                snprintf(timeBuf, sizeof(timeBuf), "UP-%lu", millis() / 1000);
             }
-
-            struct tm *timeinfo = localtime(&now);
-            char dateBuf[16];
-            char timeBuf[16];
-            strftime(dateBuf, sizeof(dateBuf), "%Y-%m-%d", timeinfo);
-            strftime(timeBuf, sizeof(timeBuf), "%H:%M:%S", timeinfo);
 
             if (WiFi.status() == WL_CONNECTED) {
                 String url = String(currentConfig.host_uri);
@@ -301,6 +300,14 @@ void setup() {
 
     audioInit();
     beepPowerOn();
+
+    if (!LittleFS.begin()) {
+        Serial.println("[LittleFS] Mount failed! Formatting filesystem...");
+        LittleFS.format();
+        LittleFS.begin();
+    } else {
+        Serial.println("[LittleFS] Filesystem mounted successfully.");
+    }
 
     storageLoadConfig(currentConfig);
     audioSetMute(currentConfig.buzzer_enabled == 0);

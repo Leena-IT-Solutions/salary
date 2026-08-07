@@ -99,6 +99,10 @@ void storageResetConfig(Config &cfg) {
 // ==========================================
 void storageSaveOfflinePunch(const String &tagms, const String &tagid,
                               const String &dateStr, const String &timeStr) {
+    if (!LittleFS.begin()) {
+        Serial.println("[OFFLINE STORAGE ERROR] LittleFS filesystem failed to mount!");
+        return;
+    }
     File file = LittleFS.open("/punches.txt", "a");
     if (file) {
         file.print(tagms);
@@ -109,16 +113,23 @@ void storageSaveOfflinePunch(const String &tagms, const String &tagid,
         file.print(",");
         file.println(timeStr);
         file.close();
+        Serial.printf("[OFFLINE QUEUE] Saved punch offline: Code=%s, Tag=%s, Date=%s, Time=%s\n",
+                      tagms.c_str(), tagid.c_str(), dateStr.c_str(), timeStr.c_str());
+    } else {
+        Serial.println("[OFFLINE STORAGE ERROR] Failed to open /punches.txt for writing!");
     }
 }
 
 void storageClearOfflineQueue() {
+    if (!LittleFS.begin()) return;
     if (LittleFS.exists("/punches.txt")) {
         LittleFS.remove("/punches.txt");
+        Serial.println("[OFFLINE QUEUE] Cleared all offline punches.");
     }
 }
 
 int storageGetOfflineQueueCount() {
+    if (!LittleFS.begin()) return 0;
     if (!LittleFS.exists("/punches.txt")) return 0;
     File file = LittleFS.open("/punches.txt", "r");
     if (!file) return 0;
@@ -134,6 +145,7 @@ int storageGetOfflineQueueCount() {
 }
 
 String storageGetOfflineQueueContents() {
+    if (!LittleFS.begin()) return "";
     if (!LittleFS.exists("/punches.txt")) return "";
     File file = LittleFS.open("/punches.txt", "r");
     if (!file) return "";
