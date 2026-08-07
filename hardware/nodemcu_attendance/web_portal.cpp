@@ -657,7 +657,7 @@ void webPortalStart() {
     server.on("/queue/clear", HTTP_POST, handleQueueClearWeb);
     
     server.onNotFound([]() {
-        server.sendHeader("Location", "http://192.168.4.1/", true);
+        server.sendHeader("Location", "/", true);
         server.send(302, "text/plain", "");
     });
     server.begin();
