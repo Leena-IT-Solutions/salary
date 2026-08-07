@@ -1284,20 +1284,23 @@ SyncResult sendDataToServerParams(String tId, String tMs, String d, String t) {
   SyncResult result = SYNC_SERVER_ERROR;
 
   if (isHttps) {
-    std::unique_ptr<BearSSL::WiFiClientSecure> client(new BearSSL::WiFiClientSecure);
-    client->setInsecure();
-    client->setBufferSizes(1024, 1024);
-    client->setTimeout(2500);
-    http.setTimeout(2500);
+    BearSSL::WiFiClientSecure client;
+    client.setInsecure();
+    client.setBufferSizes(2048, 1024);
+    client.setTimeout(6000);
+    http.setTimeout(6000);
     http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
     http.setUserAgent("ESP8266-AttendanceMachine");
 
-    if (http.begin(*client, uri)) {
+    yield();
+    if (http.begin(client, uri)) {
       http.addHeader("Accept", "application/json");
       if (api_token.length() > 0) {
         http.addHeader("Authorization", "Bearer " + api_token);
       }
+      yield();
       int httpCode = http.GET();
+      yield();
       Serial.print("[API] HTTPS Status Code: "); Serial.println(httpCode);
       if (httpCode >= 200 && httpCode < 300) {
         String payload = http.getString();
@@ -1317,17 +1320,20 @@ SyncResult sendDataToServerParams(String tId, String tMs, String d, String t) {
     }
   } else {
     WiFiClient client;
-    client.setTimeout(2500);
-    http.setTimeout(2500);
+    client.setTimeout(6000);
+    http.setTimeout(6000);
     http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
     http.setUserAgent("ESP8266-AttendanceMachine");
 
+    yield();
     if (http.begin(client, uri)) {
       http.addHeader("Accept", "application/json");
       if (api_token.length() > 0) {
         http.addHeader("Authorization", "Bearer " + api_token);
       }
+      yield();
       int httpCode = http.GET();
+      yield();
       Serial.print("[API] HTTP Status Code: "); Serial.println(httpCode);
       if (httpCode >= 200 && httpCode < 300) {
         String payload = http.getString();
@@ -1346,6 +1352,7 @@ SyncResult sendDataToServerParams(String tId, String tMs, String d, String t) {
       result = SYNC_SERVER_ERROR;
     }
   }
+  yield();
   Serial.println("------------------------------------\n");
   return result;
 }
@@ -1399,8 +1406,8 @@ void processOfflineQueue() {
     }
   } else { // SYNC_SERVER_ERROR
     consecutiveServerErrors++;
-    serverErrorCooldownUntil = millis() + 30000;
-    Serial.println("[QUEUE] Server error/timeout detected. Entering 30s network cooldown penalty.");
+    serverErrorCooldownUntil = millis() + 60000; // 60-second cooldown penalty!
+    Serial.println("[QUEUE] Server error/timeout detected. Entering 60s network cooldown penalty.");
   }
   isQueueSyncing = false;
 }
