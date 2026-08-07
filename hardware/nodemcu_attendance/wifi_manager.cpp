@@ -56,6 +56,7 @@ void wifiConnect(Config &cfg) {
     Serial.printf("[WIFI] Connecting to Wi-Fi SSID: '%s'...\n", cfg.wifi_ssid);
 
     WiFi.persistent(false);
+    WiFi.setAutoReconnect(true);
     WiFi.mode(WIFI_STA);
     WiFi.setOutputPower(17.5);
     WiFi.begin(cfg.wifi_ssid, cfg.wifi_pass);
@@ -72,7 +73,8 @@ void wifiConnect(Config &cfg) {
     if (WiFi.status() == WL_CONNECTED) {
         apMode = false;
         reconnectFailures = 0;
-        Serial.printf("[WIFI] Connected! IP Address: %s | RSSI: %d dBm\n", 
+        lastReconnectAttempt = millis(); // Reset reconnect timer!
+        Serial.printf("[WIFI] Connected cleanly! IP Address: %s | RSSI: %d dBm\n", 
                       WiFi.localIP().toString().c_str(), WiFi.RSSI());
         configTime(cfg.tz_offset, 0, "pool.ntp.org", "time.nist.gov");
         startMDNSAndPortal(cfg);
@@ -91,6 +93,7 @@ void wifiLoop(Config &cfg) {
 
     if (WiFi.status() == WL_CONNECTED) {
         reconnectFailures = 0;
+        lastReconnectAttempt = millis();
         return;
     }
 
@@ -99,11 +102,11 @@ void wifiLoop(Config &cfg) {
     lastReconnectAttempt = now;
 
     reconnectFailures++;
-    Serial.printf("[WIFI] Connection lost! Reconnect attempt %d/%d to '%s'...\n", 
+    Serial.printf("[WIFI] Connection status disconnected! Reconnect attempt %d/%d to '%s'...\n", 
                   reconnectFailures, MAX_RECONNECT_FAILURES_BEFORE_AP, cfg.wifi_ssid);
 
-    if (reconnectFailures > MAX_RECONNECT_FAILURES_BEFORE_AP) {
-        Serial.println("[WIFI] Reconnect limit reached. Switching back to AP Mode.");
+    if (reconnectFailures >= MAX_RECONNECT_FAILURES_BEFORE_AP) {
+        Serial.println("[WIFI] Continuous disconnect limit reached. Falling back to AP Mode.");
         wifiStartAPMode(cfg);
         return;
     }
