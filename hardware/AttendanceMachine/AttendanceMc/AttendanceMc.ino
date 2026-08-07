@@ -660,23 +660,23 @@ void sendDataToServer(){
 
 void readCard(){
   NfcTag tag = nfc.read();
-  //tag.print();
   tagId = tag.getUidString();
-  //Serial.println(tagId);
   if(tag.hasNdefMessage()){
     NdefRecord record = tag.getNdefMessage().getRecord(0);
     byte length = record.getPayloadLength();
-    byte payload[length];
+    byte payload[length + 1];
+    memset(payload, 0, sizeof(payload));
     record.getPayload(payload);
+    payload[length] = '\0';
     tagMs = String((char *)payload);
     if (tagMs.length() >= 3) {
       tagMs = tagMs.substring(3);
     }
     tagMs.trim();
     showMessage();
-    //Serial.println(tagMs);
     printLocalTime();
     sendDataToServer();
+    delay(2000); // Keep Employee Code visible on screen for 2 seconds
   }
   writeCompanyName();
 }
@@ -769,9 +769,11 @@ void writeBrandName(){
 }
 
 void showMessage(){
-  int c = (10 - tagMs.length())*6;
+  oled.clearDisplay();
+  int c = (10 - tagMs.length()) * 6;
+  if (c < 0) c = 0;
   oled.setTextSize(2);
-  oled.setCursor(c,35);
+  oled.setCursor(c, 25);
   oled.println(tagMs);
   oled.display();
 }
