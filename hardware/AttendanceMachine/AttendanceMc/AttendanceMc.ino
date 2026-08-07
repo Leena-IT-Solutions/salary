@@ -685,18 +685,29 @@ void saveSettings(String msg) {
                        (old_domain_name != domain_name);
 
   if (rebootNeeded) {
-    server.send(200, "text/html",
-                "<!DOCTYPE html><html><head><meta name='viewport' "
-                "content='width=device-width, "
-                "initial-scale=1.0'><style>body{font-family:-apple-system,sans-"
-                "serif;background:#f4f6f9;text-align:center;padding:50px;} "
-                ".card{background:#fff;padding:30px;border-radius:12px;display:"
-                "inline-block;box-shadow:0 4px 15px rgba(0,0,0,0.1);} "
-                "h2{color:#dc2626;margin-top:0;}</style></head><body><div "
-                "class='card'><h2>🔄 Rebooting Machine...</h2><p>Network / mDNS Domain "
-                "settings updated. Machine is restarting to apply new network "
-                "parameters...</p></div><script>setTimeout(function(){ "
-                "window.location.href='/'; }, 6000);</script></body></html>");
+    String redirectTarget = "/";
+    if (old_domain_name != domain_name) {
+      String cleanDom = domain_name;
+      cleanDom.trim();
+      if (!cleanDom.startsWith("http://") && !cleanDom.startsWith("https://")) {
+        cleanDom = "http://" + cleanDom;
+      }
+      if (!cleanDom.endsWith("/")) {
+        cleanDom += "/";
+      }
+      redirectTarget = cleanDom;
+    }
+
+    String responseHtml = "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-width, initial-scale=1.0'>"
+                          "<style>body{font-family:-apple-system,sans-serif;background:#f4f6f9;text-align:center;padding:50px;}"
+                          ".card{background:#fff;padding:30px;border-radius:12px;display:inline-block;box-shadow:0 4px 15px rgba(0,0,0,0.1);}"
+                          "h2{color:#2563eb;margin-top:0;} p{color:#475569;font-size:14px;}</style></head><body>"
+                          "<div class='card'><h2>🔄 Rebooting Machine...</h2>"
+                          "<p>Network / mDNS Domain settings updated. Machine is restarting...</p>"
+                          "<p style='margin-top:10px;font-weight:600;'>Redirecting to <u>" + redirectTarget + "</u></p></div>"
+                          "<script>setTimeout(function(){ window.location.href='" + redirectTarget + "'; }, 6000);</script></body></html>";
+
+    server.send(200, "text/html", responseHtml);
     delay(1000);
     ESP.restart();
   }
