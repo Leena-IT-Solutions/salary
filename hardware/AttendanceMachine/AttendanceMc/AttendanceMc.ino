@@ -521,17 +521,30 @@ void startWebServer(){
 }
 
 void saveSettings(String msg){
+    String old_ap_ssid = ap_ssid;
+    String old_ap_pswd = ap_pswd;
+    String old_wf_ssid = wf_ssid;
+    String old_wf_pswd = wf_pswd;
+
     File fl = SPIFFS.open(settings_filename, "w");
     if(!fl){
-      //Serial.println("Failed to write file");
+      return;
     }
-    if(fl.print(msg)){
-      //Serial.println("File was written");
-      setSettings();
-    } else {
-      //Serial.println("Fail to write file");
-    }
+    fl.print(msg);
     fl.close();
+
+    setSettings();
+
+    bool wifiOrApChanged = (old_ap_ssid != ap_ssid) || 
+                           (old_ap_pswd != ap_pswd) || 
+                           (old_wf_ssid != wf_ssid) || 
+                           (old_wf_pswd != wf_pswd);
+
+    if (wifiOrApChanged) {
+      server.send(200, "text/html", "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-width, initial-scale=1.0'><style>body{font-family:-apple-system,sans-serif;background:#f4f6f9;text-align:center;padding:50px;} .card{background:#fff;padding:30px;border-radius:12px;display:inline-block;box-shadow:0 4px 15px rgba(0,0,0,0.1);} h2{color:#dc2626;margin-top:0;}</style></head><body><div class='card'><h2>🔄 Rebooting Machine...</h2><p>Wi-Fi / AP settings updated. Machine is restarting to apply new network parameters...</p></div><script>setTimeout(function(){ window.location.href='/'; }, 6000);</script></body></html>");
+      delay(1000);
+      ESP.restart();
+    }
 }
 
 void updateAndSaveSettings(){
