@@ -343,12 +343,14 @@ static void handleUpdateTab() {
     String html = renderHeader("update");
 
     html += "<div class='card'><h2>Wireless OTA Firmware Update</h2>";
-    html += "<p class='hint'>Upload a new compiled <code>.bin</code> firmware file to wirelessly update the terminal software over Wi-Fi.</p>";
-    html += "<form method='POST' action='/update' enctype='multipart/form-data'>";
+    html += "<div class='hint' style='color:#dc2626;font-weight:bold;margin-bottom:12px;'>⚠️ Flashing a new firmware will wirelessly update the NodeMCU terminal. Do not disconnect power during flashing.</div>";
+    html += "<form method='POST' action='/do_update' enctype='multipart/form-data' onsubmit=\"document.getElementById('flashMsg').style.display='block';\">";
     html += "<label>Select Firmware File (.bin):</label>";
-    html += "<input type='file' name='update' accept='.bin' required>";
-    html += "<input type='submit' class='btn btn-danger' value='Upload & Flash Firmware'>";
-    html += "</form></div>";
+    html += "<input type='file' name='firmware' accept='.bin' required style='margin-bottom:15px;'>";
+    html += "<input type='submit' class='btn btn-danger' value='⚡ Upload & Flash Firmware'>";
+    html += "</form>";
+    html += "<div id='flashMsg' style='display:none;margin-top:15px;text-align:center;font-weight:bold;color:#1e3a5f;'>⏳ Flashing firmware... Terminal will reboot automatically upon completion.</div>";
+    html += "</div>";
 
     html += renderFooter();
     server.send(200, "text/html", html);
@@ -634,7 +636,7 @@ static void handleQueueClearWeb() {
 }
 
 void webPortalStart() {
-    httpUpdater.setup(&server, "/update", config->portal_user, config->portal_pass);
+    httpUpdater.setup(&server, "/do_update", config->portal_user, config->portal_pass);
 
     server.on("/", handleHomeTab);
     server.on("/write", handleWriteTab);
@@ -642,7 +644,7 @@ void webPortalStart() {
     server.on("/wifi", handleWifiTab);
     server.on("/wifi_scan", handleWifiScanApi);
     server.on("/password", handlePasswordTab);
-    server.on("/update", HTTP_GET, handleUpdateTab);
+    server.on("/update", handleUpdateTab);
     
     server.on("/save_home", HTTP_POST, handleSaveHomeWeb);
     server.on("/save_wifi", HTTP_POST, handleSaveWifiWeb);
