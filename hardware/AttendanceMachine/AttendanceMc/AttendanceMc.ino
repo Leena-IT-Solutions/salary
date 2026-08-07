@@ -284,53 +284,51 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f6f9; color: #333; padding: 15px; }
-        .max-500 { margin: 0 auto; max-width: 500px; width: 100%; background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .max-500 { margin: 0 auto; max-width: 500px; width: 100%; background: #fff; border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
         .text-center { text-align: center; }
         .mb-1 { margin-bottom: 5px; }
-        .mb-3 { margin-bottom: 20px; }
-        .mb-5 { margin-bottom: 30px; }
+        .mb-3 { margin-bottom: 18px; }
+        .mb-4 { margin-bottom: 22px; }
         .p-2 { padding: 10px; }
         .w-full { width: 100%; }
-        h1 { color: #1e3a5f; font-size: 24px; margin-bottom: 5px; }
-        h3 { color: #1e3a5f; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 15px; font-size: 16px; }
+        h1 { color: #1e3a5f; font-size: 22px; margin-bottom: 4px; }
+        p.subtitle { color: #64748b; font-size: 13px; margin-bottom: 20px; }
+        h3 { color: #1e3a5f; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 15px; font-size: 15px; font-weight: 700; }
+        
+        .nav-tabs { display: flex; gap: 6px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .nav-tab { flex: 1; border: 0; background: #f1f5f9; color: #475569; padding: 10px 4px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+        .nav-tab.active { background: #1e3a5f; color: #fff; box-shadow: 0 2px 8px rgba(30,58,95,0.25); }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
         label, div.mb-1 { font-size: 13px; font-weight: 600; color: #475569; }
-        input[type=text], input[type=password], select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; margin-top: 4px; }
-        button, .btn { background: #1e3a5f; color: #fff; border: 0; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; margin-top: 10px; }
-        button:hover { background: #0f2744; }
+        input[type=text], input[type=password], select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; margin-top: 4px; outline: none; transition: border-color 0.2s; }
+        input:focus, select:focus { border-color: #1e3a5f; }
+        
+        .btn { background: #1e3a5f; color: #fff; border: 0; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; font-size: 14px; margin-top: 8px; transition: background 0.2s; }
+        .btn:hover { background: #0f2744; }
+        .btn-write { background: #2563eb; }
+        .btn-write:hover { background: #1d4ed8; }
+        .btn-save { background: #16a34a; }
+        .btn-save:hover { background: #15803d; }
     </style>
 </head>
 <body>
     <div class="max-500">
-        <div class="mb-3 p-2 text-center">
+        <div class="text-center">
             <h1>Attendance System</h1>
-            <p>Powered By Leena IT Solutions</p>
+            <p class="subtitle">Powered By Leena IT Solutions</p>
         </div>
 
-        <div id="ap">
-            <h3 class="mb-3">Access Point Setup</h3>
-            <div class="mb-3">
-                <div class="mb-1">Accesspoint SSID</div>
-                <input id="ap_ssid" name="ap_ssid" type="text">
-            </div>
-            <div class="mb-3">
-                <div class="mb-1">Accesspoint Password</div>
-                <input id="ap_pswd" name="ap_pswd" type="password">
-            </div>
+        <div class="nav-tabs mb-4">
+            <button id="btn-home" class="nav-tab active" onclick="switchTab('home')">🏠 Home</button>
+            <button id="btn-write" class="nav-tab" onclick="switchTab('write')">💳 Write Card</button>
+            <button id="btn-wifi" class="nav-tab" onclick="switchTab('wifi')">📶 Wi-Fi & AP</button>
         </div>
 
-        <div id="wifi">
-            <h3 class="mb-3">WiFi Setup</h3>
-            <div class="mb-3">
-                <div class="mb-1">WiFi SSID</div>
-                <input id="wf_ssid" name="wf_ssid" type="text">
-            </div>
-            <div class="mb-3">
-                <div class="mb-1">WiFi Password</div>
-                <input id="wf_pswd" name="wf_pswd" type="password">
-            </div>
-        </div>
-
-        <div id="home">
+        <!-- Page 1: Home -->
+        <div id="tab-home" class="tab-content active">
             <h3 class="mb-3">Terminal Settings</h3>
             <div class="mb-3">
                 <div class="mb-1">Operation Mode</div>
@@ -345,27 +343,47 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
             </div>
             <div class="mb-3">
                 <div class="mb-1">Host URI</div>
-                <input id="sr_host" name="sr_host" type="text">
+                <input id="sr_host" name="sr_host" type="text" placeholder="https://domain.com/attendance/save">
             </div>
             <div class="mb-3">
                 <div class="mb-1">Bearer API Token</div>
-                <input id="api_token" name="api_token" type="password" placeholder="API Token">
+                <input id="api_token" name="api_token" type="password" placeholder="Sanctum Bearer Token">
             </div>
+            <button onclick="saveData(false)" class="btn">💾 Save Terminal Settings</button>
         </div>
 
-        <div class="mb-5">
-            <button onclick="saveData()">Save Settings</button>
+        <!-- Page 2: Write Card -->
+        <div id="tab-write" class="tab-content">
+            <h3 class="mb-3">Write Card / Tag</h3>
+            <div class="mb-3">
+                <div class="mb-1">Employee Code / Card Value</div>
+                <input id="card_value" name="card_value" type="text" placeholder="e.g. SV001">
+            </div>
+            <button onclick="writeCard()" id="cardButton" class="btn btn-write">⚡ Write Card to NFC Tag</button>
         </div>
 
-        <div id="write">
-            <h3 class="mb-3">Write Card</h3>
+        <!-- Page 3: Wi-Fi & AP Setup -->
+        <div id="tab-wifi" class="tab-content">
+            <h3 class="mb-3">Wi-Fi Connection</h3>
             <div class="mb-3">
-                <div class="mb-1">Card Value / Employee Code</div>
-                <input id="card_value" name="card_value" type="text">
+                <div class="mb-1">Wi-Fi Router SSID</div>
+                <input id="wf_ssid" name="wf_ssid" type="text" placeholder="Router SSID">
             </div>
             <div class="mb-3">
-                <button onclick="writeCard()" id="cardButton">Write Card</button>
+                <div class="mb-1">Wi-Fi Router Password</div>
+                <input id="wf_pswd" name="wf_pswd" type="password" placeholder="Router Password">
             </div>
+
+            <h3 class="mb-3" style="margin-top: 25px;">Access Point (AP) Setup</h3>
+            <div class="mb-3">
+                <div class="mb-1">AP Accesspoint SSID</div>
+                <input id="ap_ssid" name="ap_ssid" type="text" placeholder="attendance">
+            </div>
+            <div class="mb-3">
+                <div class="mb-1">AP Accesspoint Password</div>
+                <input id="ap_pswd" name="ap_pswd" type="password" placeholder="123456789">
+            </div>
+            <button onclick="saveData(true)" class="btn btn-save">🔄 Save & Restart Machine</button>
         </div>
     </div>
 
@@ -373,6 +391,13 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
         var url = "/settings";
         var save_url = "/save";
         setData();
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+            document.getElementById('btn-' + tabName).classList.add('active');
+        }
 
         function setData() {
             var xmlHttp = new XMLHttpRequest();
@@ -393,7 +418,7 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
             }
         }
 
-        function saveData() {
+        function saveData(isWifiSave) {
             let data = {
                 ap_ssid: document.getElementById("ap_ssid").value,
                 ap_pswd: document.getElementById("ap_pswd").value,
@@ -407,13 +432,15 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
             var xmlHttp = new XMLHttpRequest();
             xmlHttp.open("GET", save_url + "?q=" + encodeURIComponent(JSON.stringify(data)), false);
             xmlHttp.send(null);
-            alert("Settings Saved Successfully!");
+            if (!isWifiSave) {
+                alert("Settings Saved Successfully!");
+            }
         }
 
         function writeCard() {
             document.getElementById("cardButton").innerHTML = "⌛ Waiting for Card Tap...";
             document.getElementById("op_mode").value = "Write";
-            saveData();
+            saveData(false);
             setTimeout(checkStatus, 1000);
         }
 
@@ -427,7 +454,7 @@ static const char DEFAULT_WEBPAGE_HTML[] PROGMEM = R"rawliteral(
                     setTimeout(checkStatus, 1000);
                 } else {
                     setData();
-                    document.getElementById("cardButton").innerHTML = "Write Card";
+                    document.getElementById("cardButton").innerHTML = "⚡ Write Card to NFC Tag";
                 }
             }
         }
