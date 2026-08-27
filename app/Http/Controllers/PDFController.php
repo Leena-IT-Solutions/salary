@@ -192,9 +192,10 @@ class PDFController extends Controller
     public function cheque_print($id){
         $company = CompanyProfile::first();
         $payroll = Payroll::with(['payroll_employees.employee.employee_bank'])->find($id);
+        $settings = Setting::pluck('value', 'key')->all();
         $path = "cheque_print_".$id.".pdf";
         
-        return Pdf::loadView('pdf.cheque_print', ['company' => $company, 'payroll' => $payroll])
+        return Pdf::loadView('pdf.cheque_print', ['company' => $company, 'payroll' => $payroll, 'settings' => $settings])
         ->setPaper([0, 0, 575.43, 263.62])
         ->stream($path);
     }

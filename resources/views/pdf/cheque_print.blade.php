@@ -3,6 +3,22 @@
 <head>
     <meta charset="utf-8">
     <title>Cheque Print</title>
+    <?php
+        $ac_payee_top = isset($settings['Cheque Account Payee Top (mm)']) && strlen($settings['Cheque Account Payee Top (mm)']) ? $settings['Cheque Account Payee Top (mm)'] : '8.8';
+        $ac_payee_left = isset($settings['Cheque Account Payee Left (mm)']) && strlen($settings['Cheque Account Payee Left (mm)']) ? $settings['Cheque Account Payee Left (mm)'] : '1.4';
+
+        $date_grid_top = isset($settings['Cheque Date Grid Top (mm)']) && strlen($settings['Cheque Date Grid Top (mm)']) ? $settings['Cheque Date Grid Top (mm)'] : '9.25';
+        $date_grid_left = isset($settings['Cheque Date Grid Left (mm)']) && strlen($settings['Cheque Date Grid Left (mm)']) ? $settings['Cheque Date Grid Left (mm)'] : '149';
+
+        $payee_name_top = isset($settings['Cheque Employee Name Top (mm)']) && strlen($settings['Cheque Employee Name Top (mm)']) ? $settings['Cheque Employee Name Top (mm)'] : '23.3';
+        $payee_name_left = isset($settings['Cheque Employee Name Left (mm)']) && strlen($settings['Cheque Employee Name Left (mm)']) ? $settings['Cheque Employee Name Left (mm)'] : '18';
+
+        $rupees_words_top = isset($settings['Cheque Amount in Words Top (mm)']) && strlen($settings['Cheque Amount in Words Top (mm)']) ? $settings['Cheque Amount in Words Top (mm)'] : '31.5';
+        $rupees_words_left = isset($settings['Cheque Amount in Words Left (mm)']) && strlen($settings['Cheque Amount in Words Left (mm)']) ? $settings['Cheque Amount in Words Left (mm)'] : '33';
+
+        $amount_figures_top = isset($settings['Cheque Amount in Numbers Top (mm)']) && strlen($settings['Cheque Amount in Numbers Top (mm)']) ? $settings['Cheque Amount in Numbers Top (mm)'] : '34';
+        $amount_figures_left = isset($settings['Cheque Amount in Numbers Left (mm)']) && strlen($settings['Cheque Amount in Numbers Left (mm)']) ? $settings['Cheque Amount in Numbers Left (mm)'] : '154';
+    ?>
     <style>
         @page {
             margin: 0;
@@ -32,11 +48,11 @@
             overflow: hidden;
         }
 
-        /* A/C PAYEE ONLY CROSSING STAMP (Exact Canva Vector Coordinates) */
+        /* A/C PAYEE ONLY CROSSING STAMP */
         .ac-payee-stamp {
             position: absolute;
-            top: 8.8mm;
-            left: 1.4mm;
+            top: {{ $ac_payee_top }}mm;
+            left: {{ $ac_payee_left }}mm;
             width: 25.1mm;
             height: 4.3mm;
             border-top: 1.5px solid #000000;
@@ -51,11 +67,11 @@
             color: #000000;
         }
 
-        /* DATE DIGITS GRID: Top 9.25mm (5.5mm + 3.75mm), Left 149mm, Width 45mm (8 boxes, each 5.6mm) */
+        /* DATE DIGITS GRID */
         .cheque-date-grid {
             position: absolute;
-            top: 9.25mm;
-            left: 149mm;
+            top: {{ $date_grid_top }}mm;
+            left: {{ $date_grid_left }}mm;
             width: 45mm;
             height: 6mm;
             line-height: 6mm;
@@ -70,11 +86,11 @@
             color: #000000;
         }
 
-        /* PAYEE NAME: Pay line at Top 23.3mm (20.5mm + 2.8mm), Left 18mm */
+        /* PAYEE NAME */
         .payee-name {
             position: absolute;
-            top: 23.3mm;
-            left: 18mm;
+            top: {{ $payee_name_top }}mm;
+            left: {{ $payee_name_left }}mm;
             width: 128mm;
             font-size: 11pt;
             font-weight: bold;
@@ -83,11 +99,11 @@
             letter-spacing: 0.3px;
         }
 
-        /* AMOUNT IN WORDS: Rupees line at Top 31.5mm (29.5mm + 2mm), Left 33mm */
+        /* AMOUNT IN WORDS */
         .rupees-words {
             position: absolute;
-            top: 31.5mm;
-            left: 33mm;
+            top: {{ $rupees_words_top }}mm;
+            left: {{ $rupees_words_left }}mm;
             width: 160mm;
             font-size: 10.5pt;
             font-weight: bold;
@@ -96,11 +112,11 @@
             letter-spacing: 0.2px;
         }
 
-        /* AMOUNT IN FIGURES: ₹ Box at Top 34mm (33mm + 1mm), Left 154mm (153mm + 1mm offset), Width 37mm, Height 8.5mm */
+        /* AMOUNT IN FIGURES */
         .amount-figures {
             position: absolute;
-            top: 34mm;
-            left: 154mm;
+            top: {{ $amount_figures_top }}mm;
+            left: {{ $amount_figures_left }}mm;
             width: 37mm;
             height: 8.5mm;
             line-height: 8.5mm;

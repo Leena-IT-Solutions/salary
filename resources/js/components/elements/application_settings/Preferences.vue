@@ -172,6 +172,48 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Cheque Print Coordinates Group -->
+            <div class="col-12 col-xl-6">
+                <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                    <div class="card-header bg-white py-3 px-4 border-bottom">
+                        <h6 class="fw-bold mb-0 d-flex align-items-center" style="color: #6f42c1;">
+                            <i class="bi bi-credit-card-2-front me-2 fs-5"></i> Cheque Print Coordinates (mm)
+                        </h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div v-for="(item, ind) in chequeItems" :key="item.name" 
+                             class="setting-row p-3 p-md-4 border-bottom-light transition-all">
+                            <div class="row align-items-center">
+                                <div class="col-12 col-md-5 mb-2 mb-md-0">
+                                    <div class="fw-bold text-dark small text-uppercase opacity-75 mb-1">{{ item.name }}</div>
+                                    <div class="text-muted small">Top & Left position on cheque leaf</div>
+                                </div>
+                                <div class="col-12 col-md-7">
+                                    <div v-if="item.topSetting && item.leftSetting" class="d-flex gap-2 align-items-center justify-content-md-end">
+                                        <!-- Top Offset -->
+                                        <div class="d-flex align-items-center gap-1">
+                                            <span class="badge bg-light text-secondary border small fw-semibold">Top</span>
+                                            <div class="input-group input-group-sm shadow-sm rounded-3 overflow-hidden" style="width: 95px;">
+                                                <input type="text" v-model="item.topSetting.val" @input="saveOriginal(item.topSetting)" class="form-control border-0 bg-light text-center fw-bold">
+                                                <span class="input-group-text border-0 bg-white small px-2">mm</span>
+                                            </div>
+                                        </div>
+                                        <!-- Left Offset -->
+                                        <div class="d-flex align-items-center gap-1">
+                                            <span class="badge bg-light text-secondary border small fw-semibold">Left</span>
+                                            <div class="input-group input-group-sm shadow-sm rounded-3 overflow-hidden" style="width: 95px;">
+                                                <input type="text" v-model="item.leftSetting.val" @input="saveOriginal(item.leftSetting)" class="form-control border-0 bg-light text-center fw-bold">
+                                                <span class="input-group-text border-0 bg-white small px-2">mm</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -202,6 +244,16 @@ export default {
                 {type: 'Select', key: "Salary Cycle Start Date", val: 1, options: []},
                 {type: 'Select', key: "Salary Release Date", val: 1, options: []},
                 {type: 'Input', key: "Attendance Machine API Token", val: ''},
+                {type: 'Input', key: "Cheque Account Payee Top (mm)", val: '8.8'},
+                {type: 'Input', key: "Cheque Account Payee Left (mm)", val: '1.4'},
+                {type: 'Input', key: "Cheque Date Grid Top (mm)", val: '9.25'},
+                {type: 'Input', key: "Cheque Date Grid Left (mm)", val: '149'},
+                {type: 'Input', key: "Cheque Employee Name Top (mm)", val: '23.3'},
+                {type: 'Input', key: "Cheque Employee Name Left (mm)", val: '18'},
+                {type: 'Input', key: "Cheque Amount in Words Top (mm)", val: '31.5'},
+                {type: 'Input', key: "Cheque Amount in Words Left (mm)", val: '33'},
+                {type: 'Input', key: "Cheque Amount in Numbers Top (mm)", val: '34'},
+                {type: 'Input', key: "Cheque Amount in Numbers Left (mm)", val: '154'},
             ],
             saveTimer: null,
             showToken: false
@@ -216,7 +268,17 @@ export default {
             return this.settings.slice(10, 13);
         },
         integrationSettings() {
-            return this.settings.slice(13);
+            return this.settings.slice(13, 14);
+        },
+        chequeItems() {
+            if (this.settings.length < 24) return [];
+            return [
+                { name: "Account Payee", topSetting: this.settings[14], leftSetting: this.settings[15] },
+                { name: "Date Grid", topSetting: this.settings[16], leftSetting: this.settings[17] },
+                { name: "Employee Name", topSetting: this.settings[18], leftSetting: this.settings[19] },
+                { name: "Amount in Words", topSetting: this.settings[20], leftSetting: this.settings[21] },
+                { name: "Amount in Numbers", topSetting: this.settings[22], leftSetting: this.settings[23] }
+            ];
         },
         apiSaveUrl() {
             return `${window.location.origin}/attendance/save`;
