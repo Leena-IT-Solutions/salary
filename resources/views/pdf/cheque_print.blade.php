@@ -36,7 +36,7 @@
         .ac-payee-stamp {
             position: absolute;
             top: 8.8mm;
-            left: -3.6mm;
+            left: 1.4mm;
             width: 25.1mm;
             height: 4.3mm;
             border-top: 1.5px solid #000000;
