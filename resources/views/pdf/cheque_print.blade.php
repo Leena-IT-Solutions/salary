@@ -51,10 +51,10 @@
             color: #000000;
         }
 
-        /* DATE DIGITS GRID: Top 5.5mm, Left 149mm, Width 45mm (8 boxes, each 5.6mm) */
+        /* DATE DIGITS GRID: Top 9.25mm (5.5mm + 3.75mm), Left 149mm, Width 45mm (8 boxes, each 5.6mm) */
         .cheque-date-grid {
             position: absolute;
-            top: 5.5mm;
+            top: 9.25mm;
             left: 149mm;
             width: 45mm;
             height: 6mm;
@@ -70,10 +70,10 @@
             color: #000000;
         }
 
-        /* PAYEE NAME: Pay line at Top 24mm, Left 18mm */
+        /* PAYEE NAME: Pay line at Top 23.3mm (20.5mm + 2.8mm), Left 18mm */
         .payee-name {
             position: absolute;
-            top: 20.5mm;
+            top: 23.3mm;
             left: 18mm;
             width: 128mm;
             font-size: 11pt;
@@ -83,10 +83,10 @@
             letter-spacing: 0.3px;
         }
 
-        /* AMOUNT IN WORDS: Rupees line at Top 33mm, Left 33mm */
+        /* AMOUNT IN WORDS: Rupees line at Top 31.5mm (29.5mm + 2mm), Left 33mm */
         .rupees-words {
             position: absolute;
-            top: 29.5mm;
+            top: 31.5mm;
             left: 33mm;
             width: 160mm;
             font-size: 10.5pt;
@@ -96,10 +96,10 @@
             letter-spacing: 0.2px;
         }
 
-        /* AMOUNT IN FIGURES: ₹ Box at Top 33mm, Left 154mm (153mm + 1mm offset), Width 37mm, Height 8.5mm */
+        /* AMOUNT IN FIGURES: ₹ Box at Top 34mm (33mm + 1mm), Left 154mm (153mm + 1mm offset), Width 37mm, Height 8.5mm */
         .amount-figures {
             position: absolute;
-            top: 33mm;
+            top: 34mm;
             left: 154mm;
             width: 37mm;
             height: 8.5mm;
