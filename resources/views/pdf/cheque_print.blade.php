@@ -4,20 +4,26 @@
     <meta charset="utf-8">
     <title>Cheque Print</title>
     <?php
-        $ac_payee_top = isset($settings['Cheque Account Payee Top (mm)']) && strlen($settings['Cheque Account Payee Top (mm)']) ? $settings['Cheque Account Payee Top (mm)'] : '8.8';
-        $ac_payee_left = isset($settings['Cheque Account Payee Left (mm)']) && strlen($settings['Cheque Account Payee Left (mm)']) ? $settings['Cheque Account Payee Left (mm)'] : '1.4';
+        $settingMap = isset($settings) && is_array($settings) ? $settings : \App\Models\Setting::pluck('value', 'key')->all();
 
-        $date_grid_top = isset($settings['Cheque Date Grid Top (mm)']) && strlen($settings['Cheque Date Grid Top (mm)']) ? $settings['Cheque Date Grid Top (mm)'] : '9.25';
-        $date_grid_left = isset($settings['Cheque Date Grid Left (mm)']) && strlen($settings['Cheque Date Grid Left (mm)']) ? $settings['Cheque Date Grid Left (mm)'] : '149';
+        $getVal = function($k, $default) use ($settingMap) {
+            return (isset($settingMap[$k]) && trim((string)$settingMap[$k]) !== '') ? trim((string)$settingMap[$k]) : $default;
+        };
 
-        $payee_name_top = isset($settings['Cheque Employee Name Top (mm)']) && strlen($settings['Cheque Employee Name Top (mm)']) ? $settings['Cheque Employee Name Top (mm)'] : '23.3';
-        $payee_name_left = isset($settings['Cheque Employee Name Left (mm)']) && strlen($settings['Cheque Employee Name Left (mm)']) ? $settings['Cheque Employee Name Left (mm)'] : '18';
+        $ac_payee_top = $getVal('Cheque Account Payee Top (mm)', '8.8');
+        $ac_payee_left = $getVal('Cheque Account Payee Left (mm)', '1.4');
 
-        $rupees_words_top = isset($settings['Cheque Amount in Words Top (mm)']) && strlen($settings['Cheque Amount in Words Top (mm)']) ? $settings['Cheque Amount in Words Top (mm)'] : '31.5';
-        $rupees_words_left = isset($settings['Cheque Amount in Words Left (mm)']) && strlen($settings['Cheque Amount in Words Left (mm)']) ? $settings['Cheque Amount in Words Left (mm)'] : '33';
+        $date_grid_top = $getVal('Cheque Date Grid Top (mm)', '9.25');
+        $date_grid_left = $getVal('Cheque Date Grid Left (mm)', '149');
 
-        $amount_figures_top = isset($settings['Cheque Amount in Numbers Top (mm)']) && strlen($settings['Cheque Amount in Numbers Top (mm)']) ? $settings['Cheque Amount in Numbers Top (mm)'] : '34';
-        $amount_figures_left = isset($settings['Cheque Amount in Numbers Left (mm)']) && strlen($settings['Cheque Amount in Numbers Left (mm)']) ? $settings['Cheque Amount in Numbers Left (mm)'] : '154';
+        $payee_name_top = $getVal('Cheque Employee Name Top (mm)', '23.3');
+        $payee_name_left = $getVal('Cheque Employee Name Left (mm)', '18');
+
+        $rupees_words_top = $getVal('Cheque Amount in Words Top (mm)', '31.5');
+        $rupees_words_left = $getVal('Cheque Amount in Words Left (mm)', '33');
+
+        $amount_figures_top = $getVal('Cheque Amount in Numbers Top (mm)', '34');
+        $amount_figures_left = $getVal('Cheque Amount in Numbers Left (mm)', '154');
     ?>
     <style>
         @page {

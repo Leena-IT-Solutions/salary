@@ -16,15 +16,10 @@ class PreferenceController extends Controller
     }
 
     public function save(Request $request){
-
-        $setting = Setting::where('key', $request->key);
-        $s = null;
-
-        if($setting->exists()){
-            $s = $setting->update($request->all());
-        } else {
-            $s = Setting::create($request->all());
-        }
-        return $s;
+        $s = Setting::updateOrCreate(
+            ['key' => $request->key],
+            ['value' => $request->value]
+        );
+        return response()->json($s);
     }
 }
