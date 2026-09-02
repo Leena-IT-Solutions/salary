@@ -182,6 +182,24 @@
                         </h6>
                     </div>
                     <div class="card-body p-0">
+                        <!-- Total Net Payout Payee Name Setting -->
+                        <div v-if="totalPayoutPayeeSetting" class="p-3 p-md-4 border-bottom bg-light-subtle transition-all">
+                            <div class="row align-items-center">
+                                <div class="col-12 col-md-6 mb-2 mb-md-0">
+                                    <div class="fw-bold text-dark small text-uppercase opacity-75 mb-1">
+                                        <i class="bi bi-person-badge text-primary me-1"></i> Total Payout Cheque Payee Text
+                                    </div>
+                                    <div class="text-muted small">Text to print on the Payee line of the Total Net Payout single cheque (e.g. "Yourself for Salary", "Self", "Salary").</div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <div class="input-group input-group-sm shadow-sm rounded-3 overflow-hidden">
+                                        <span class="input-group-text bg-white border-0 text-muted"><i class="bi bi-pen"></i></span>
+                                        <input type="text" v-model="totalPayoutPayeeSetting.val" @input="saveOriginal(totalPayoutPayeeSetting)" class="form-control border-0 bg-light fw-bold text-dark" placeholder="e.g. Yourself for Salary">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div v-for="(item, ind) in chequeItems" :key="item.name" 
                              class="setting-row p-3 p-md-4 border-bottom-light transition-all">
                             <div class="row align-items-center">
@@ -254,6 +272,7 @@ export default {
                 {type: 'Input', key: "Cheque Amount in Words Left (mm)", val: '33'},
                 {type: 'Input', key: "Cheque Amount in Numbers Top (mm)", val: '34'},
                 {type: 'Input', key: "Cheque Amount in Numbers Left (mm)", val: '154'},
+                {type: 'Input', key: "Total Payout Cheque Payee Name", val: 'Yourself for Salary'},
             ],
             saveTimer: null,
             showToken: false
@@ -279,6 +298,9 @@ export default {
                 { name: "Amount in Words", topSetting: this.settings[20], leftSetting: this.settings[21] },
                 { name: "Amount in Numbers", topSetting: this.settings[22], leftSetting: this.settings[23] }
             ];
+        },
+        totalPayoutPayeeSetting() {
+            return this.settings.find(s => s.key === "Total Payout Cheque Payee Name") || this.settings[24];
         },
         apiSaveUrl() {
             return `${window.location.origin}/attendance/save`;

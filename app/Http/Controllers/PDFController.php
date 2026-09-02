@@ -200,6 +200,21 @@ class PDFController extends Controller
         ->stream($path);
     }
 
+    public function totalPayoutCheque($id){
+        $company = CompanyProfile::first();
+        $payroll = Payroll::findOrFail($id);
+        $settings = Setting::pluck('value', 'key')->all();
+        $path = "total_payout_cheque_".$id.".pdf";
+        
+        return Pdf::loadView('pdf.total_payout_cheque', [
+            'company' => $company, 
+            'payroll' => $payroll, 
+            'settings' => $settings
+        ])
+        ->setPaper([0, 0, 575.43, 263.62])
+        ->stream($path);
+    }
+
     public function employeeProfile($id){
         $employee = Employee::with([
             'employee_photo',
