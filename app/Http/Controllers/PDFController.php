@@ -247,4 +247,12 @@ class PDFController extends Controller
     public function excel_ca_report($id){
         return Excel::download(new CAExport($id), 'ca_report.xlsx');
     }
+
+    public function employeeEnrollmentForm(){
+        $company = CompanyProfile::first();
+        $path = "Employee_Enrollment_Form.pdf";
+        return Pdf::loadView('pdf.employee_enrollment_form', compact('company'))
+            ->setPaper('a4', 'portrait')
+            ->stream($path);
+    }
 }

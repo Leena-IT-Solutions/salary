@@ -7,7 +7,15 @@
                     <h4 class="fw-bold mb-1 text-dark">Staff Directory</h4>
                     <p class="text-muted small mb-0">Unified lifecycle management for all corporate employees and workforce data.</p>
                 </div>
-                <div class="col-auto">
+                <div class="col-auto d-flex align-items-center gap-2 flex-wrap">
+                    <a 
+                        href="/employee/enrollment_form/pdf" 
+                        target="_blank"
+                        class="btn btn-lg btn-outline-primary shadow-sm px-4 fw-bold rounded-pill transition-all bg-white hover-lift"
+                        title="Download blank printable enrollment application form (PDF)">
+                        <i class="bi bi-file-earmark-arrow-down-fill me-2 text-primary"></i>
+                        Enrollment Form (PDF)
+                    </a>
                     <button 
                         @click="toggleForm"
                         :class="[isForm ? 'btn-danger' : 'btn-primary']"

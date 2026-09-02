@@ -94,6 +94,8 @@ Route::middleware(['auth', 'role'])->group(function () {
     Route::get('/pdf/individual_attendance/{from}/{to}', [App\Http\Controllers\PDFController::class, 'individual_attendance']);
     Route::get('/pdf/employee_profile/{id}', [App\Http\Controllers\PDFController::class, 'employeeProfile'])->name('employee.profile.pdf');
     Route::get('/pdf/employee_profile/{id}/open', [App\Http\Controllers\PDFController::class, 'openProfilePdf'])->name('employee.profile.pdf.open');
+    Route::get('/pdf/employee_enrollment_form', [App\Http\Controllers\PDFController::class, 'employeeEnrollmentForm'])->name('employee.enrollment.form.pdf');
+    Route::get('/employee/enrollment_form/pdf', [App\Http\Controllers\PDFController::class, 'employeeEnrollmentForm'])->name('employee.enrollment.pdf');
 
     Route::group(['prefix' => 'employee'], function () {
         Route::get('/dashboard', [App\Http\Controllers\Employee\EmployeeDashboardController::class, 'index']);
