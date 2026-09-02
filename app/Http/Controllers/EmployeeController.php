@@ -318,15 +318,44 @@ class EmployeeController extends Controller
             ->with([
                 'employee_department.department',
                 'employee_designation.designation',
-                'employee_work_location.work_location'
+                'employee_work_location.work_location',
+                'employee_photo'
             ])
             ->get();
 
         $data = [];
+        $drawingsData = [];
+        $rowIndex = 2; // Row 1 is heading row
+
         foreach ($employees as $employee) {
             $row = [];
-            foreach ($fields as $field) {
+            foreach ($fields as $colIndex => $field) {
                 switch ($field) {
+                    case 'photo':
+                        $row[] = ''; // Empty string in text cell, Drawing will overlay image
+                        $mediaPath = optional($employee->employee_photo)->media;
+                        if ($mediaPath) {
+                            $possiblePaths = [
+                                public_path('storage' . $mediaPath),
+                                storage_path('app/public' . $mediaPath),
+                                storage_path('app' . $mediaPath),
+                            ];
+                            $foundPath = null;
+                            foreach ($possiblePaths as $p) {
+                                if (file_exists($p) && !is_dir($p)) {
+                                    $foundPath = $p;
+                                    break;
+                                }
+                            }
+                            if ($foundPath) {
+                                $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex + 1);
+                                $drawingsData[] = [
+                                    'path' => $foundPath,
+                                    'coordinate' => $colLetter . $rowIndex
+                                ];
+                            }
+                        }
+                        break;
                     case 'department':
                         $row[] = optional($employee->employee_department)->department ? $employee->employee_department->department->department : '—';
                         break;
@@ -336,15 +365,25 @@ class EmployeeController extends Controller
                     case 'work_location':
                         $row[] = optional($employee->employee_work_location)->work_location ? $employee->employee_work_location->work_location->location_name : '—';
                         break;
+                    case 'dob':
+                        $row[] = $employee->dob ? date('d/m/Y', strtotime($employee->dob)) : '—';
+                        break;
+                    case 'doj':
+                        $row[] = $employee->doj ? date('d/m/Y', strtotime($employee->doj)) : '—';
+                        break;
+                    case 'doe':
+                        $row[] = $employee->doe ? date('d/m/Y', strtotime($employee->doe)) : '—';
+                        break;
                     default:
                         $row[] = $employee->$field ?? '—';
                         break;
                 }
             }
             $data[] = $row;
+            $rowIndex++;
         }
 
-        return Excel::download(new EmployeeExport($data, $headings), 'employees_export.xlsx');
+        return Excel::download(new EmployeeExport($data, $headings, $drawingsData), 'employees_export.xlsx');
     }
 
     public function exportPdf(Request $request){

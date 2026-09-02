@@ -444,6 +444,7 @@ export default {
             exportType: null,
             selectedFields: ['id', 'first_name', 'last_name', 'employee_code', 'email', 'phone', 'department', 'designation'],
             fieldOptions: [
+                { key: 'photo', label: 'Photo', category: 'Personal' },
                 { key: 'id', label: 'Staff ID', category: 'Personal' },
                 { key: 'first_name', label: 'First Name', category: 'Personal' },
                 { key: 'middle_name', label: 'Middle Name', category: 'Personal' },
