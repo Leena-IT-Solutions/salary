@@ -236,8 +236,15 @@
                             </td>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <div class="emp-avatar me-3" :class="[emp.doe ? 'bg-gradient-staff-exited text-white-50' : 'bg-gradient-staff']">
-                                        {{ (emp.first_name && emp.first_name.length > 0) ? emp.first_name.charAt(0).toUpperCase() : '?' }}
+                                    <div class="emp-avatar me-3 overflow-hidden" :class="[emp.doe ? 'bg-gradient-staff-exited text-white-50' : 'bg-gradient-staff']">
+                                        <img v-if="emp.employee_photo && emp.employee_photo.media" 
+                                             :src="getPhotoUrl(emp.employee_photo.media)" 
+                                             :alt="emp.first_name" 
+                                             class="w-100 h-100 object-fit-cover" 
+                                             @error="handleImageError($event)">
+                                        <span v-else>
+                                            {{ (emp.first_name && emp.first_name.length > 0) ? emp.first_name.charAt(0).toUpperCase() : '?' }}
+                                        </span>
                                     </div>
                                     <div>
                                         <div class="fw-bold text-dark fs-6">
@@ -528,6 +535,14 @@ export default {
     },
 
     methods: {
+        getPhotoUrl(media) {
+            if (!media) return '';
+            if (media.startsWith('http')) return media;
+            return '/storage' + media;
+        },
+        handleImageError(event) {
+            event.target.style.display = 'none';
+        },
         toggleForm() {
             if(this.isForm) {
                 this.reset();

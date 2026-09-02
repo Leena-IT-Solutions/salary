@@ -201,6 +201,7 @@ class EmployeeController extends Controller
                          ->with('employee_designation.designation')
                          ->with('employee_work_location.work_location')
                          ->with('employee_salary')
+                         ->with('employee_photo')
                          ->simplePaginate(25);
     }
 
