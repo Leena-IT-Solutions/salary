@@ -89,7 +89,7 @@ class RunPayrollController extends Controller
             $q->where('doe', null)->orWhere('doe', '>=', $request->from);
         })
         ->with('employee_salaries', function($qq) use($request){
-            $qq->where('effective_from', '<=', $request->from)->orderBy('effective_from', 'desc');
+            $qq->where('effective_from', '<=', $request->to)->orderBy('effective_from', 'desc');
         })
         ->get();
 
@@ -175,14 +175,26 @@ class RunPayrollController extends Controller
                 'es_statutories.statutory_compliance_condition',
             )
             ->where('employee_id', $employee_id)
-            ->where('effective_from', '<=', $request->from)
+            ->where('effective_from', '<=', $request->to)
             ->orderBy('effective_from', 'desc')
             ->first();
+
+            if(!$employee_salary){
+                $employee_salary = EmployeeSalary::
+                with(
+                    'salary_group.earnings',
+                    'es_statutories.statutory_compliance',
+                    'es_statutories.statutory_compliance_condition',
+                )
+                ->where('employee_id', $employee_id)
+                ->orderBy('effective_from', 'asc')
+                ->first();
+            }
 
             $payroll_employee_data = [
                 "payroll_id" => 0,
                 "employee_id" => $employee_id,
-                "ctc" => $employee_salary->ctc,
+                "ctc" => $employee_salary ? $employee_salary->ctc : 0,
                 "basic_pay" => 0,
                 "gross_pay" => 0,
                 "total_earning" => 0,
@@ -210,7 +222,7 @@ class RunPayrollController extends Controller
 
             /* Calculate Overtime */
             $ot_hours = $this->calculateOT($request, $employee_id);
-            $ot_amount = round($employee_salary->per_hour * $ot_hours);
+            $ot_amount = round(($employee_salary ? $employee_salary->per_hour : 0) * $ot_hours);
             $payroll_employee_attendance_data["ot_hours"] = $ot_hours;
             $payroll_employee_attendance_data["ot_amount"] = $ot_amount;
 
@@ -416,15 +428,19 @@ class RunPayrollController extends Controller
 
     public function calculateEarnings(Request $request, $employee, $employee_salary, $k){
 
-        $salary_group = $employee_salary->salary_group;
-        $earnings = $employee_salary->salary_group->earnings;
+        if(!$employee_salary || !$employee_salary->salary_group){
+            return [];
+        }
 
-        $ctc = $employee_salary->ctc;
-        $gross_pay = $employee_salary->gross_pay;
-        $basic_pay = $employee_salary->basic_pay;
-        $per_hour = $employee_salary->per_hour;
-        $per_minute = $employee_salary->per_minute;
-        $checking_gross_pay = $employee_salary->checking_gross_pay;
+        $salary_group = $employee_salary->salary_group;
+        $earnings = $salary_group->earnings ?? [];
+
+        $ctc = $employee_salary->ctc ?? 0;
+        $gross_pay = $employee_salary->gross_pay ?? 0;
+        $basic_pay = $employee_salary->basic_pay ?? 0;
+        $per_hour = $employee_salary->per_hour ?? 0;
+        $per_minute = $employee_salary->per_minute ?? 0;
+        $checking_gross_pay = $employee_salary->checking_gross_pay ?? 0;
         
         $items = [];
         foreach($earnings as $earning){
@@ -463,14 +479,15 @@ class RunPayrollController extends Controller
             }
         }
         /* Add Remaining Amount as Special Allowance to earnings */
+        $rem_amt = $employee_salary->remaining_amount ?? 0;
         $items[] = [
             "payroll_employee_id" => 0,
-            "breakupable_id" => $employee_salary->id,
+            "breakupable_id" => $employee_salary->id ?? 0,
             "breakupable_type" => "App\Models\EmployeeSalary",
             "name_in_payslip" => "Special Allowance",
-            "standard_amount" => $employee_salary->remaining_amount,
-            "actual_payable_amount" => round($employee_salary->remaining_amount * $k),
-            /* "actual_payable_amount" => $earning->is_pro_rata ? round($employee_salary->remaining_amount * $k) : round($employee_salary->remaining_amount * $k), */
+            "standard_amount" => $rem_amt,
+            "actual_payable_amount" => round($rem_amt * $k),
+            /* "actual_payable_amount" => $earning->is_pro_rata ? round($rem_amt * $k) : round($rem_amt * $k), */
             "employer_contribution_amount" => 0,
             "is_basic_pay" => false,
             "is_gross_pay" => true,
@@ -647,6 +664,9 @@ class RunPayrollController extends Controller
     }
 
     public function calculateStatutoryCompliance($employee_salary, $payroll_employee_data, $from, $k){
+        if(!$employee_salary || !$employee_salary->es_statutories){
+            return [];
+        }
         $sss = $employee_salary->es_statutories;
         $items = [];
         foreach($sss as $statutory){
