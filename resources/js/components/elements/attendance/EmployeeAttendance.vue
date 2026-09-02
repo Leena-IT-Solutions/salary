@@ -209,18 +209,22 @@
                     <div class="modal-header border-0 py-3 px-4 flex-column align-items-stretch" style="background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);">
                         <div class="d-flex align-items-center justify-content-between">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="bg-white bg-opacity-15 p-2 rounded-3 text-white d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
-                                    <i class="bi bi-clock-history fs-4 text-white"></i>
+                                <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; background-color: rgba(255, 255, 255, 0.2) !important;">
+                                    <i class="bi bi-clock-history fs-4" style="color: #ffffff !important;"></i>
                                 </div>
                                 <div>
-                                    <h5 class="fw-bold m-0 text-white fs-5">Adjust Time Entry</h5>
+                                    <h5 class="fw-bold m-0 fs-5" style="color: #ffffff !important;">Adjust Time Entry</h5>
                                     <div class="d-flex align-items-center flex-wrap gap-2 mt-1">
-                                        <span class="text-white-50 small mb-0 fw-medium">{{ editForm.employee_name }}</span>
-                                        <span v-if="modalMode === 'single' && editForm.on_date" class="badge bg-white bg-opacity-20 text-white fw-bold px-2.5 py-1 rounded-pill small border border-white border-opacity-25">
-                                            <i class="bi bi-calendar-event me-1 text-warning"></i>{{ formatDateAndDay(editForm.on_date) }}
+                                        <span class="small mb-0 fw-medium" style="color: rgba(255, 255, 255, 0.8) !important;">{{ editForm.employee_name }}</span>
+                                        <span v-if="modalMode === 'single' && editForm.on_date" 
+                                              class="badge rounded-pill small fw-bold px-3 py-1" 
+                                              style="background-color: rgba(255, 255, 255, 0.2) !important; color: #ffffff !important; border: 1px solid rgba(255, 255, 255, 0.3) !important;">
+                                            <i class="bi bi-calendar-event me-1.5" style="color: #fbbf24 !important;"></i>{{ formatDateAndDay(editForm.on_date) }}
                                         </span>
-                                        <span v-if="modalMode === 'paycycle' && payCycleData.from" class="badge bg-white bg-opacity-20 text-white fw-bold px-2.5 py-1 rounded-pill small border border-white border-opacity-25">
-                                            <i class="bi bi-calendar3 me-1 text-warning"></i>Pay Cycle: {{ formatDateShort(payCycleData.from) }} — {{ formatDateShort(payCycleData.to) }}
+                                        <span v-if="modalMode === 'paycycle' && payCycleData.from" 
+                                              class="badge rounded-pill small fw-bold px-3 py-1" 
+                                              style="background-color: rgba(255, 255, 255, 0.2) !important; color: #ffffff !important; border: 1px solid rgba(255, 255, 255, 0.3) !important;">
+                                            <i class="bi bi-calendar3 me-1.5" style="color: #fbbf24 !important;"></i>Pay Cycle: {{ formatDateShort(payCycleData.from) }} — {{ formatDateShort(payCycleData.to) }}
                                         </span>
                                     </div>
                                 </div>
@@ -229,25 +233,27 @@
                         </div>
 
                         <!-- Mode Switcher Segmented Control -->
-                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3 pt-2 border-top border-white border-opacity-15">
-                            <div class="bg-black bg-opacity-25 p-1 rounded-pill d-inline-flex gap-1">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3 pt-2" style="border-top: 1px solid rgba(255, 255, 255, 0.2) !important;">
+                            <div class="p-1 rounded-pill d-inline-flex gap-1" style="background-color: rgba(0, 0, 0, 0.25) !important;">
                                 <button type="button" 
                                         class="btn btn-sm rounded-pill fw-bold px-3.5 py-1.5 text-nowrap transition-all border-0"
-                                        :style="modalMode === 'single' ? 'background-color: #ffffff !important; color: #1e293b !important; box-shadow: 0 2px 6px rgba(0,0,0,0.15);' : 'color: rgba(255,255,255,0.75) !important; background: transparent;'"
+                                        :style="modalMode === 'single' ? 'background-color: #ffffff !important; color: #4f46e5 !important; font-weight: 700 !important; box-shadow: 0 2px 6px rgba(0,0,0,0.2);' : 'background-color: transparent !important; color: rgba(255, 255, 255, 0.85) !important; font-weight: 600 !important;'"
                                         @click="switchModalMode('single')">
                                     <i class="bi bi-calendar-day me-1.5"></i>Selected Date
                                 </button>
                                 <button type="button" 
                                         class="btn btn-sm rounded-pill fw-bold px-3.5 py-1.5 text-nowrap transition-all border-0"
-                                        :style="modalMode === 'paycycle' ? 'background-color: #ffffff !important; color: #1e293b !important; box-shadow: 0 2px 6px rgba(0,0,0,0.15);' : 'color: rgba(255,255,255,0.75) !important; background: transparent;'"
+                                        :style="modalMode === 'paycycle' ? 'background-color: #ffffff !important; color: #4f46e5 !important; font-weight: 700 !important; box-shadow: 0 2px 6px rgba(0,0,0,0.2);' : 'background-color: transparent !important; color: rgba(255, 255, 255, 0.85) !important; font-weight: 600 !important;'"
                                         @click="switchModalMode('paycycle')">
                                     <i class="bi bi-calendar-range me-1.5"></i>Full Pay Cycle
                                 </button>
                             </div>
 
                             <div v-if="modalMode === 'paycycle'">
-                                <button class="btn btn-sm bg-white bg-opacity-20 text-white border border-white border-opacity-25 rounded-pill px-3 py-1.5 fw-bold transition-all hover-lift" @click="fillAllPayCycleMissing()">
-                                    <i class="bi bi-magic me-1.5 text-warning"></i>Auto-Fill All Missing
+                                <button class="btn btn-sm rounded-pill px-3 py-1.5 fw-bold transition-all" 
+                                        style="background-color: #ffffff !important; color: #4f46e5 !important; border: none !important; box-shadow: 0 2px 6px rgba(0,0,0,0.15);"
+                                        @click="fillAllPayCycleMissing()">
+                                    <i class="bi bi-magic me-1.5" style="color: #d97706 !important;"></i>Auto-Fill All Missing
                                 </button>
                             </div>
                         </div>
