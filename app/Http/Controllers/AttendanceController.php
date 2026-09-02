@@ -70,12 +70,21 @@ class AttendanceController extends Controller
             });
         }
 
-        return $employees
+        $employeeData = $employees
         ->active()
         ->with('employee_work_location.work_location')
         ->with('employee_department.department')
         ->orderBy('first_name', 'asc')
         ->get();
+
+        $special_day = \App\Models\SpecialDays::where('special_day', $request->current_date)->first();
+
+        return response()->json([
+            'employees' => $employeeData,
+            'special_day' => $special_day,
+            'current_date' => $request->current_date,
+            'day_name' => $request->current_date ? date('l', strtotime($request->current_date)) : null,
+        ]);
     }
 
     public function attendance_evalution_report(){

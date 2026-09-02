@@ -31,32 +31,41 @@
                         </div>
                         
                         <div class="col-lg-6 border-start-lg">
-                            <div class="d-flex align-items-center justify-content-center">
-                                <button class="btn btn-outline-primary btn-icon rounded-circle me-3 shadow-sm" @click="prevDay()">
-                                    <i class="bi bi-chevron-left"></i>
-                                </button>
-                                
-                                <div class="position-relative">
-                                    <div class="text-center px-4 py-2 bg-light rounded-pill min-width-200 shadow-sm border cursor-pointer hover-lift" 
-                                         @click="triggerDatePicker"
-                                         title="Click to select a date">
-                                        <h5 class="fw-bold m-0 text-primary d-flex align-items-center justify-content-center">
-                                            <i class="bi bi-calendar-event me-2"></i>
-                                            {{ formatDisplayDate(employeeFilter.current_date) }}
-                                            <i class="bi bi-caret-down-fill ms-2 small opacity-50"></i>
-                                        </h5>
+                            <div class="d-flex align-items-center justify-content-center flex-column flex-sm-row gap-2">
+                                <div class="d-flex align-items-center">
+                                    <button class="btn btn-outline-primary btn-icon rounded-circle me-3 shadow-sm" @click="prevDay()">
+                                        <i class="bi bi-chevron-left"></i>
+                                    </button>
+                                    
+                                    <div class="position-relative">
+                                        <div class="text-center px-4 py-2 bg-light rounded-pill shadow-sm border cursor-pointer hover-lift" 
+                                             @click="triggerDatePicker"
+                                             title="Click to select a date">
+                                            <h5 class="fw-bold m-0 text-primary d-flex align-items-center justify-content-center">
+                                                <i class="bi bi-calendar-event me-2"></i>
+                                                {{ formatDisplayDate(employeeFilter.current_date) }}
+                                                <i class="bi bi-caret-down-fill ms-2 small opacity-50"></i>
+                                            </h5>
+                                        </div>
+                                        <!-- Hidden Date Input -->
+                                        <input type="date" ref="datePicker" 
+                                               class="position-absolute translate-middle opacity-0" 
+                                               style="top: 50%; left: 50%; width: 100%; z-index: -1;"
+                                               v-model="employeeFilter.current_date" 
+                                               @change="fetch()">
                                     </div>
-                                    <!-- Hidden Date Input -->
-                                    <input type="date" ref="datePicker" 
-                                           class="position-absolute translate-middle opacity-0" 
-                                           style="top: 50%; left: 50%; width: 100%; z-index: -1;"
-                                           v-model="employeeFilter.current_date" 
-                                           @change="fetch()">
+
+                                    <button class="btn btn-outline-primary btn-icon rounded-circle ms-3 shadow-sm" @click="nextDay()">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </button>
                                 </div>
 
-                                <button class="btn btn-outline-primary btn-icon rounded-circle ms-3 shadow-sm" @click="nextDay()">
-                                    <i class="bi bi-chevron-right"></i>
-                                </button>
+                                <!-- Calendar Status Badge -->
+                                <span class="badge px-3 py-2 rounded-pill shadow-xs fw-bold d-inline-flex align-items-center gap-1.5 ms-sm-2"
+                                      :class="calendarStatus.badgeClass" style="font-size: 0.85rem;">
+                                    <i :class="['bi', calendarStatus.icon]"></i>
+                                    {{ calendarStatus.label }}
+                                </span>
                             </div>
                         </div>
 
@@ -83,9 +92,12 @@
             <!-- Attendance Roster -->
             <div class="card border-0 shadow-premium overflow-hidden mb-4">
                 <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-3">
-                    <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center flex-wrap gap-3">
                         <h5 class="fw-bold m-0"><i class="bi bi-people-fill text-primary me-2"></i> Attendance Log</h5>
                         <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3">{{ filteredEmployees.length }} Records</span>
+                        <span class="badge px-3 py-1.5 rounded-pill fw-bold" :class="calendarStatus.badgeClass">
+                            <i :class="['bi', calendarStatus.icon]" class="me-1"></i> {{ calendarStatus.label }}
+                        </span>
                     </div>
                     <div class="search-container position-relative" style="min-width: 300px;">
                         <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
@@ -280,6 +292,7 @@ export default {
                 current_month_name: null
             },
             employees: [],
+            specialDayInfo: null,
             saving: false,
             deleting: false,
             editModal: null,
@@ -301,6 +314,42 @@ export default {
                 const code = (emp.employee_code || '').toLowerCase();
                 return fullName.includes(query) || code.includes(query);
             });
+        },
+        calendarStatus() {
+            if (this.specialDayInfo) {
+                const type = this.specialDayInfo.day_type;
+                const remark = this.specialDayInfo.remark;
+                let label = type;
+                if (remark && remark !== 'wo' && remark.toLowerCase() !== type.toLowerCase()) {
+                    label += ` (${remark})`;
+                }
+                return {
+                    label: label,
+                    type: type,
+                    badgeClass: type === 'Holiday' ? 'bg-danger text-white' : (type === 'Weekoff' ? 'bg-warning text-dark' : 'bg-info text-white'),
+                    icon: type === 'Holiday' ? 'bi-gift-fill' : (type === 'Weekoff' ? 'bi-house-door-fill' : 'bi-sun-fill')
+                };
+            }
+            if (this.employeeFilter.current_date) {
+                const parts = this.employeeFilter.current_date.split('-');
+                if (parts.length === 3) {
+                    const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                    if (d.getDay() === 0) { // Sunday
+                        return {
+                            label: 'Sunday Weekoff',
+                            type: 'Weekoff',
+                            badgeClass: 'bg-warning text-dark',
+                            icon: 'bi-house-door-fill'
+                        };
+                    }
+                }
+            }
+            return {
+                label: 'Working Day',
+                type: 'Working Day',
+                badgeClass: 'bg-success text-white',
+                icon: 'bi-briefcase-fill'
+            };
         }
     },
     methods: {
@@ -476,8 +525,20 @@ export default {
         },
         formatDisplayDate(dateString) {
             if (!dateString) return '';
-            const d = new Date(dateString);
-            return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+            const parts = dateString.split('-');
+            if (parts.length === 3) {
+                const year = parseInt(parts[0]);
+                const month = parseInt(parts[1]) - 1;
+                const day = parseInt(parts[2]);
+                const d = new Date(year, month, day);
+                const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                const dayName = days[d.getDay()];
+                const monthName = months[d.getMonth()];
+                const formattedDay = day < 10 ? '0' + day : day;
+                return `${formattedDay} ${monthName} ${year}, ${dayName}`;
+            }
+            return dateString;
         },
         nextDay(){
             let d = new Date(this.employeeFilter.current_date);
@@ -493,7 +554,15 @@ export default {
         },
         fetch(){
             axios.get('/attendance/fetch', { params: this.employeeFilter })
-            .then(res => this.employees = res.data);
+            .then(res => {
+                if (Array.isArray(res.data)) {
+                    this.employees = res.data;
+                    this.specialDayInfo = null;
+                } else {
+                    this.employees = res.data.employees || [];
+                    this.specialDayInfo = res.data.special_day || null;
+                }
+            });
         },
         addSelectAllOption(){
             let option = { val: "0", key: "All" };
