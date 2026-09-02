@@ -128,27 +128,32 @@
         <div class="modal fade" id="editEvaluationPunchModal" tabindex="-1" aria-hidden="true" ref="editModal">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-                    <div class="modal-header bg-primary bg-opacity-5 border-0 py-3">
-                        <div class="d-flex align-items-center">
-                            <div class="bg-primary bg-opacity-10 p-2 rounded-3 me-3 text-primary">
+                    <div class="modal-header bg-primary text-white border-0 py-3 px-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-white bg-opacity-20 p-2 rounded-3 text-white">
                                 <i class="bi bi-clock-history fs-5"></i>
                             </div>
                             <div>
-                                <h5 class="fw-bold m-0 text-dark">Adjust Time Entry</h5>
+                                <h5 class="fw-bold m-0 text-white">Adjust Time Entry</h5>
                                 <div class="d-flex align-items-center flex-wrap gap-2 mt-1">
-                                    <span class="text-muted small mb-0">{{ editForm.employee_name }}</span>
-                                    <span v-if="editForm.on_date" class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2.5 py-1 rounded-pill small fw-bold">
+                                    <span class="text-white-50 small mb-0">{{ editForm.employee_name }}</span>
+                                    <span v-if="editForm.on_date" class="badge bg-white text-primary fw-bold px-2.5 py-1 rounded-pill small">
                                         <i class="bi bi-calendar-event me-1"></i>{{ formatDateAndDay(editForm.on_date) }}
                                     </span>
                                 </div>
                             </div>
                         </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body p-4">
-                        <div class="alert alert-info border-0 bg-info bg-opacity-10 small mb-4">
-                            <i class="bi bi-info-circle-fill me-2"></i>
-                            Changes will reflect after re-evaluating the pay cycle.
+                        <div class="alert alert-info border-0 bg-info bg-opacity-10 rounded-3 p-3 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-info-circle-fill me-1"></i>
+                                <span class="small">Changes will reflect after re-evaluating the pay cycle.</span>
+                            </div>
+                            <div v-if="editForm.on_date" class="badge bg-white text-dark border px-3 py-1.5 rounded-2 fw-bold text-nowrap">
+                                <i class="bi bi-calendar3 text-primary me-1.5"></i>{{ formatDateAndDay(editForm.on_date) }}
+                            </div>
                         </div>
                         <div class="row g-4">
                             <div class="col-md-6">
