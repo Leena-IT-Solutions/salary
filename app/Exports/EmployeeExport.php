@@ -37,14 +37,14 @@ class EmployeeExport implements FromArray, WithHeadings, ShouldAutoSize, WithDra
     {
         $drawings = [];
         foreach ($this->drawingsData as $item) {
-            if (isset($item['path']) && file_exists($item['path'])) {
+            if (isset($item['path']) && file_exists($item['path']) && filesize($item['path']) > 0) {
                 $drawing = new Drawing();
                 $drawing->setName('Employee Photo');
                 $drawing->setDescription('Employee Photo');
                 $drawing->setPath($item['path']);
-                $drawing->setHeight(48);
+                $drawing->setHeight(55);
                 $drawing->setCoordinates($item['coordinate']);
-                $drawing->setOffsetX(4);
+                $drawing->setOffsetX(6);
                 $drawing->setOffsetY(4);
                 $drawings[] = $drawing;
             }
@@ -57,8 +57,9 @@ class EmployeeExport implements FromArray, WithHeadings, ShouldAutoSize, WithDra
         if (!empty($this->drawingsData)) {
             $totalRows = count($this->data) + 1;
             for ($row = 2; $row <= $totalRows; $row++) {
-                $sheet->getRowDimension($row)->setRowHeight(42);
+                $sheet->getRowDimension($row)->setRowHeight(50);
             }
+            $sheet->getColumnDimension('A')->setWidth(16);
         }
     }
 }

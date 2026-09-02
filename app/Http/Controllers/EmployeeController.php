@@ -310,6 +310,57 @@ class EmployeeController extends Controller
             ->get(['id', 'employee_code', 'first_name', 'last_name', 'phone', 'email']);
     }
 
+    protected function getLocalPhotoPath($employee) {
+        if (!$employee || !$employee->employee_photo || !$employee->employee_photo->media) {
+            return null;
+        }
+
+        $m = $employee->employee_photo->media;
+
+        $possiblePaths = [
+            public_path('storage' . $m),
+            storage_path('app/public' . $m),
+            storage_path('app' . $m),
+        ];
+
+        foreach ($possiblePaths as $p) {
+            if (file_exists($p) && !is_dir($p)) {
+                return $p;
+            }
+        }
+
+        // Fetch remote image if missing from local filesystem (e.g. production asset)
+        $parts = explode('/', $m);
+        $encodedParts = array_map('rawurlencode', $parts);
+        $encodedMedia = implode('/', $encodedParts);
+
+        $url = str_starts_with($m, 'http') ? $m : url('storage' . $encodedMedia);
+
+        $tmpFile = sys_get_temp_dir() . '/emp_photo_' . $employee->id . '_' . md5($m) . '.jpg';
+
+        if (file_exists($tmpFile) && filesize($tmpFile) > 0) {
+            return $tmpFile;
+        }
+
+        $ctx = stream_context_create([
+            'http' => ['timeout' => 8],
+            'ssl' => ['verify_peer' => false, 'verify_peer_name' => false]
+        ]);
+
+        $content = @file_get_contents($url, false, $ctx);
+        if (!$content && !str_starts_with($m, 'http')) {
+            $fallbackUrl = 'https://payroll.sarvodayavidyalay.com/storage' . $encodedMedia;
+            $content = @file_get_contents($fallbackUrl, false, $ctx);
+        }
+
+        if ($content && strlen($content) > 100) {
+            file_put_contents($tmpFile, $content);
+            return $tmpFile;
+        }
+
+        return null;
+    }
+
     public function exportExcel(Request $request){
         $fields = $request->get('fields', ['id', 'first_name', 'last_name', 'employee_code', 'email', 'phone']);
         $headings = $request->get('headings', ['Staff ID', 'First Name', 'Last Name', 'Code', 'Email', 'Phone']);
@@ -333,27 +384,13 @@ class EmployeeController extends Controller
                 switch ($field) {
                     case 'photo':
                         $row[] = ''; // Empty string in text cell, Drawing will overlay image
-                        $mediaPath = optional($employee->employee_photo)->media;
-                        if ($mediaPath) {
-                            $possiblePaths = [
-                                public_path('storage' . $mediaPath),
-                                storage_path('app/public' . $mediaPath),
-                                storage_path('app' . $mediaPath),
+                        $photoPath = $this->getLocalPhotoPath($employee);
+                        if ($photoPath) {
+                            $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex + 1);
+                            $drawingsData[] = [
+                                'path' => $photoPath,
+                                'coordinate' => $colLetter . $rowIndex
                             ];
-                            $foundPath = null;
-                            foreach ($possiblePaths as $p) {
-                                if (file_exists($p) && !is_dir($p)) {
-                                    $foundPath = $p;
-                                    break;
-                                }
-                            }
-                            if ($foundPath) {
-                                $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex + 1);
-                                $drawingsData[] = [
-                                    'path' => $foundPath,
-                                    'coordinate' => $colLetter . $rowIndex
-                                ];
-                            }
                         }
                         break;
                     case 'department':
@@ -531,5 +568,65 @@ class EmployeeController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportCanvaExcel(Request $request){
+        $employees = $this->getFilteredEmployeesQuery($request)
+            ->with([
+                'employee_department.department',
+                'employee_designation.designation',
+                'employee_work_location.work_location',
+                'employee_photo',
+                'employee_address'
+            ])
+            ->get();
+
+        $headings = ['photo', 'myname', 'designation', 'phone', 'employee_code', 'blood_group', 'dob', 'addr'];
+        $data = [];
+        $drawingsData = [];
+        $rowIndex = 2; // Row 1 is headings
+
+        foreach ($employees as $emp) {
+            $photoPath = $this->getLocalPhotoPath($emp);
+            if ($photoPath) {
+                $drawingsData[] = [
+                    'path' => $photoPath,
+                    'coordinate' => 'A' . $rowIndex
+                ];
+            }
+
+            $fullName = strtoupper(trim($emp->first_name . ' ' . ($emp->middle_name ? $emp->middle_name . ' ' : '') . $emp->last_name));
+            $designation = strtoupper(optional(optional($emp->employee_designation)->designation)->designation ?? '');
+            $phone = $emp->phone ?? '';
+            $code = $emp->employee_code ?? '';
+            $bg = $emp->blood_group ?? '';
+            $dob = $emp->dob ? date('d/m/Y', strtotime($emp->dob)) : '';
+
+            $addrObj = $emp->employee_address;
+            $addrParts = [];
+            if ($addrObj) {
+                if ($addrObj->address) $addrParts[] = $addrObj->address;
+                if ($addrObj->city) $addrParts[] = $addrObj->city;
+                if ($addrObj->state) $addrParts[] = $addrObj->state;
+                if ($addrObj->pincode) $addrParts[] = $addrObj->pincode;
+            }
+            $addrStr = implode(', ', $addrParts);
+
+            $data[] = [
+                '', // Column A cell text left empty for embedded Drawing photo
+                $fullName,
+                $designation,
+                $phone,
+                $code,
+                $bg,
+                $dob,
+                $addrStr
+            ];
+
+            $rowIndex++;
+        }
+
+        $filename = "canva_icard_employees_" . date('Y-m-d') . ".xlsx";
+        return Excel::download(new EmployeeExport($data, $headings, $drawingsData), $filename);
     }
 }

@@ -120,6 +120,7 @@ Route::middleware(['auth', 'role'])->group(function () {
     Route::post('/employee/employee_manager/export/pdf', [App\Http\Controllers\EmployeeController::class, 'exportPdf'])->name('employee.export.pdf');
     Route::post('/employee/employee_manager/export/csv', [App\Http\Controllers\EmployeeController::class, 'exportCsv'])->name('employee.export.csv');
     Route::post('/employee/employee_manager/export/canva_csv', [App\Http\Controllers\EmployeeController::class, 'exportCanvaCsv'])->name('employee.export.canva_csv');
+    Route::post('/employee/employee_manager/export/canva_excel', [App\Http\Controllers\EmployeeController::class, 'exportCanvaExcel'])->name('employee.export.canva_excel');
 
     /* Employee Address */
     Route::get('/employee/employee_address/{id}/fetch', [App\Http\Controllers\EmployeeAddressController::class, 'fetch']);

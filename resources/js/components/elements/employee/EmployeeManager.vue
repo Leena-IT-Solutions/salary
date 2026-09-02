@@ -349,10 +349,20 @@
                         class="btn btn-purple btn-lg px-4 rounded-pill fw-bold small d-inline-flex align-items-center gap-2 shadow-sm border-0 text-white"
                         style="background: linear-gradient(135deg, #7d2ae8 0%, #00c4cc 100%);"
                         :disabled="exportLoading"
+                        @click="triggerExport('canva_excel')"
+                        title="Download Canva ICards Excel with actual photos embedded inside cells">
+                        <i v-if="exportLoading && exportType === 'canva_excel'" class="spinner-border spinner-border-sm"></i>
+                        <i v-else class="bi bi-file-earmark-image-fill"></i>
+                        Canva ICard Excel
+                    </button>
+                    <button 
+                        class="btn btn-outline-purple btn-lg px-4 rounded-pill fw-bold small d-inline-flex align-items-center gap-2 shadow-sm"
+                        style="color: #7d2ae8; border-color: #7d2ae8;"
+                        :disabled="exportLoading"
                         @click="triggerExport('canva_csv')"
-                        title="Download Canva ICards CSV (photo, myname, designation, phone, employee_code, blood_group, dob, addr)">
+                        title="Download Canva ICards CSV with photo URLs">
                         <i v-if="exportLoading && exportType === 'canva_csv'" class="spinner-border spinner-border-sm"></i>
-                        <i v-else class="bi bi-person-badge-fill"></i>
+                        <i v-else class="bi bi-person-badge"></i>
                         Canva ICard CSV
                     </button>
                     <button 
@@ -627,6 +637,9 @@ export default {
             } else if (type === 'canva_csv') {
                 url = '/employee/employee_manager/export/canva_csv';
                 defaultFilename = 'canva_icard_employees.csv';
+            } else if (type === 'canva_excel') {
+                url = '/employee/employee_manager/export/canva_excel';
+                defaultFilename = 'canva_icard_employees.xlsx';
             }
                 
             axios.post(url, payload, { responseType: 'blob' }).then(response => {
