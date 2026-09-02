@@ -212,10 +212,13 @@ class RunPayrollController extends Controller
 
             $salary_calculations["employee_id"][] = $employee_id;
 
-            /* Calculate LOP */
-            $lop = $this->calculateLOP($request, $employee_id);
-            $payable_days = $days - $lop;
-            $k = $payable_days / $days;
+            /* Calculate LOP (Pre-joining / Post-exit non-working days + Attendance LOP) */
+            $pre_post_lop = $this->calculatePrePostJoiningLOP($request, $employee, $wdc);
+            $attendance_lop = $this->calculateLOP($request, $employee_id, $employee);
+            $lop = $pre_post_lop + $attendance_lop;
+
+            $payable_days = max(0, $days - $lop);
+            $k = $days > 0 ? ($payable_days / $days) : 0;
 
             $payroll_employee_attendance_data["lop"] = $lop;
             $payroll_employee_attendance_data["payable_days"] = $payable_days;
@@ -414,8 +417,64 @@ class RunPayrollController extends Controller
         }
     }
 
-    public function calculateLOP(Request $request, $employee_id){
-        return EmployeeShift::where('employee_id', $employee_id)->where('dt', '>=', $request->from)->where('dt', '<=', $request->to)->sum('lop');
+    public function calculatePrePostJoiningLOP(Request $request, $employee, $wdc){
+        $pre_joining_days = 0;
+        if ($employee && $employee->doj && $employee->doj > $request->from) {
+            $preToDate = date('Y-m-d', strtotime('-1 day', strtotime($employee->doj)));
+            if ($preToDate >= $request->from) {
+                $fromDt = date_create($request->from);
+                $toDt = date_create(min($request->to, $preToDate));
+                $actual_pre_days = date_diff($fromDt, $toDt)->days + 1;
+                if ($wdc == "Actual Days") {
+                    $pre_joining_days = $actual_pre_days;
+                } else {
+                    $off_pre_days = SpecialDays::where('special_day', '>=', $request->from)
+                        ->where('special_day', '<=', min($request->to, $preToDate))
+                        ->where(function($q){
+                            $q->where('day_type', 'Weekoff')->orWhere('day_type', 'Holiday');
+                        })
+                        ->count();
+                    $pre_joining_days = max(0, $actual_pre_days - $off_pre_days);
+                }
+            }
+        }
+
+        $post_exit_days = 0;
+        if ($employee && $employee->doe && $employee->doe < $request->to) {
+            $postFromDate = date('Y-m-d', strtotime('+1 day', strtotime($employee->doe)));
+            if ($postFromDate <= $request->to) {
+                $fromDt = date_create(max($request->from, $postFromDate));
+                $toDt = date_create($request->to);
+                $actual_post_days = date_diff($fromDt, $toDt)->days + 1;
+                if ($wdc == "Actual Days") {
+                    $post_exit_days = $actual_post_days;
+                } else {
+                    $off_post_days = SpecialDays::where('special_day', '>=', max($request->from, $postFromDate))
+                        ->where('special_day', '<=', $request->to)
+                        ->where(function($q){
+                            $q->where('day_type', 'Weekoff')->orWhere('day_type', 'Holiday');
+                        })
+                        ->count();
+                    $post_exit_days = max(0, $actual_post_days - $off_post_days);
+                }
+            }
+        }
+
+        return $pre_joining_days + $post_exit_days;
+    }
+
+    public function calculateLOP(Request $request, $employee_id, $employee = null){
+        if (!$employee) {
+            $employee = Employee::find($employee_id);
+        }
+        $empFrom = ($employee && $employee->doj && $employee->doj > $request->from) ? $employee->doj : $request->from;
+        $empTo = ($employee && $employee->doe && $employee->doe < $request->to) ? $employee->doe : $request->to;
+
+        if ($empFrom > $empTo) {
+            return 0;
+        }
+
+        return EmployeeShift::where('employee_id', $employee_id)->where('dt', '>=', $empFrom)->where('dt', '<=', $empTo)->sum('lop');
     }
 
     public function calculateOT(Request $request, $employee_id){
