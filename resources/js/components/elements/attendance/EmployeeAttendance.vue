@@ -197,10 +197,15 @@
                             <div class="bg-primary bg-opacity-10 p-2 rounded-3 me-3 text-primary">
                                 <i class="bi bi-clock-history fs-5"></i>
                             </div>
-                            <div>
-                                <h5 class="fw-bold m-0 text-dark">Adjust Time Entry</h5>
-                                <p class="text-muted small mb-0">{{ editForm.employee_name }}</p>
-                            </div>
+                             <div>
+                                 <h5 class="fw-bold m-0 text-dark">Adjust Time Entry</h5>
+                                 <div class="d-flex align-items-center flex-wrap gap-2 mt-1">
+                                     <span class="text-muted small mb-0">{{ editForm.employee_name }}</span>
+                                     <span v-if="editForm.on_date" class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2.5 py-1 rounded-pill small fw-bold">
+                                         <i class="bi bi-calendar-event me-1"></i>{{ formatDateAndDay(editForm.on_date) }}
+                                     </span>
+                                 </div>
+                             </div>
                         </div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -333,9 +338,27 @@ export default {
             }
             return h * 3600 + m * 60 + s;
         },
+        formatDateAndDay(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('-');
+            if (parts.length === 3) {
+                const year = parseInt(parts[0]);
+                const month = parseInt(parts[1]) - 1;
+                const day = parseInt(parts[2]);
+                const d = new Date(year, month, day);
+                const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const dayName = days[d.getDay()];
+                const monthName = months[d.getMonth()];
+                const formattedDay = day < 10 ? '0' + day : day;
+                return `${formattedDay} ${monthName} ${year}, ${dayName}`;
+            }
+            return dateStr;
+        },
         openEditModal(shift, name) {
             this.editForm.employee_shift_id = shift.id;
             this.editForm.employee_name = name;
+            this.editForm.on_date = shift ? shift.dt : this.employeeFilter.current_date;
             
             const attendance = shift.employee_attendance;
             const shiftIn = shift.working_shift.in;
