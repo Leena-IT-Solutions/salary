@@ -5,14 +5,14 @@
     <title>Employee Enrollment Application Form - {{ $company->company_name ?? 'Sarvodaya Vidyalay' }}</title>
     <style>
         @page {
-            margin: 8mm 10mm 8mm 10mm;
+            margin: 10mm 12mm 10mm 12mm;
             size: a4 portrait;
         }
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 8.5pt;
-            color: #1e293b;
-            line-height: 1.25;
+            font-size: 9pt;
+            color: #0f172a;
+            line-height: 1.35;
             margin: 0;
             padding: 0;
         }
@@ -28,113 +28,109 @@
             border-collapse: collapse;
         }
         
-        /* Header section */
+        /* Organization Header section */
         .org-header-table {
             width: 100%;
-            margin-bottom: 4px;
-            border-bottom: 2px solid #3b82f6;
-            padding-bottom: 4px;
+            margin-bottom: 6px;
+            border-bottom: 2.5px solid #2563eb;
+            padding-bottom: 6px;
         }
         .org-logo {
-            max-height: 48px;
-            max-width: 90px;
+            max-height: 54px;
+            max-width: 95px;
         }
         .org-name {
-            font-size: 14pt;
+            font-size: 16pt;
             font-weight: bold;
             color: #1e3a8a;
             letter-spacing: 0.5px;
-            margin: 0;
+            margin: 0 0 2px 0;
         }
         .org-meta {
-            font-size: 7.5pt;
+            font-size: 8pt;
             color: #475569;
             margin-top: 2px;
         }
         .form-title-banner {
             background-color: #1e3a8a;
             color: #ffffff;
-            font-size: 10pt;
+            font-size: 10.5pt;
             font-weight: bold;
             text-align: center;
-            padding: 3px 0;
-            margin: 5px 0 3px 0;
+            padding: 4px 0;
+            margin: 6px 0 3px 0;
             letter-spacing: 1px;
-            border-radius: 2px;
+            border-radius: 3px;
         }
         .form-subtitle {
-            font-size: 7pt;
+            font-size: 7.5pt;
             color: #64748b;
             font-style: italic;
             text-align: center;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
         }
 
         /* Section Styling */
         .section-header {
             background-color: #eff6ff;
             color: #1e40af;
-            font-size: 8pt;
+            font-size: 8.5pt;
             font-weight: bold;
-            padding: 2.5px 6px;
-            border-left: 3px solid #2563eb;
+            padding: 4px 8px;
+            border-left: 3.5px solid #2563eb;
             border-top: 1px solid #dbeafe;
             border-right: 1px solid #dbeafe;
             border-bottom: 1px solid #dbeafe;
             text-transform: uppercase;
-            margin-top: 5px;
-            margin-bottom: 3px;
+            margin-top: 10px;
+            margin-bottom: 6px;
+            border-radius: 2px;
         }
 
         /* Tables & Forms */
         .form-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
         }
         .form-table td {
-            padding: 3px 5px;
+            padding: 5.5px 6px;
             vertical-align: middle;
-            font-size: 8pt;
+            font-size: 8.5pt;
         }
         .field-label {
             font-weight: bold;
             color: #334155;
-            font-size: 7.5pt;
+            font-size: 8pt;
             white-space: nowrap;
         }
         .field-line {
-            border-bottom: 1px dotted #94a3b8;
-            height: 14px;
+            border-bottom: 1px dashed #94a3b8;
+            height: 18px;
             display: block;
-        }
-        .field-box {
-            border: 1px solid #cbd5e1;
-            background-color: #ffffff;
-            height: 16px;
-            border-radius: 2px;
+            width: 100%;
         }
 
-        /* Data grids (e.g. education) */
+        /* Data grids (education) */
         .grid-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 3px 0 5px 0;
+            margin: 6px 0 8px 0;
         }
         .grid-table th {
             background-color: #f1f5f9;
-            color: #334155;
-            font-size: 7.5pt;
+            color: #1e293b;
+            font-size: 8pt;
             font-weight: bold;
             border: 1px solid #cbd5e1;
-            padding: 3px 4px;
+            padding: 6px 4px;
             text-align: center;
         }
         .grid-table td {
             border: 1px solid #cbd5e1;
-            padding: 4px;
-            font-size: 7.5pt;
-            height: 16px;
+            padding: 6px;
+            font-size: 8pt;
+            height: 24px;
         }
 
         /* Office Box */
@@ -142,52 +138,57 @@
             border: 1px solid #93c5fd;
             background-color: #f8fafc;
             border-radius: 4px;
-            padding: 4px 6px;
-            margin-bottom: 4px;
+            padding: 6px 8px;
+            margin-bottom: 6px;
         }
         .office-box-title {
-            font-size: 7pt;
+            font-size: 7.5pt;
             font-weight: bold;
             color: #1e40af;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             border-bottom: 1px dashed #bfdbfe;
-            padding-bottom: 2px;
-            margin-bottom: 3px;
+            padding-bottom: 3px;
+            margin-bottom: 5px;
         }
 
         /* Photo Box */
         .photo-box {
-            width: 90px;
-            height: 105px;
-            border: 1px dashed #64748b;
+            width: 95px;
+            height: 115px;
+            border: 1.5px dashed #64748b;
             background-color: #fafafa;
             text-align: center;
             vertical-align: middle;
-            font-size: 6.5pt;
-            color: #94a3b8;
-            padding: 4px;
+            font-size: 7pt;
+            color: #64748b;
+            padding: 6px;
             box-sizing: border-box;
+            border-radius: 4px;
         }
 
         /* Checkboxes */
         .checkbox-box {
             display: inline-block;
-            width: 8px;
-            height: 8px;
-            border: 1px solid #475569;
+            width: 10px;
+            height: 10px;
+            border: 1.2px solid #334155;
             margin-right: 3px;
             vertical-align: middle;
+            background-color: #ffffff;
+            border-radius: 1px;
         }
+        
+        /* Empty write-in boxes (DOB, Phone, Aadhaar, PAN, IFSC) */
         .char-box {
             display: inline-block;
-            width: 9.5px;
-            height: 12px;
-            border: 1px solid #94a3b8;
-            margin-right: 1px;
+            width: 12px;
+            height: 16px;
+            border: 1.2px solid #64748b;
+            margin-right: 1.5px;
             vertical-align: middle;
-            text-align: center;
-            font-size: 6.5pt;
+            background-color: #ffffff;
+            border-radius: 1px;
         }
 
         .page-break {
@@ -196,32 +197,32 @@
         
         .declaration-box {
             background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            padding: 5px 8px;
-            font-size: 7pt;
+            border: 1px solid #cbd5e1;
+            padding: 8px 10px;
+            font-size: 7.5pt;
             color: #334155;
             text-align: justify;
-            line-height: 1.35;
+            line-height: 1.4;
             border-radius: 3px;
-            margin: 4px 0 6px 0;
+            margin: 6px 0 10px 0;
         }
 
         .signature-table {
             width: 100%;
-            margin-top: 15px;
+            margin-top: 20px;
         }
         .signature-table td {
             vertical-align: top;
-            padding: 0 8px;
+            padding: 0 10px;
         }
         .sig-line {
-            border-top: 1px solid #475569;
-            margin-top: 25px;
-            padding-top: 3px;
+            border-top: 1.2px solid #334155;
+            margin-top: 35px;
+            padding-top: 4px;
             text-align: center;
-            font-size: 7.5pt;
+            font-size: 8pt;
             font-weight: bold;
-            color: #334155;
+            color: #1e293b;
         }
     </style>
 </head>
@@ -239,7 +240,7 @@
     @endphp
 
     <!-- ============================================================== -->
-    <!-- PAGE 1: PRIMARY IDENTITY, DEMOGRAPHICS, ADDRESS & CONTACT       -->
+    <!-- PAGE 1: PRIMARY IDENTITY, CONTACT, ADDRESS & EMERGENCY          -->
     <!-- ============================================================== -->
 
     <!-- Header Table -->
@@ -249,7 +250,7 @@
                 @if($logoPath)
                     <img src="{{ $logoPath }}" class="org-logo" alt="Logo">
                 @else
-                    <div style="font-size: 20pt; font-weight: bold; color: #1e3a8a;">SV</div>
+                    <div style="font-size: 24pt; font-weight: bold; color: #1e3a8a;">SV</div>
                 @endif
             </td>
             <td style="width: 70%; text-align: center; vertical-align: middle; padding: 0 10px;">
@@ -258,7 +259,7 @@
                     {{ $company->address ?? 'Jambhul Road, Sarvodya Nagar' }}, 
                     {{ $company->city ?? 'Ambernath' }} - {{ $company->pincode ?? '421505' }}, {{ $company->state ?? 'Maharashtra' }}
                 </div>
-                <div class="org-meta">
+                <div class="org-meta" style="margin-top: 3px;">
                     <strong>Phone:</strong> {{ $company->phone ?? '9112021959' }} &nbsp;|&nbsp; 
                     <strong>Email:</strong> {{ $company->email ?? 'sarvodayavidyalayschool@gmail.com' }}
                 </div>
@@ -268,7 +269,7 @@
                     <tr>
                         <td class="photo-box">
                             AFFIX RECENT<br>PASSPORT SIZE<br>PHOTOGRAPH<br>HERE<br>
-                            <span style="font-size: 5.5pt; color: #94a3b8;">(Self-Attested)</span>
+                            <span style="font-size: 6pt; color: #94a3b8; display: inline-block; margin-top: 4px;">(Self-Attested)</span>
                         </td>
                     </tr>
                 </table>
@@ -282,7 +283,7 @@
     <!-- Office Administrative Record Box -->
     <div class="office-box">
         <div class="office-box-title">FOR OFFICE / ADMINISTRATIVE USE ONLY</div>
-        <table style="width: 100%; font-size: 7.5pt;">
+        <table style="width: 100%; font-size: 8pt;">
             <tr>
                 <td style="width: 18%;"><strong>Staff / Emp Code:</strong></td>
                 <td style="width: 32%;"><span class="field-line"></span></td>
@@ -320,15 +321,21 @@
         <tr>
             <td class="field-label">Middle / Father's Name:</td>
             <td><span class="field-line"></span></td>
-            <td class="field-label">Mother's Legal Name:</td>
+            <td class="field-label">Mother's Name:</td>
             <td><span class="field-line"></span></td>
         </tr>
         <tr>
             <td class="field-label">Date of Birth:</td>
             <td>
-                <span class="char-box">D</span><span class="char-box">D</span> / 
-                <span class="char-box">M</span><span class="char-box">M</span> / 
-                <span class="char-box">Y</span><span class="char-box">Y</span><span class="char-box">Y</span><span class="char-box">Y</span>
+                <!-- Clean empty boxes with sub-label below -->
+                <div style="display: inline-block; vertical-align: middle;">
+                    <span class="char-box"></span><span class="char-box"></span>
+                    <span style="font-weight: bold; margin: 0 1px;">/</span>
+                    <span class="char-box"></span><span class="char-box"></span>
+                    <span style="font-weight: bold; margin: 0 1px;">/</span>
+                    <span class="char-box"></span><span class="char-box"></span><span class="char-box"></span><span class="char-box"></span>
+                    <div style="font-size: 6pt; color: #64748b; margin-top: 1px;">(DD / MM / YYYY)</div>
+                </div>
             </td>
             <td class="field-label">Gender Identity:</td>
             <td>
@@ -351,8 +358,8 @@
             </td>
             <td class="field-label">Marital Status:</td>
             <td>
-                <span class="checkbox-box"></span> Married &nbsp;
-                <span class="checkbox-box"></span> Single &nbsp;
+                <span class="checkbox-box"></span> Married &nbsp;&nbsp;
+                <span class="checkbox-box"></span> Single &nbsp;&nbsp;
                 <span class="checkbox-box"></span> Other
             </td>
         </tr>
@@ -375,7 +382,7 @@
     <table class="form-table">
         <tr>
             <td class="field-label" style="width: 18%;">Primary Mobile No:</td>
-            <td style="width: 32%;">
+            <td style="width: 32%; white-space: nowrap;">
                 @for($i=0; $i<10; $i++)
                     <span class="char-box"></span>
                 @endfor
@@ -393,15 +400,15 @@
     <div class="section-header">3. Residential Address Particulars</div>
     <table class="form-table">
         <tr>
-            <td class="field-label" style="width: 18%; vertical-align: top;">Present Address:<br><span style="font-size: 6.5pt; color: #64748b;">(Current Residence)</span></td>
+            <td class="field-label" style="width: 18%; vertical-align: top;">Present Address:<br><span style="font-size: 6.5pt; color: #64748b; font-weight: normal;">(Current Residence)</span></td>
             <td colspan="3">
-                <span class="field-line" style="margin-bottom: 5px;"></span>
-                <span class="field-line" style="margin-bottom: 5px;"></span>
-                <table style="width: 100%;">
+                <span class="field-line" style="margin-bottom: 7px;"></span>
+                <span class="field-line" style="margin-bottom: 7px;"></span>
+                <table style="width: 100%; margin-top: 3px;">
                     <tr>
                         <td style="width: 33%; padding: 0;"><strong>City:</strong> <span class="field-line" style="display:inline-block; width: 70%;"></span></td>
                         <td style="width: 33%; padding: 0;"><strong>State:</strong> <span class="field-line" style="display:inline-block; width: 70%;"></span></td>
-                        <td style="width: 34%; padding: 0;"><strong>Pincode:</strong> 
+                        <td style="width: 34%; padding: 0; white-space: nowrap;"><strong>Pincode:</strong> 
                             @for($i=0; $i<6; $i++)
                                 <span class="char-box"></span>
                             @endfor
@@ -411,18 +418,18 @@
             </td>
         </tr>
         <tr>
-            <td class="field-label" style="width: 18%; vertical-align: top;">Permanent Address:</td>
-            <td colspan="3">
-                <div style="font-size: 7pt; margin-bottom: 3px;">
-                    <span class="checkbox-box"></span> Same as Present Address (Check if identical)
+            <td class="field-label" style="width: 18%; vertical-align: top; padding-top: 8px;">Permanent Address:</td>
+            <td colspan="3" style="padding-top: 8px;">
+                <div style="font-size: 7.5pt; margin-bottom: 5px;">
+                    <span class="checkbox-box"></span> <strong>Same as Present Address</strong> (Check if identical)
                 </div>
-                <span class="field-line" style="margin-bottom: 5px;"></span>
-                <span class="field-line" style="margin-bottom: 5px;"></span>
-                <table style="width: 100%;">
+                <span class="field-line" style="margin-bottom: 7px;"></span>
+                <span class="field-line" style="margin-bottom: 7px;"></span>
+                <table style="width: 100%; margin-top: 3px;">
                     <tr>
                         <td style="width: 33%; padding: 0;"><strong>City:</strong> <span class="field-line" style="display:inline-block; width: 70%;"></span></td>
                         <td style="width: 33%; padding: 0;"><strong>State:</strong> <span class="field-line" style="display:inline-block; width: 70%;"></span></td>
-                        <td style="width: 34%; padding: 0;"><strong>Pincode:</strong> 
+                        <td style="width: 34%; padding: 0; white-space: nowrap;"><strong>Pincode:</strong> 
                             @for($i=0; $i<6; $i++)
                                 <span class="char-box"></span>
                             @endfor
@@ -430,6 +437,27 @@
                     </tr>
                 </table>
             </td>
+        </tr>
+    </table>
+
+    <!-- Section 4: Emergency Reference (Placed on Page 1 to balance page height perfectly!) -->
+    <div class="section-header">4. Emergency Contact & Family Reference</div>
+    <table class="form-table">
+        <tr>
+            <td class="field-label" style="width: 20%;">Emergency Contact Name:</td>
+            <td style="width: 30%;"><span class="field-line"></span></td>
+            <td class="field-label" style="width: 18%;">Relationship:</td>
+            <td style="width: 32%;"><span class="field-line"></span></td>
+        </tr>
+        <tr>
+            <td class="field-label">Emergency Phone Number:</td>
+            <td style="white-space: nowrap;">
+                @for($i=0; $i<10; $i++)
+                    <span class="char-box"></span>
+                @endfor
+            </td>
+            <td class="field-label">Alternate Number:</td>
+            <td><span class="field-line"></span></td>
         </tr>
     </table>
 
@@ -442,17 +470,17 @@
     <!-- ============================================================== -->
     <div class="page-break"></div>
 
-    <!-- Section 4: Educational Credentials -->
-    <div class="section-header" style="margin-top: 0;">4. Educational & Professional Qualifications</div>
-    <table class="form-table">
+    <!-- Section 5: Educational Credentials -->
+    <div class="section-header" style="margin-top: 0;">5. Educational & Professional Qualifications</div>
+    <table class="form-table" style="margin-bottom: 2px;">
         <tr>
             <td class="field-label" style="width: 20%;">Highest Qualification:</td>
             <td colspan="3">
-                <span class="checkbox-box"></span> SSC/Primary &nbsp;
-                <span class="checkbox-box"></span> HSC/12th &nbsp;
-                <span class="checkbox-box"></span> Graduate &nbsp;
-                <span class="checkbox-box"></span> Post Graduate &nbsp;
-                <span class="checkbox-box"></span> Doctorate/PhD &nbsp;
+                <span class="checkbox-box"></span> SSC/Primary &nbsp;&nbsp;
+                <span class="checkbox-box"></span> HSC/12th &nbsp;&nbsp;
+                <span class="checkbox-box"></span> Graduate &nbsp;&nbsp;
+                <span class="checkbox-box"></span> Post Graduate &nbsp;&nbsp;
+                <span class="checkbox-box"></span> Doctorate/PhD &nbsp;&nbsp;
                 <span class="checkbox-box"></span> Other
             </td>
         </tr>
@@ -465,10 +493,10 @@
     <table class="grid-table">
         <thead>
             <tr>
-                <th style="width: 24%;">Examination / Degree</th>
-                <th style="width: 36%;">Board / University / Institute</th>
+                <th style="width: 22%;">Examination / Degree</th>
+                <th style="width: 38%;">Board / University / Institute</th>
                 <th style="width: 12%;">Passing Year</th>
-                <th style="width: 14%;">Percentage / CGPA</th>
+                <th style="width: 14%;">Marks / CGPA</th>
                 <th style="width: 14%;">Grade / Div</th>
             </tr>
         </thead>
@@ -511,12 +539,12 @@
         </tbody>
     </table>
 
-    <!-- Section 5: Statutory & Identity Proofs (KYC) -->
-    <div class="section-header">5. Statutory Identification & Social Security (KYC)</div>
+    <!-- Section 6: Statutory & Identity Proofs (KYC) -->
+    <div class="section-header">6. Statutory Identification & Social Security (KYC)</div>
     <table class="form-table">
         <tr>
-            <td class="field-label" style="width: 20%;">Aadhaar Card Number:</td>
-            <td style="width: 30%; white-space: nowrap;">
+            <td class="field-label" style="width: 22%;">Aadhaar Card Number:</td>
+            <td style="width: 28%; white-space: nowrap;">
                 @for($i=0; $i<4; $i++) <span class="char-box"></span> @endfor - 
                 @for($i=0; $i<4; $i++) <span class="char-box"></span> @endfor - 
                 @for($i=0; $i<4; $i++) <span class="char-box"></span> @endfor
@@ -552,8 +580,8 @@
         </tr>
     </table>
 
-    <!-- Section 6: Bank Remittance Details -->
-    <div class="section-header">6. Bank Details for Salary Credit Remittance</div>
+    <!-- Section 7: Bank Remittance Details -->
+    <div class="section-header">7. Bank Details for Salary Credit Remittance</div>
     <table class="form-table">
         <tr>
             <td class="field-label" style="width: 22%;">Account Holder Name:</td>
@@ -562,57 +590,46 @@
         <tr>
             <td class="field-label">Bank Name:</td>
             <td style="width: 28%;"><span class="field-line"></span></td>
-            <td class="field-label" style="width: 22%;">Branch Location:</td>
-            <td style="width: 28%;"><span class="field-line"></span></td>
+            <td class="field-label" style="width: 20%;">Branch Location:</td>
+            <td style="width: 30%;"><span class="field-line"></span></td>
         </tr>
         <tr>
             <td class="field-label">Bank Account Number:</td>
             <td><span class="field-line"></span></td>
             <td class="field-label">Account Type:</td>
             <td>
-                <span class="checkbox-box"></span> Salary &nbsp;
-                <span class="checkbox-box"></span> Savings &nbsp;
+                <span class="checkbox-box"></span> Salary &nbsp;&nbsp;
+                <span class="checkbox-box"></span> Savings &nbsp;&nbsp;
                 <span class="checkbox-box"></span> Current
             </td>
         </tr>
         <tr>
             <td class="field-label">IFSC Code:</td>
-            <td colspan="3">
+            <td colspan="3" style="white-space: nowrap;">
                 @for($i=0; $i<11; $i++)
                     <span class="char-box"></span>
                 @endfor
-                <span style="font-size: 7pt; color: #64748b; margin-left: 10px;">(11-digit alphanumeric code as per chequebook)</span>
+                <span style="font-size: 7pt; color: #64748b; margin-left: 8px;">(11-digit alphanumeric code as per chequebook/passbook)</span>
             </td>
-        </tr>
-    </table>
-
-    <!-- Section 7: Emergency Reference -->
-    <div class="section-header">7. Emergency Contact & Family Reference</div>
-    <table class="form-table">
-        <tr>
-            <td class="field-label" style="width: 22%;">Emergency Contact Person:</td>
-            <td style="width: 28%;"><span class="field-line"></span></td>
-            <td class="field-label" style="width: 22%;">Relationship:</td>
-            <td style="width: 28%;"><span class="field-line"></span></td>
-        </tr>
-        <tr>
-            <td class="field-label">Emergency Phone Number:</td>
-            <td colspan="3"><span class="field-line"></span></td>
         </tr>
     </table>
 
     <!-- Section 8: Document Enclosures Checklist -->
     <div class="section-header">8. Mandatory Enclosures / Attachments Checklist</div>
-    <table style="width: 100%; font-size: 7pt; margin-bottom: 4px;">
+    <table style="width: 100%; font-size: 7.5pt; margin-bottom: 6px;">
         <tr>
-            <td style="width: 50%; padding: 2px 4px;">
+            <td style="width: 50%; padding: 4px 6px;">
                 <span class="checkbox-box"></span> Copy of Aadhaar Card (Self-Attested)<br>
+                <div style="height: 4px;"></div>
                 <span class="checkbox-box"></span> Copy of PAN Card (Self-Attested)<br>
+                <div style="height: 4px;"></div>
                 <span class="checkbox-box"></span> Cancelled Cheque / Bank Passbook Copy
             </td>
-            <td style="width: 50%; padding: 2px 4px;">
+            <td style="width: 50%; padding: 4px 6px;">
                 <span class="checkbox-box"></span> 2 Recent Passport Size Photographs<br>
-                <span class="checkbox-box"></span> Educational Certificates & Marksheets<br>
+                <div style="height: 4px;"></div>
+                <span class="checkbox-box"></span> Educational Certificates & Degree Marksheets<br>
+                <div style="height: 4px;"></div>
                 <span class="checkbox-box"></span> Previous Relieving / Experience Letter (If applicable)
             </td>
         </tr>
@@ -621,14 +638,14 @@
     <!-- Section 9: Self Declaration & Signatures -->
     <div class="section-header">9. Candidate Self-Declaration & Signatures</div>
     <div class="declaration-box">
-        I hereby declare and affirm that all the statements and information furnished above in this application form are true, complete, and correct to the best of my knowledge and belief. In the event of any information being found false, fabricated, or incorrect at any stage, my candidature / employment shall be subject to immediate cancellation and termination without notice.
+        I hereby declare and affirm that all the statements, particulars, and information furnished above in this enrollment application form are true, complete, and correct to the best of my knowledge and belief. In the event of any information being found false, misleading, fabricated, or incorrect at any stage, my candidature / employment shall be subject to immediate cancellation and termination without notice.
     </div>
 
     <table class="signature-table">
         <tr>
             <td style="width: 30%;">
-                <div style="font-size: 7.5pt;"><strong>Date:</strong> _____ / _____ / 202___</div>
-                <div style="font-size: 7.5pt; margin-top: 4px;"><strong>Place:</strong> ___________________</div>
+                <div style="font-size: 8pt; margin-bottom: 8px;"><strong>Date:</strong> _____ / _____ / 202___</div>
+                <div style="font-size: 8pt;"><strong>Place:</strong> ___________________</div>
             </td>
             <td style="width: 35%;">
                 <div class="sig-line">
@@ -645,14 +662,14 @@
         </tr>
     </table>
 
-    <div style="margin-top: 15px; border-top: 1px dashed #cbd5e1; padding-top: 6px;">
+    <div style="margin-top: 18px; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
         <table style="width: 100%;">
             <tr>
-                <td style="width: 65%; font-size: 7pt; color: #64748b; vertical-align: middle;">
+                <td style="width: 62%; font-size: 7.5pt; color: #64748b; vertical-align: middle;">
                     Form Approved for Registration in Portal by: __________________________________
                 </td>
-                <td style="width: 35%; text-align: center; vertical-align: middle;">
-                    <div style="border: 1px solid #cbd5e1; padding: 12px 6px; font-size: 7pt; color: #64748b; border-radius: 4px;">
+                <td style="width: 38%; text-align: center; vertical-align: middle;">
+                    <div style="border: 1.2px solid #cbd5e1; padding: 14px 8px; font-size: 7.5pt; color: #64748b; border-radius: 4px; background-color: #fafafa;">
                         Principal / Authorized Signatory & Official Stamp
                     </div>
                 </td>
@@ -660,7 +677,7 @@
         </table>
     </div>
 
-    <div style="text-align: right; font-size: 7pt; color: #94a3b8; margin-top: 10px;">
+    <div style="text-align: right; font-size: 7pt; color: #94a3b8; margin-top: 12px;">
         Page 2 of 2 &nbsp;&bull;&nbsp; {{ $company->company_name ?? 'Sarvodaya Vidyalay' }} Employee Enrollment Form
     </div>
 
