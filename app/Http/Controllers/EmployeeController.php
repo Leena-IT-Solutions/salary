@@ -364,4 +364,133 @@ class EmployeeController extends Controller
 
         return $pdf->download('employees_export.pdf');
     }
+
+    public function exportCsv(Request $request){
+        $fields = $request->get('fields', ['id', 'first_name', 'last_name', 'employee_code', 'email', 'phone']);
+        $headings = $request->get('headings', ['Staff ID', 'First Name', 'Last Name', 'Code', 'Email', 'Phone']);
+
+        $employees = $this->getFilteredEmployeesQuery($request)
+            ->with([
+                'employee_department.department',
+                'employee_designation.designation',
+                'employee_work_location.work_location',
+                'employee_photo',
+                'employee_address'
+            ])
+            ->get();
+
+        $filename = "employees_export_" . date('Y-m-d') . ".csv";
+
+        $headers = [
+            "Content-Type" => "text/csv; charset=UTF-8",
+            "Content-Disposition" => "attachment; filename=\"$filename\"",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ];
+
+        $callback = function() use($employees, $fields, $headings) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            fputcsv($file, $headings);
+
+            foreach ($employees as $employee) {
+                $row = [];
+                foreach ($fields as $field) {
+                    switch ($field) {
+                        case 'department':
+                            $row[] = optional($employee->employee_department)->department ? $employee->employee_department->department->department : '—';
+                            break;
+                        case 'designation':
+                            $row[] = optional($employee->employee_designation)->designation ? $employee->employee_designation->designation->designation : '—';
+                            break;
+                        case 'work_location':
+                            $row[] = optional($employee->employee_work_location)->work_location ? $employee->employee_work_location->work_location->location_name : '—';
+                            break;
+                        case 'dob':
+                            $row[] = $employee->dob ? date('d/m/Y', strtotime($employee->dob)) : '—';
+                            break;
+                        case 'doj':
+                            $row[] = $employee->doj ? date('d/m/Y', strtotime($employee->doj)) : '—';
+                            break;
+                        case 'doe':
+                            $row[] = $employee->doe ? date('d/m/Y', strtotime($employee->doe)) : '—';
+                            break;
+                        default:
+                            $row[] = $employee->$field ?? '—';
+                            break;
+                    }
+                }
+                fputcsv($file, $row);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportCanvaCsv(Request $request){
+        $employees = $this->getFilteredEmployeesQuery($request)
+            ->with([
+                'employee_department.department',
+                'employee_designation.designation',
+                'employee_work_location.work_location',
+                'employee_photo',
+                'employee_address'
+            ])
+            ->get();
+
+        $filename = "canva_icard_employees_" . date('Y-m-d') . ".csv";
+
+        $headers = [
+            "Content-Type" => "text/csv; charset=UTF-8",
+            "Content-Disposition" => "attachment; filename=\"$filename\"",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ];
+
+        // Headers matching Canva template variable names
+        $columns = ['photo', 'myname', 'designation', 'phone', 'employee_code', 'blood_group', 'dob', 'addr'];
+
+        $callback = function() use($employees, $columns) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM
+            fputcsv($file, $columns);
+
+            foreach ($employees as $emp) {
+                $photoUrl = optional($emp->employee_photo)->media ? url('storage' . $emp->employee_photo->media) : '';
+                $fullName = strtoupper(trim($emp->first_name . ' ' . ($emp->middle_name ? $emp->middle_name . ' ' : '') . $emp->last_name));
+                $designation = strtoupper(optional(optional($emp->employee_designation)->designation)->designation ?? '');
+                $phone = $emp->phone ?? '';
+                $code = $emp->employee_code ?? '';
+                $bg = $emp->blood_group ?? '';
+                $dob = $emp->dob ? date('d/m/Y', strtotime($emp->dob)) : '';
+
+                $addrObj = $emp->employee_address;
+                $addrParts = [];
+                if ($addrObj) {
+                    if ($addrObj->address) $addrParts[] = $addrObj->address;
+                    if ($addrObj->city) $addrParts[] = $addrObj->city;
+                    if ($addrObj->state) $addrParts[] = $addrObj->state;
+                    if ($addrObj->pincode) $addrParts[] = $addrObj->pincode;
+                }
+                $addrStr = implode(', ', $addrParts);
+
+                fputcsv($file, [
+                    $photoUrl,
+                    $fullName,
+                    $designation,
+                    $phone,
+                    $code,
+                    $bg,
+                    $dob,
+                    $addrStr
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }

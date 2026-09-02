@@ -339,11 +339,29 @@
                 </div>
                 
                 <!-- Modal Footer Actions -->
-                <div class="card-footer bg-white py-3 px-4 border-top d-flex gap-3 justify-content-end">
+                <div class="card-footer bg-white py-3 px-4 border-top d-flex flex-wrap gap-2 justify-content-end align-items-center">
                     <button 
-                        class="btn btn-light btn-lg px-4 rounded-pill fw-semibold small shadow-none" 
+                        class="btn btn-light btn-lg px-3 rounded-pill fw-semibold small shadow-none" 
                         @click="closeDownloadModal">
                         Cancel
+                    </button>
+                    <button 
+                        class="btn btn-purple btn-lg px-4 rounded-pill fw-bold small d-inline-flex align-items-center gap-2 shadow-sm border-0 text-white"
+                        style="background: linear-gradient(135deg, #7d2ae8 0%, #00c4cc 100%);"
+                        :disabled="exportLoading"
+                        @click="triggerExport('canva_csv')"
+                        title="Download Canva ICards CSV (photo, myname, designation, phone, employee_code, blood_group, dob, addr)">
+                        <i v-if="exportLoading && exportType === 'canva_csv'" class="spinner-border spinner-border-sm"></i>
+                        <i v-else class="bi bi-person-badge-fill"></i>
+                        Canva ICard CSV
+                    </button>
+                    <button 
+                        class="btn btn-info text-white btn-lg px-4 rounded-pill fw-bold small d-inline-flex align-items-center gap-2 shadow-sm border-0"
+                        :disabled="selectedFields.length === 0 || exportLoading"
+                        @click="triggerExport('csv')">
+                        <i v-if="exportLoading && exportType === 'csv'" class="spinner-border spinner-border-sm"></i>
+                        <i v-else class="bi bi-file-earmark-text-fill"></i>
+                        Export CSV
                     </button>
                     <button 
                         class="btn btn-success btn-lg px-4 rounded-pill fw-bold small d-inline-flex align-items-center gap-2 shadow-sm border-0"
@@ -596,16 +614,26 @@ export default {
                 headings: headings
             };
             
-            const url = type === 'excel' 
-                ? '/employee/employee_manager/export/excel' 
-                : '/employee/employee_manager/export/pdf';
+            let url = '/employee/employee_manager/export/excel';
+            let defaultFilename = 'employees_export.xlsx';
+
+            if (type === 'pdf') {
+                url = '/employee/employee_manager/export/pdf';
+                defaultFilename = 'employees_export.pdf';
+            } else if (type === 'csv') {
+                url = '/employee/employee_manager/export/csv';
+                defaultFilename = 'employees_export.csv';
+            } else if (type === 'canva_csv') {
+                url = '/employee/employee_manager/export/canva_csv';
+                defaultFilename = 'canva_icard_employees.csv';
+            }
                 
             axios.post(url, payload, { responseType: 'blob' }).then(response => {
                 const blob = new Blob([response.data], { type: response.headers['content-type'] });
                 const link = document.createElement('a');
                 link.href = window.URL.createObjectURL(blob);
                 
-                let filename = type === 'excel' ? 'employees_export.xlsx' : 'employees_export.pdf';
+                let filename = defaultFilename;
                 const disposition = response.headers['content-disposition'];
                 if (disposition && disposition.indexOf('attachment') !== -1) {
                     const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
