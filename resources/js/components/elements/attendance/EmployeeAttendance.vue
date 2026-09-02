@@ -202,66 +202,193 @@
 
         <!-- Move Modal OUTSIDE the animated div to fix stacking context (Behind Backdrop Issue) -->
         <div class="modal fade" id="editAttendanceModal" tabindex="-1" aria-hidden="true" ref="editModal">
-            <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-dialog modal-dialog-centered" :class="modalMode === 'paycycle' ? 'modal-xl modal-dialog-scrollable' : ''">
                 <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-                    <div class="modal-header bg-primary text-white border-0 py-3 px-4">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="bg-white bg-opacity-20 p-2 rounded-3 text-white">
-                                <i class="bi bi-clock-history fs-5"></i>
-                            </div>
-                            <div>
-                                <h5 class="fw-bold m-0 text-white">Adjust Time Entry</h5>
-                                <div class="d-flex align-items-center flex-wrap gap-2 mt-1">
-                                    <span class="text-white-50 small mb-0">{{ editForm.employee_name }}</span>
-                                    <span v-if="editForm.on_date" class="badge bg-white text-primary fw-bold px-2.5 py-1 rounded-pill small">
-                                        <i class="bi bi-calendar-event me-1"></i>{{ formatDateAndDay(editForm.on_date) }}
-                                    </span>
+                    
+                    <!-- Modal Header with Mode Switcher Tabs -->
+                    <div class="modal-header bg-primary text-white border-0 py-3 px-4 flex-column align-items-stretch">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-white bg-opacity-20 p-2 rounded-3 text-white">
+                                    <i class="bi bi-clock-history fs-5"></i>
+                                </div>
+                                <div>
+                                    <h5 class="fw-bold m-0 text-white">Adjust Time Entry</h5>
+                                    <div class="d-flex align-items-center flex-wrap gap-2 mt-1">
+                                        <span class="text-white-50 small mb-0">{{ editForm.employee_name }}</span>
+                                        <span v-if="modalMode === 'single' && editForm.on_date" class="badge bg-white text-primary fw-bold px-2.5 py-1 rounded-pill small">
+                                            <i class="bi bi-calendar-event me-1"></i>{{ formatDateAndDay(editForm.on_date) }}
+                                        </span>
+                                        <span v-if="modalMode === 'paycycle' && payCycleData.from" class="badge bg-white text-primary fw-bold px-2.5 py-1 rounded-pill small">
+                                            <i class="bi bi-calendar3 me-1"></i>Pay Cycle: {{ formatDateShort(payCycleData.from) }} — {{ formatDateShort(payCycleData.to) }}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
+                            <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+
+                        <!-- Mode Switcher Segmented Control -->
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3 pt-2 border-top border-white border-opacity-20">
+                            <div class="btn-group bg-black bg-opacity-20 p-1 rounded-pill" role="group">
+                                <button type="button" 
+                                        class="btn btn-xs rounded-pill fw-bold px-3 py-1 text-white transition-all"
+                                        :class="modalMode === 'single' ? 'bg-white text-primary shadow-sm' : 'btn-link text-white-50 text-decoration-none'"
+                                        @click="switchModalMode('single')">
+                                    <i class="bi bi-calendar-day me-1"></i>Selected Date
+                                </button>
+                                <button type="button" 
+                                        class="btn btn-xs rounded-pill fw-bold px-3 py-1 text-white transition-all"
+                                        :class="modalMode === 'paycycle' ? 'bg-white text-primary shadow-sm' : 'btn-link text-white-50 text-decoration-none'"
+                                        @click="switchModalMode('paycycle')">
+                                    <i class="bi bi-calendar-range me-1"></i>Full Pay Cycle
+                                </button>
+                            </div>
+
+                            <div v-if="modalMode === 'paycycle'" class="d-flex align-items-center gap-2">
+                                <button class="btn btn-xs btn-light text-primary fw-bold rounded-pill px-3 py-1" @click="fillAllPayCycleMissing()">
+                                    <i class="bi bi-magic me-1"></i>Auto-Fill All Missing
+                                </button>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- Modal Body -->
                     <div class="modal-body p-4">
-                        <div class="alert alert-info border-0 bg-info bg-opacity-10 rounded-3 p-3 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
-                            <div class="d-flex align-items-center gap-2">
-                                <i class="bi bi-info-circle-fill me-1"></i>
-                                <span class="small">Modifying times will automatically re-evaluate LOP and Status for this record.</span>
-                            </div>
-                            <div v-if="editForm.on_date" class="badge bg-white text-dark border px-3 py-1.5 rounded-2 fw-bold text-nowrap">
-                                <i class="bi bi-calendar3 text-primary me-1.5"></i>{{ formatDateAndDay(editForm.on_date) }}
-                            </div>
-                        </div>
-                        <div class="row g-4">
-                            <div class="col-md-6">
-                                <label class="form-label small fw-900 text-uppercase tracking-wider text-muted mb-2">Punch IN Time</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white border-end-0 text-success"><i class="bi bi-login"></i></span>
-                                    <input type="time" class="form-control border-start-0 ps-0" v-model="editForm.in_time">
+                        
+                        <!-- Single Date Mode -->
+                        <div v-if="modalMode === 'single'">
+                            <div class="alert alert-info border-0 bg-info bg-opacity-10 rounded-3 p-3 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-info-circle-fill me-1"></i>
+                                    <span class="small">Modifying times will automatically re-evaluate LOP and Status for this record.</span>
+                                </div>
+                                <div v-if="editForm.on_date" class="badge bg-white text-dark border px-3 py-1.5 rounded-2 fw-bold text-nowrap">
+                                    <i class="bi bi-calendar3 text-primary me-1.5"></i>{{ formatDateAndDay(editForm.on_date) }}
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-900 text-uppercase tracking-wider text-muted mb-2">Punch OUT Time</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white border-end-0 text-danger"><i class="bi bi-logout"></i></span>
-                                    <input type="time" class="form-control border-start-0 ps-0" v-model="editForm.out_time">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-900 text-uppercase tracking-wider text-muted mb-2">Punch IN Time</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0 text-success"><i class="bi bi-login"></i></span>
+                                        <input type="time" class="form-control border-start-0 ps-0" v-model="editForm.in_time">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-900 text-uppercase tracking-wider text-muted mb-2">Punch OUT Time</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0 text-danger"><i class="bi bi-logout"></i></span>
+                                        <input type="time" class="form-control border-start-0 ps-0" v-model="editForm.out_time">
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Full Pay Cycle Mode -->
+                        <div v-if="modalMode === 'paycycle'">
+                            <div v-if="loadingPayCycle" class="text-center py-5">
+                                <div class="spinner-border text-primary me-2"></div>
+                                <div class="text-muted small mt-2">Loading pay cycle shifts...</div>
+                            </div>
+
+                            <div v-else>
+                                <div class="alert alert-primary bg-primary bg-opacity-10 border-0 rounded-3 p-3 mb-3 d-flex align-items-center justify-content-between">
+                                    <div class="small">
+                                        <i class="bi bi-info-circle-fill me-1"></i>
+                                        Review and modify punch times for all dates in the active pay cycle. Click <strong>Save Pay Cycle Changes</strong> to apply updates.
+                                    </div>
+                                    <div class="fw-bold small text-primary text-nowrap ms-2">
+                                        {{ payCycleData.shifts.length }} Days in Cycle
+                                    </div>
+                                </div>
+
+                                <div class="table-responsive custom-scrollbar" style="max-height: 400px;">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="bg-light sticky-top">
+                                            <tr class="small text-uppercase text-muted">
+                                                <th style="width: 170px;">Date & Day</th>
+                                                <th style="width: 120px;">Status</th>
+                                                <th>Shift Hours</th>
+                                                <th style="width: 150px;">Punch IN</th>
+                                                <th style="width: 150px;">Punch OUT</th>
+                                                <th class="text-end" style="width: 120px;">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="row in payCycleData.shifts" :key="row.dt"
+                                                :class="{'table-warning bg-warning bg-opacity-10': row.day_name === 'Sunday' || row.status === 'Weekoff', 'table-danger bg-danger bg-opacity-10': row.special_day === 'Holiday' || row.status === 'Holiday', 'table-active': row.dt === editForm.on_date}">
+                                                <td>
+                                                    <div class="fw-bold text-dark">{{ row.formatted_date }}</div>
+                                                    <div class="text-muted small">{{ row.day_name }}</div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge px-2.5 py-1 fw-bold" :class="getStatusBadgeClass(row.status)">
+                                                        {{ row.status }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="small fw-semibold text-dark">{{ row.working_shift_name }}</div>
+                                                    <div class="small text-muted">{{ row.std_in }} - {{ row.std_out }}</div>
+                                                </td>
+                                                <td>
+                                                    <input type="time" class="form-control form-control-sm" v-model="row.in_time" @change="row.is_modified = true">
+                                                </td>
+                                                <td>
+                                                    <input type="time" class="form-control form-control-sm" v-model="row.out_time" @change="row.is_modified = true">
+                                                </td>
+                                                <td class="text-end">
+                                                    <div class="d-flex gap-1 justify-content-end">
+                                                        <button class="btn btn-xs btn-outline-primary rounded px-2" @click="fillRowStandard(row)" title="Fill standard shift times">
+                                                            <i class="bi bi-clock-history"></i>
+                                                        </button>
+                                                        <button class="btn btn-xs btn-outline-secondary rounded px-2" @click="clearRowTimes(row)" title="Clear times">
+                                                            <i class="bi bi-x-lg"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
+
+                    <!-- Modal Footer -->
                     <div class="modal-footer bg-light border-0 py-3 px-4 justify-content-between">
-                        <button type="button" class="btn btn-outline-danger border-0 fw-bold px-3" @click="deleteTimes()" :disabled="deleting">
-                            <span v-if="deleting" class="spinner-border spinner-border-sm me-1"></span>
-                            <i v-else class="bi bi-trash3 me-1"></i>
-                            Delete Record
-                        </button>
-                        <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-link text-muted fw-bold text-decoration-none" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold" @click="saveTimes()" :disabled="saving">
-                                <span v-show="saving" class="spinner-border spinner-border-sm me-2"></span>
-                                Update Record
+                        <template v-if="modalMode === 'single'">
+                            <button type="button" class="btn btn-outline-danger border-0 fw-bold px-3" @click="deleteTimes()" :disabled="deleting">
+                                <span v-if="deleting" class="spinner-border spinner-border-sm me-1"></span>
+                                <i v-else class="bi bi-trash3 me-1"></i>
+                                Delete Record
                             </button>
-                        </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-link text-muted fw-bold text-decoration-none" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold" @click="saveTimes()" :disabled="saving">
+                                    <span v-show="saving" class="spinner-border spinner-border-sm me-2"></span>
+                                    Update Record
+                                </button>
+                            </div>
+                        </template>
+
+                        <template v-if="modalMode === 'paycycle'">
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill fw-bold px-3" @click="fillAllPayCycleMissing()">
+                                    <i class="bi bi-magic me-1"></i>Auto-Fill All Missing
+                                </button>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-link text-muted fw-bold text-decoration-none" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold" @click="savePayCycleTimes()" :disabled="savingPayCycle">
+                                    <span v-show="savingPayCycle" class="spinner-border spinner-border-sm me-2"></span>
+                                    <i class="bi bi-check2-circle me-1.5"></i>Save Pay Cycle Changes
+                                </button>
+                            </div>
+                        </template>
                     </div>
+
                 </div>
             </div>
         </div>
@@ -295,8 +422,18 @@ export default {
             specialDayInfo: null,
             saving: false,
             deleting: false,
+            modalMode: 'single',
+            loadingPayCycle: false,
+            savingPayCycle: false,
+            payCycleData: {
+                employee_id: null,
+                from: null,
+                to: null,
+                shifts: []
+            },
             editModal: null,
             editForm: {
+                employee_id: null,
                 employee_shift_id: null,
                 employee_name: '',
                 in_time: null,
@@ -409,10 +546,91 @@ export default {
             }
             return dateStr;
         },
+        switchModalMode(mode) {
+            this.modalMode = mode;
+            if (mode === 'paycycle' && (!this.payCycleData.shifts || this.payCycleData.shifts.length === 0 || this.payCycleData.employee_id !== this.editForm.employee_id)) {
+                this.fetchPayCycleShifts();
+            }
+        },
+        fetchPayCycleShifts() {
+            this.loadingPayCycle = true;
+            axios.get('/attendance/employee_paycycle_shifts', {
+                params: {
+                    employee_id: this.editForm.employee_id,
+                    current_date: this.editForm.on_date || this.employeeFilter.current_date
+                }
+            })
+            .then(res => {
+                this.loadingPayCycle = false;
+                this.payCycleData = {
+                    employee_id: this.editForm.employee_id,
+                    from: res.data.from,
+                    to: res.data.to,
+                    shifts: res.data.shifts || []
+                };
+            })
+            .catch(err => {
+                this.loadingPayCycle = false;
+                alert('Error loading pay cycle shifts.');
+            });
+        },
+        fillRowStandard(row) {
+            row.in_time = row.std_in;
+            row.out_time = row.std_out;
+            row.is_modified = true;
+        },
+        clearRowTimes(row) {
+            row.in_time = null;
+            row.out_time = null;
+            row.is_modified = true;
+        },
+        fillAllPayCycleMissing() {
+            if (!this.payCycleData.shifts) return;
+            this.payCycleData.shifts.forEach(row => {
+                if (!row.in_time && !row.out_time && row.status !== 'Weekoff' && row.status !== 'Holiday') {
+                    row.in_time = row.std_in;
+                    row.out_time = row.std_out;
+                    row.is_modified = true;
+                }
+            });
+        },
+        savePayCycleTimes() {
+            const modifiedShifts = this.payCycleData.shifts.filter(s => s.is_modified);
+            if (modifiedShifts.length === 0) {
+                alert('No changes detected in the pay cycle roster.');
+                return;
+            }
+            this.savingPayCycle = true;
+            axios.post('/attendance/batch_update_times', {
+                employee_id: this.editForm.employee_id,
+                shifts: modifiedShifts
+            })
+            .then(res => {
+                this.savingPayCycle = false;
+                this.editModal.hide();
+                this.fetch();
+            })
+            .catch(err => {
+                this.savingPayCycle = false;
+                alert('Error saving pay cycle changes.');
+            });
+        },
+        formatDateShort(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('-');
+            if (parts.length === 3) {
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                return `${parseInt(parts[2])} ${months[parseInt(parts[1]) - 1]} ${parts[0]}`;
+            }
+            return dateStr;
+        },
         openEditModal(shift, name) {
-            this.editForm.employee_shift_id = shift.id;
+            this.editForm.employee_id = shift ? shift.employee_id : null;
+            this.editForm.employee_shift_id = shift ? shift.id : null;
             this.editForm.employee_name = name;
             this.editForm.on_date = shift ? shift.dt : this.employeeFilter.current_date;
+            this.modalMode = 'single';
+            this.payCycleData = { employee_id: null, from: null, to: null, shifts: [] };
             
             const attendance = shift.employee_attendance;
             const shiftIn = shift.working_shift.in;

@@ -56,7 +56,9 @@ Route::middleware(['auth', 'role'])->group(function () {
 
     Route::get('/attendance', [App\Http\Controllers\AttendanceController::class, 'attendance']);
     Route::get('/attendance/fetch', [App\Http\Controllers\AttendanceController::class, 'fetch']);
+    Route::get('/attendance/employee_paycycle_shifts', [App\Http\Controllers\AttendanceController::class, 'fetch_employee_paycycle_shifts']);
     Route::post('/attendance/update_times', [App\Http\Controllers\AttendanceController::class, 'update_times']);
+    Route::post('/attendance/batch_update_times', [App\Http\Controllers\AttendanceController::class, 'batch_update_times']);
     Route::post('/attendance/delete_times', [App\Http\Controllers\AttendanceController::class, 'delete_times']);
     Route::post('/attendance/auto_update_all', [App\Http\Controllers\AttendanceController::class, 'auto_update_all']);
 

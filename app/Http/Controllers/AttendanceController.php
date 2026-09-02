@@ -229,6 +229,142 @@ class AttendanceController extends Controller
         return ["message" => "Success", "processed" => count($shifts)];
     }
 
+    public function fetch_employee_paycycle_shifts(Request $request){
+        $employee_id = $request->employee_id;
+        $current_date = $request->current_date ?: date('Y-m-d');
+        
+        $settings = new SettingsController();
+        $cycle_day = (strlen($settings->cycle_day) < 2 ? '0' : '').$settings->cycle_day;
+        $pay_cycle_from = date('Y-m-'.$cycle_day, strtotime($current_date));
+        $from = $current_date >= $pay_cycle_from 
+            ? date('Y-m-d', strtotime($pay_cycle_from)) 
+            : date('Y-m-d', strtotime("-1 month", strtotime($pay_cycle_from)));
+        $to = date('Y-m-d', strtotime('+1 month -1 day', strtotime($from)));
+
+        if ($request->from && $request->to) {
+            $from = $request->from;
+            $to = $request->to;
+        }
+
+        $employee = Employee::find($employee_id);
+        if (!$employee) {
+            return response()->json(['message' => 'Employee not found'], 404);
+        }
+
+        $period = new \DatePeriod(
+            new \DateTime($from),
+            new \DateInterval('P1D'),
+            (new \DateTime($to))->modify('+1 day')
+        );
+
+        $shifts = EmployeeShift::where('employee_id', $employee_id)
+            ->where('dt', '>=', $from)
+            ->where('dt', '<=', $to)
+            ->with(['working_shift', 'employee_attendance' => function($q) {
+                $q->orderBy('tm', 'asc');
+            }])
+            ->get()
+            ->keyBy('dt');
+
+        $specialDays = \App\Models\SpecialDays::where('special_day', '>=', $from)
+            ->where('special_day', '<=', $to)
+            ->get()
+            ->keyBy('special_day');
+
+        $result = [];
+        foreach ($period as $dateObj) {
+            $dtStr = $dateObj->format('Y-m-d');
+            $shift = $shifts->get($dtStr);
+            $specialDay = $specialDays->get($dtStr);
+
+            $inTime = null;
+            $outTime = null;
+            if ($shift && $shift->employee_attendance && count($shift->employee_attendance) > 0) {
+                $inTime = $shift->employee_attendance[0]->tm;
+                if (count($shift->employee_attendance) > 1) {
+                    $outTime = $shift->employee_attendance[count($shift->employee_attendance) - 1]->tm;
+                }
+            }
+
+            $dayName = $dateObj->format('l');
+            $formattedDate = $dateObj->format('d M Y');
+
+            $result[] = [
+                'dt' => $dtStr,
+                'day_name' => $dayName,
+                'formatted_date' => $formattedDate,
+                'employee_shift_id' => $shift ? $shift->id : null,
+                'status' => $shift ? $shift->status : ($specialDay ? $specialDay->day_type : ($dayName === 'Sunday' ? 'Weekoff' : 'Absent')),
+                'working_shift_name' => $shift && $shift->working_shift ? $shift->working_shift->name : ($employee->working_shift ? $employee->working_shift->name : 'Standard Shift'),
+                'std_in' => $shift && $shift->working_shift ? $shift->working_shift->in : ($employee->working_shift ? $employee->working_shift->in : '09:00:00'),
+                'std_out' => $shift && $shift->working_shift ? $shift->working_shift->out : ($employee->working_shift ? $employee->working_shift->out : '18:00:00'),
+                'in_time' => $inTime,
+                'out_time' => $outTime,
+                'lop' => $shift ? $shift->lop : 0,
+                'late' => $shift ? $shift->late : 0,
+                'early' => $shift ? $shift->early : 0,
+                'special_day' => $specialDay ? $specialDay->day_type : null,
+                'is_modified' => false
+            ];
+        }
+
+        return response()->json([
+            'employee' => $employee,
+            'from' => $from,
+            'to' => $to,
+            'shifts' => $result
+        ]);
+    }
+
+    public function batch_update_times(Request $request){
+        $shiftsData = $request->shifts ?: [];
+        $employee_id = $request->employee_id;
+        $amc = new AttendanceMachineController();
+        $updatedCount = 0;
+
+        foreach ($shiftsData as $item) {
+            $es = null;
+            if (!empty($item['employee_shift_id'])) {
+                $es = \App\Models\EmployeeShift::find($item['employee_shift_id']);
+            }
+            if (!$es && !empty($item['dt']) && !empty($employee_id)) {
+                $es = \App\Models\EmployeeShift::where('employee_id', $employee_id)
+                    ->where('dt', $item['dt'])
+                    ->first();
+                if (!$es) {
+                    $employee = Employee::find($employee_id);
+                    $es = new \App\Models\EmployeeShift();
+                    $es->employee_id = $employee_id;
+                    $es->working_shift_id = $employee->working_shift_id ?? 1;
+                    $es->dt = $item['dt'];
+                    $es->save();
+                }
+            }
+
+            if ($es) {
+                $es->employee_attendance()->delete();
+
+                if (!empty($item['in_time'])) {
+                    $es->employee_attendance()->create(['tm' => $item['in_time']]);
+                }
+                if (!empty($item['out_time'])) {
+                    $es->employee_attendance()->create(['tm' => $item['out_time']]);
+                }
+
+                $req = new Request();
+                $req->employee_id = $es->employee_id;
+                $req->on_date = $es->dt;
+                $amc->evalute($req);
+                $updatedCount++;
+            }
+        }
+
+        return response()->json([
+            'message' => 'Batch update successful',
+            'updated_count' => $updatedCount
+        ]);
+    }
+
     public function run_lop(Request $request){
         $jobId = Str::uuid()->toString();
 
