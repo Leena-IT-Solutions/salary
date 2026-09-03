@@ -71,7 +71,15 @@
             v-model="params.key" 
             error="" 
             classes="col" 
-            :options="[{key: 'ID', val: 'id'},{key: 'Department', val: 'department'},{key: 'Code', val: 'code'},]"></forms-select-field>
+            :options="[
+                {key: 'ID', val: 'id'},
+                {key: 'State', val: 'state'},
+                {key: 'Gender', val: 'gender'},
+                {key: 'Salary Type', val: 'salary_type'},
+                {key: 'Min Amount', val: 'min_salary'},
+                {key: 'Max Amount', val: 'max_salary'},
+                {key: 'Calculation', val: 'calculation'}
+            ]"></forms-select-field>
 
             <forms-text-field name="search" label="Type Search Sring" v-model="params.value" error="" classes="col"></forms-text-field>
 
@@ -82,7 +90,7 @@
 
         <!-- Data -->
         <div class="table-responsive px-4">
-            <table class="table table-striped">
+            <table class="table table-striped align-middle">
                 <thead>
                     <tr>
                         <th @click="orderBy('id')" class="cursor-pointer" style="width: 60px;">ID</th>
@@ -90,6 +98,8 @@
                         <th @click="orderBy('state')" class="cursor-pointer">State</th>
                         <th @click="orderBy('gender')" class="cursor-pointer">Gender</th>
                         <th @click="orderBy('salary_type')" class="cursor-pointer">Salary Type</th>
+                        <th @click="orderBy('min_salary')" class="cursor-pointer">Min Amount</th>
+                        <th @click="orderBy('max_salary')" class="cursor-pointer">Max Amount</th>
                         <th @click="orderBy('calculation')" class="cursor-pointer">Calculation</th>
                         <th @click="orderBy('employee_contribution')" class="cursor-pointer">Employee</th>
                         <th @click="orderBy('employer_contribution')" class="cursor-pointer">Employer</th>
@@ -104,6 +114,19 @@
                         <td>{{ row.state }}</td>
                         <td>{{ row.gender }}</td>
                         <td>{{ row.salary_type }}</td>
+                        <td>
+                            <span v-if="row.min_salary !== null && row.min_salary !== ''">
+                                ₹{{ Number(row.min_salary).toLocaleString() }}
+                            </span>
+                            <span v-else class="text-muted">—</span>
+                        </td>
+                        <td>
+                            <span v-if="row.max_salary !== null && row.max_salary !== ''">
+                                <span v-if="Number(row.max_salary) > 0">₹{{ Number(row.max_salary).toLocaleString() }}</span>
+                                <span v-else class="badge bg-light text-secondary border">No Limit (0)</span>
+                            </span>
+                            <span v-else class="text-muted">—</span>
+                        </td>
                         <td>{{ row.calculation }}</td>
                         <td>{{ row.employee_contribution }}{{ row.calculation == "Percentage" ? '%' : row.calculation == "Flat" ? '/-' : '' }}</td>
                         <td>{{ row.employer_contribution }}{{ row.calculation == "Percentage" ? '%' : row.calculation == "Flat" ? '/-' : '' }}</td>
