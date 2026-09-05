@@ -20,6 +20,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        ini_set('pcre.jit', '0');
         Schema::defaultStringLength(191);
     }
 }

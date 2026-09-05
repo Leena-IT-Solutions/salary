@@ -1,5 +1,7 @@
 <?php
 
+ini_set('pcre.jit', '0');
+
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 

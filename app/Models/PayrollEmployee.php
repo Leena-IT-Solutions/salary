@@ -90,6 +90,8 @@ class PayrollEmployee extends Model
     }
 
     public function displaywords($number){
+        $isNegative = $number < 0;
+        $number = abs((float) $number);
         $num = (int) floor($number);
         $number_after_decimal = round($number - $num, 2) * 100;
         
@@ -103,10 +105,16 @@ class PayrollEmployee extends Model
             $words .= ' Point ' . $this->convertNumberToWordsIndian((int)$number_after_decimal);
         }
 
-        return trim(preg_replace('/\s+/', ' ', $words));
+        $result = trim(preg_replace('/\s+/', ' ', $words));
+        return $isNegative ? 'Minus ' . $result : $result;
     }
 
     private function convertNumberToWordsIndian($number) {
+        $number = (int) $number;
+        if ($number <= 0) {
+            return '';
+        }
+
         $words = array(
             0 => '', 1 => 'One', 2 => 'Two', 3 => 'Three', 4 => 'Four', 5 => 'Five',
             6 => 'Six', 7 => 'Seven', 8 => 'Eight', 9 => 'Nine', 10 => 'Ten',
@@ -117,21 +125,27 @@ class PayrollEmployee extends Model
         );
 
         if ($number < 21) {
-            return $words[$number];
+            return $words[$number] ?? '';
         }
         if ($number < 100) {
-            return $words[floor($number / 10) * 10] . ' ' . $words[$number % 10];
+            $tens = floor($number / 10) * 10;
+            $units = $number % 10;
+            return ($words[$tens] ?? '') . ($units > 0 ? ' ' . ($words[$units] ?? '') : '');
         }
         if ($number < 1000) {
-            return $words[floor($number / 100)] . ' Hundred ' . $this->convertNumberToWordsIndian($number % 100);
+            $rem = $number % 100;
+            return ($words[floor($number / 100)] ?? '') . ' Hundred' . ($rem > 0 ? ' ' . $this->convertNumberToWordsIndian($rem) : '');
         }
         if ($number < 100000) {
-            return $this->convertNumberToWordsIndian(floor($number / 1000)) . ' Thousand ' . $this->convertNumberToWordsIndian($number % 1000);
+            $rem = $number % 1000;
+            return $this->convertNumberToWordsIndian(floor($number / 1000)) . ' Thousand' . ($rem > 0 ? ' ' . $this->convertNumberToWordsIndian($rem) : '');
         }
         if ($number < 10000000) {
-            return $this->convertNumberToWordsIndian(floor($number / 100000)) . ' Lakh ' . $this->convertNumberToWordsIndian($number % 100000);
+            $rem = $number % 100000;
+            return $this->convertNumberToWordsIndian(floor($number / 100000)) . ' Lakh' . ($rem > 0 ? ' ' . $this->convertNumberToWordsIndian($rem) : '');
         }
-        return $this->convertNumberToWordsIndian(floor($number / 10000000)) . ' Crore ' . $this->convertNumberToWordsIndian($number % 10000000);
+        $rem = $number % 10000000;
+        return $this->convertNumberToWordsIndian(floor($number / 10000000)) . ' Crore' . ($rem > 0 ? ' ' . $this->convertNumberToWordsIndian($rem) : '');
     }
     
 }

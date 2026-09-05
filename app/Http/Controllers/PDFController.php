@@ -27,6 +27,13 @@ use DateInterval;
 
 class PDFController extends Controller
 {
+    public function __construct()
+    {
+        ini_set('pcre.jit', '0');
+        ini_set('memory_limit', '512M');
+        set_time_limit(300);
+    }
+
     public function demo($id){
         $company = CompanyProfile::first();
         $payroll = Payroll::find($id);
@@ -145,6 +152,10 @@ class PDFController extends Controller
 
 
     public function payslip($id){
+        ini_set('pcre.jit', '0');
+        ini_set('memory_limit', '512M');
+        set_time_limit(300);
+
         $company = CompanyProfile::first();
         $payroll = Payroll::find($id);
         $path = "payroll_".$id.".pdf";
