@@ -2,6 +2,25 @@
 
 ini_set('pcre.jit', '0');
 
+// Self-heal stale bootstrap cache if any cached package provider class is missing
+$packagesCache = __DIR__ . '/cache/packages.php';
+if (file_exists($packagesCache)) {
+    $cached = @include $packagesCache;
+    if (is_array($cached)) {
+        foreach ($cached as $pkg) {
+            foreach ($pkg['providers'] ?? [] as $provider) {
+                if (!class_exists($provider)) {
+                    @unlink($packagesCache);
+                    if (file_exists(__DIR__ . '/cache/services.php')) {
+                        @unlink(__DIR__ . '/cache/services.php');
+                    }
+                    break 2;
+                }
+            }
+        }
+    }
+}
+
 /*
 |--------------------------------------------------------------------------
 | Create The Application
