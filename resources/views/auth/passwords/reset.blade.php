@@ -47,6 +47,17 @@
                 </button>
             </div>
 
+            <div class="col-12 mt-4 pt-3 border-top">
+                <div class="d-flex justify-content-between align-items-center">
+                    <a class="text-decoration-none text-primary fw-semibold small d-inline-flex align-items-center" href="{{ route('login') }}">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Login
+                    </a>
+                    <a class="text-decoration-none text-muted small d-inline-flex align-items-center" href="{{ url('/') }}">
+                        <i class="bi bi-house me-1"></i> Home
+                    </a>
+                </div>
+            </div>
+
         </div>
     </form>
 
